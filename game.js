@@ -1,5 +1,6 @@
 import { randomInt, randomBytes } from 'node:crypto';
 import { categories, decks, disasters, bunkers } from './cards.js';
+import { createBiologyCard } from './biology.js';
 export { categories };
 const pick = a => a[randomInt(a.length)];
 const id = () => randomBytes(18).toString('hex');
@@ -56,7 +57,7 @@ export function act(room, p, action, value) {
   const pools = Object.fromEntries(Object.entries(decks).map(([k,v])=>[k,[...v]]));
   for (const person of room.players) {
    for (const [k, pool] of Object.entries(pools)) person.cards[k] = pool.splice(randomInt(pool.length),1)[0];
-   person.cards.biology = `${randomInt(20,76)} лет · ${pick(['женщина', 'мужчина'])} · ${pick(['легко адаптируется к новому режиму','хорошо переносит физическую нагрузку','чувствителен к холоду','предпочитает ночной режим','быстро восстанавливается после нагрузки','нуждается в стабильном режиме сна'])}`;
+   person.cards.biology = createBiologyCard();
   }
   room.phase = 'turn'; room.round = 1; room.turn = room.players[0].id; room.opened = false;
   room.log.push('Шлюз закрыт. Начинается знакомство.');
