@@ -1,0 +1,17 @@
+# Free hosting for a small group. Files on the free instance are ephemeral.
+services:
+  - type: web
+    name: bunker-online
+    runtime: node
+    plan: free
+    region: frankfurt
+    buildCommand: npm test
+    startCommand: npm start
+    healthCheckPath: /health
+    numInstances: 1
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: HOST
+        value: 0.0.0.0
