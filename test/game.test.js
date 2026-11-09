@@ -53,3 +53,44 @@ test('tied vote expels exactly one tied candidate across 100 trials',()=>{
  assert.equal(r.lastVote.tie,true);assert.ok(r.players.slice(0,2).some(p=>p.id===r.lastVote.eliminated));assert.equal(r.players.filter(p=>!p.alive).length,1);assert.equal(r.round,2);
  }
 });
+
+test('a solo host can complete a full test game, even after expulsion',()=>{
+ const r=setup(1),host=r.players[0];act(r,host,'start_test');
+ assert.equal(r.players.length,5);assert.equal(r.players.filter(p=>p.bot).length,4);
+ assert.equal(r.firstVote,4);assert.equal(r.capacity,2);assert.equal(r.testMode,true);
+ assert.throws(()=>act(r,host,'bot_step'));
+ let steps=0,forcedExpulsion=false;
+ while(r.phase!=='finished'){
+  assert.ok(++steps<100);
+  if(r.phase==='turn'){
+   if(r.turn===host.id){
+    act(r,host,'reveal',Object.keys(categories).find(k=>!host.revealed.includes(k)));
+    act(r,host,'next');
+   }else act(r,host,'bot_step');
+  }else if(!forcedExpulsion){
+   for(const p of r.players)act(r,p,'vote',host.id);
+   assert.equal(host.alive,false);forcedExpulsion=true;
+  }else{
+   act(r,host,'bot_votes');
+   assert.equal(view(r,host).pendingBotVotes,0);
+   assert.throws(()=>act(r,host,'bot_votes'));
+   act(r,host,'vote',r.players.find(p=>p.alive).id);
+  }
+ }
+ assert.equal(r.players.filter(p=>p.alive).length,2);
+});
+
+test('test controls are host-only and never reveal private bot or human cards',()=>{
+ const r=setup(2),[host,guest]=r.players;
+ assert.throws(()=>act(r,guest,'start_test'));assert.equal(r.players.length,2);
+ act(r,host,'start_test');assert.equal(r.players.filter(p=>p.bot).length,3);
+ assert.throws(()=>act(r,guest,'bot_step'));assert.throws(()=>act(r,guest,'bot_votes'));
+ assert.throws(()=>act(r,host,'start_test'));assert.throws(()=>act(r,host,'bot_votes'));
+ const hostView=view(r,host);
+ for(const p of hostView.players.filter(p=>p.id!==host.id))assert.deepEqual(p.cards,{});
+ assert.ok(r.players.every(p=>!JSON.stringify(hostView).includes(p.token)));
+ const ordinary=setup(5);act(ordinary,ordinary.players[0],'start');
+ assert.throws(()=>act(ordinary,ordinary.players[0],'bot_step'));
+ const collision=createRoom('123456',player('Бот 1'));act(collision,collision.players[0],'start_test');
+ assert.equal(new Set(collision.players.map(p=>p.name)).size,5);
+});

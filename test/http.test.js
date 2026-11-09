@@ -12,6 +12,16 @@ test('HTTP sessions, privacy, errors and durable restart',async()=>{
  async function request(path,body,token){const r=await fetch(base+path,{method:body?'POST':'GET',headers:{'Content-Type':'application/json','Connection':'close',...(token?{Authorization:'Bearer '+token}:{})},body:body?JSON.stringify(body):undefined});return {status:r.status,data:await r.json()};}
  try{
   await start();assert.equal((await request('/health')).data.ok,true);
+  const solo=(await request('/api/rooms',{name:'Тестировщик'})).data;
+  const soloPath='/api/rooms/'+solo.code;
+  let demo=await request(soloPath+'/action',{action:'start_test'},solo.token);
+  assert.equal(demo.status,200);assert.equal(demo.data.testMode,true);
+  assert.equal(demo.data.players.filter(p=>p.bot).length,4);
+  await request(soloPath+'/action',{action:'reveal',value:'profession'},solo.token);
+  await request(soloPath+'/action',{action:'next'},solo.token);
+  demo=await request(soloPath+'/action',{action:'bot_step'},solo.token);
+  assert.equal(demo.status,200);assert.equal(demo.data.players[1].revealed[0],'profession');
+  assert.equal(Object.keys(demo.data.players[1].cards).length,1);
   const host=(await request('/api/rooms',{name:'Ведущий'})).data;const path='/api/rooms/'+host.code;
   assert.equal((await request(path)).status,401);
   const people=[host];for(let i=2;i<=5;i++)people.push((await request(path+'/join',{name:'Участник '+i})).data);
@@ -22,6 +32,7 @@ test('HTTP sessions, privacy, errors and durable restart',async()=>{
   const guest=(await request(path,undefined,people[1].token)).data;assert.deepEqual(Object.keys(guest.players[0].cards),['profession']);assert.ok(!JSON.stringify(guest).includes(host.token));
   const before=(await request(path,undefined,host.token)).data;
   await stop();await start();const after=(await request(path,undefined,host.token)).data;assert.deepEqual(after,before);
+  assert.deepEqual((await request(soloPath,undefined,solo.token)).data,demo.data);
   assert.equal((await request(path+'/join',{name:'Опоздал'})).status,400);
   const page=await fetch(base,{headers:{Connection:'close'}});assert.equal(page.status,200);assert.ok(page.headers.get('content-security-policy').includes("default-src 'self'"));assert.ok((await page.text()).includes('lang="ru"'));
  }finally{await stop();await rm(dir,{recursive:true,force:true});}

@@ -20,7 +20,34 @@ export function join(room, p) {
  room.players.push(p);
 }
 export function act(room, p, action, value) {
- if (action === 'start') {
+ if (action === 'start_test') {
+  check(room.host === p.id && room.phase === 'lobby', 'Тестовую игру запускает ведущий до начала партии.');
+  check(room.players.length < 5, 'В комнате уже достаточно участников для обычной игры.');
+  let number = 1;
+  while (room.players.length < 5) {
+   const name = `Бот ${number++}`;
+   if (room.players.some(x => x.name.toLowerCase() === name.toLowerCase())) continue;
+   const bot = player(name); bot.bot = true; join(room, bot);
+  }
+  room.testMode = true;
+  act(room, p, 'start');
+  room.log.push('Тестовая партия: ведущий запускает ходы и голоса ботов кнопками.');
+ } else if (action === 'bot_step') {
+  check(room.testMode && room.host === p.id && room.phase === 'turn', 'Управление ботами доступно ведущему в тестовой партии.');
+  const bot = room.players.find(x => x.id === room.turn);
+  check(bot?.bot && bot.alive, 'Сейчас ход живого участника, а не бота.');
+  if (!room.opened) {
+   const remaining = Object.keys(categories).filter(k => !bot.revealed.includes(k));
+   if (remaining.length) act(room, bot, 'reveal', room.round === 1 ? 'profession' : pick(remaining));
+  }
+  act(room, bot, 'next');
+ } else if (action === 'bot_votes') {
+  check(room.testMode && room.host === p.id && room.phase === 'vote', 'Голоса ботов запускает ведущий во время голосования.');
+  const bots = room.players.filter(x => x.bot && !Object.hasOwn(room.votes, x.id));
+  check(bots.length > 0, 'Все боты уже проголосовали.');
+  const candidates = room.players.filter(x => x.alive).map(x => x.id);
+  for (const bot of bots) act(room, bot, 'vote', pick(candidates));
+ } else if (action === 'start') {
   check(room.host === p.id && room.phase === 'lobby', 'Только ведущий может начать игру.');
   check(room.players.length >= 5, 'Для игры нужно от 5 до 16 участников.');
   room.capacity = Math.floor(room.players.length / 2);
@@ -68,5 +95,6 @@ function newRound(room) { room.round++; room.phase='turn'; room.turn=room.player
 export function view(room, me) {
  const { players, votes, ...rest } = room;
  return { ...rest, categories, me: me.id, hasVoted: Object.hasOwn(votes,me.id), voteCount: Object.keys(votes).length,
+  pendingBotVotes: players.filter(p => p.bot && !Object.hasOwn(votes,p.id)).length,
   players: players.map(({token, cards, ...p}) => ({...p, cards: p.id===me.id || room.phase==='finished' ? cards : Object.fromEntries(p.revealed.map(k=>[k,cards[k]]))})) };
 }
