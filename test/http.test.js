@@ -41,6 +41,24 @@ test('HTTP sessions, private cards, registered artwork, caching and durable rest
   }
   const theme=await fetch(base+'/theme.css',{headers:{Connection:'close'}});
   assert.equal(theme.status,200);assert.match(theme.headers.get('content-type'),/text\/css/);assert.match(await theme.text(),/\.landing-shell/);
+  // Safari and mobile browsers request byte ranges for MP4 playback and looping.
+  const videoPath='/videos/bunker-entrance.mp4',videoBytes=await readFile(new URL('../public'+videoPath,import.meta.url));
+  const videoHead=await fetch(base+videoPath,{method:'HEAD'});
+  assert.equal(videoHead.headers.get('content-type'),'video/mp4');
+  assert.equal(videoHead.headers.get('accept-ranges'),'bytes');
+  assert.equal(Number(videoHead.headers.get('content-length')),videoBytes.length);
+  for(const [range,start,end] of [['bytes=0-1',0,1],['bytes=100-',100,videoBytes.length-1],['bytes=-32',videoBytes.length-32,videoBytes.length-1],['bytes=0-999999999',0,videoBytes.length-1]]){
+   const response=await fetch(base+videoPath,{headers:{Range:range}});
+   assert.equal(response.status,206);assert.equal(response.headers.get('content-range'),`bytes ${start}-${end}/${videoBytes.length}`);
+   assert.deepEqual(Buffer.from(await response.arrayBuffer()),videoBytes.subarray(start,end+1));
+  }
+  for(const range of ['bytes=9-2','bytes=-0','bytes=999999999-','bytes=0-1,5-9','bytes=-','garbage']){
+   const response=await fetch(base+videoPath,{headers:{Range:range}});
+   assert.equal(response.status,416);assert.equal(response.headers.get('content-range'),`bytes */${videoBytes.length}`);await response.arrayBuffer();
+  }
+  const fullVideo=await fetch(base+videoPath,{headers:{Range:'bytes=0-1','If-Range':'"stale"'}});
+  assert.equal(fullVideo.status,200);assert.deepEqual(Buffer.from(await fullVideo.arrayBuffer()),videoBytes);
+  const cachedVideo=await fetch(base+videoPath,{headers:{'If-None-Match':videoHead.headers.get('etag')}});assert.equal(cachedVideo.status,304);
   const solo=(await request('/api/rooms',{name:'Тестировщик'})).data;
   const soloPath='/api/rooms/'+solo.code;
   let demo=await request(soloPath+'/action',{action:'start_test'},solo.token);

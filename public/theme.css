@@ -12,7 +12,7 @@
 .landing-shell .header-right>.signal{width:7px;height:12px;border-radius:0;box-shadow:-5px 3px 0 -1px #8dab33,5px -3px 0 -1px #d4ef5a}
 .landing-shell .header-right .text-btn{border:1px solid #b3ca65;min-height:44px;margin-left:18px;padding:10px 20px;font-size:15px;color:#f0f2cd;background:linear-gradient(#1b2b0d,#0b1408);white-space:nowrap}
 .landing-shell .landing{position:relative;isolation:isolate;max-width:none;min-height:calc(100svh - 180px);padding:36px clamp(24px,3.5vw,58px) 48px;grid-template-columns:minmax(0,1.35fr) minmax(350px,.85fr);gap:clamp(30px,4vw,70px);align-items:start;margin:0}
-.landing-shell .landing:before{content:'';position:absolute;inset:0;z-index:-2;background:#071108 url('/images/ui/bunker-landscape.png') left bottom / 82% auto no-repeat}
+.landing-shell .landing:before{content:'';position:absolute;inset:0;z-index:-3;background:#071108 url('/images/ui/bunker-landscape.png') left bottom / 82% auto no-repeat}
 .landing-shell .landing:after{content:'';position:absolute;inset:0;z-index:-1;background:linear-gradient(90deg,#06100655,transparent 65%,#06100644),linear-gradient(#07110855,transparent 35%)}
 .landing-shell .hero{min-width:0;padding-top:14px;padding-bottom:140px}
 .landing-shell .hero-chip{display:inline-flex;gap:9px;max-width:100%;padding:9px 12px;border:1px solid #c2db56;background:#091506d9;color:#e7f582;font-size:12px;letter-spacing:.7px;line-height:1.5;text-align:center;box-shadow:inset 0 0 0 3px #22340a}
@@ -187,3 +187,10 @@ dialog{max-height:calc(100dvh - 24px);overflow-y:auto;overscroll-behavior:contai
 @media(max-width:1100px){.header-emblem{width:125px}.landing-shell .stats strong{gap:6px}.landing-shell .stats .ui-icon{width:22px;height:22px}}
 @media(max-width:860px){.header-emblem,.footer-emblem{display:none}}
 @media(max-width:480px){.landing-shell .stats .ui-icon{width:22px;height:22px}.entry-kicker>.ui-icon{width:25px;height:25px}.landing-shell .stats strong{gap:5px}}
+
+/* Decorative video shares the static backdrop's framing and never intercepts input. */
+.landing-video{position:absolute;left:0;bottom:0;width:82%;height:auto;z-index:-2;pointer-events:none;opacity:0}
+.landing-video.is-playing{opacity:1}
+.motion-toggle{display:inline-flex;align-items:center;min-height:44px;margin-top:12px;padding:8px 13px;border:1px solid #9cb25a;background:#091506e8;color:#e9efbd;font-size:12px;line-height:1.4}
+.motion-toggle:hover{background:#203412}
+@media(max-width:860px){.landing-video{top:0;bottom:auto;width:100%;height:550px;object-fit:cover;object-position:60% top}}
