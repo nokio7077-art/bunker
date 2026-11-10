@@ -1,6 +1,8 @@
 import { randomInt, randomBytes } from 'node:crypto';
-import { categories, decks, disasters, bunkers } from './cards.js';
+import { categories, decks } from './cards.js';
 import { createBiologyCard } from './biology.js';
+import { chooseWorld } from './world.js';
+import { cardDescription, eligibleCard, healthyCard } from './card-catalog.js';
 export { categories };
 const pick = a => a[randomInt(a.length)];
 const id = () => randomBytes(18).toString('hex');
@@ -53,11 +55,23 @@ export function act(room, p, action, value) {
   check(room.players.length >= 5, 'Для игры нужно от 5 до 16 участников.');
   room.capacity = Math.floor(room.players.length / 2);
   room.firstVote = firstVoteRound(room.players.length);
-  room.disaster = pick(disasters); room.bunker = pick(bunkers);
+  Object.assign(room, chooseWorld(room.capacity));
   const pools = Object.fromEntries(Object.entries(decks).map(([k,v])=>[k,[...v]]));
   for (const person of room.players) {
-   for (const [k, pool] of Object.entries(pools)) person.cards[k] = pool.splice(randomInt(pool.length),1)[0];
    person.cards.biology = createBiologyCard();
+   for (const [k, pool] of Object.entries(pools)) {
+    let eligible = pool.filter(name => eligibleCard(k,name,person.cards.biology,room.disaster));
+    if (k === 'health') {
+     // Keep a meaningful chance of a healthy character instead of forcing everyone to be ill.
+     const wantHealthy = randomInt(4) === 0;
+     const preferred = eligible.filter(name => healthyCard(name) === wantHealthy);
+     if (preferred.length) eligible = preferred;
+    }
+    if (!eligible.length) throw new Error(`Недостаточно подходящих карточек: ${k}`);
+    const name = pick(eligible);
+    person.cards[k] = name;
+    pool.splice(pool.indexOf(name),1);
+   }
   }
   room.phase = 'turn'; room.round = 1; room.turn = room.players[0].id; room.opened = false;
   room.log.push('Шлюз закрыт. Начинается знакомство.');
@@ -97,5 +111,8 @@ export function view(room, me) {
  const { players, votes, ...rest } = room;
  return { ...rest, categories, me: me.id, hasVoted: Object.hasOwn(votes,me.id), voteCount: Object.keys(votes).length,
   pendingBotVotes: players.filter(p => p.bot && !Object.hasOwn(votes,p.id)).length,
-  players: players.map(({token, cards, ...p}) => ({...p, cards: p.id===me.id || room.phase==='finished' ? cards : Object.fromEntries(p.revealed.map(k=>[k,cards[k]]))})) };
+  players: players.map(({token, cards, ...p}) => {
+   const visible = p.id===me.id || room.phase==='finished' ? cards : Object.fromEntries(p.revealed.map(k=>[k,cards[k]]));
+   return {...p, cards: visible, descriptions: Object.fromEntries(Object.entries(visible).map(([k,name])=>[k,cardDescription(k,name)]).filter(([,description])=>description))};
+  }) };
 }
