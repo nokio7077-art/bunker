@@ -30,7 +30,7 @@ test('every supported party reaches the correct final survivors; expelled player
 });
 test('privacy and turn authority',()=>{
  const r=setup(5),[a,b]=r.players;assert.throws(()=>act(r,b,'start'));act(r,a,'start');
- let v=view(r,b);assert.deepEqual(v.players[0].cards,{});assert.equal(Object.keys(v.players[1].cards).length,8);assert.ok(!JSON.stringify(v).includes(a.token));
+ let v=view(r,b);assert.deepEqual(v.players[0].cards,{});assert.equal(Object.keys(v.players[1].cards).length,Object.keys(categories).length);assert.ok(!JSON.stringify(v).includes(a.token));
  assert.throws(()=>act(r,b,'reveal','profession'));assert.throws(()=>act(r,a,'next'));assert.throws(()=>act(r,a,'reveal','hobby'));
  act(r,a,'reveal','profession');assert.throws(()=>act(r,a,'reveal','health'));
  assert.deepEqual(Object.keys(view(r,b).players[0].cards),['profession']);act(r,a,'next');assert.equal(r.turn,b.id);

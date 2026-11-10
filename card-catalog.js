@@ -3,9 +3,11 @@ import luggage from './data/luggage.json' with { type: 'json' };
 import hobby from './data/hobby.json' with { type: 'json' };
 import interesting from './data/interesting.json' with { type: 'json' };
 import personality from './data/personality.json' with { type: 'json' };
+import phobia from './data/phobia.json' with { type: 'json' };
+import { specialCards } from './special-cards.js';
 import { professionDescriptions } from './profession-descriptions.js';
 
-export const catalog = { health, luggage, hobby, interesting, personality };
+export const catalog = { health, luggage, hobby, interesting, personality, phobia, special: specialCards };
 const indexes = Object.fromEntries(Object.entries(catalog).map(([k, cards]) => [k, new Map(cards.map(c => [c.name,c]))]));
 
 export function cardDescription(category, name) {

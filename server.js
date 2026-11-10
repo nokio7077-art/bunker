@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { join as pathJoin } from 'node:path';
 import { randomInt } from 'node:crypto';
 import { player, createRoom, join, act, view } from './game.js';
+import { specialOptions } from './special-actions.js';
 
 const root = fileURLToPath(new URL('.', import.meta.url));
 const dataDir = process.env.DATA_DIR || pathJoin(root,'.data');
@@ -33,13 +34,14 @@ export const server=http.createServer(async(req,res)=>{
    do {code=String(randomInt(100000,1000000));} while(rooms.has(code));
    const room=createRoom(code,p);rooms.set(code,room);save();return send(201,{code,token:p.token});
   }
-  const match=url.pathname.match(/^\/api\/rooms\/(\d{6})(?:\/(join|action))?$/);
+  const match=url.pathname.match(/^\/api\/rooms\/(\d{6})(?:\/(join|action|special))?$/);
   if(!match) return send(404,{error:'Не найдено.'});
   const room=rooms.get(match[1]);if(!room) return send(404,{error:'Комната не найдена. Проверьте код.'});
   if(req.method==='POST' && match[2]==='join') {const b=await body(req),p=player(b.name);join(room,p);save();return send(201,{code:room.code,token:p.token});}
   const token=req.headers.authorization?.replace(/^Bearer /,''); const me=room.players.find(p=>p.token===token);
   if(!me) return send(401,{error:'Сессия не найдена. Войдите в комнату заново.'});
   if(req.method==='GET' && !match[2]) return send(200,view(room,me));
+  if(req.method==='GET' && match[2]==='special') return send(200,specialOptions(room,me));
   if(req.method==='POST' && match[2]==='action') {const b=await body(req);act(room,me,b.action,b.value);save();return send(200,view(room,me));}
   return send(405,{error:'Метод не поддерживается.'});
  } catch(e) {send(400,{error:e instanceof SyntaxError ? 'Некорректный запрос.' : e.message});}

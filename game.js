@@ -3,6 +3,8 @@ import { categories, decks } from './cards.js';
 import { createBiologyCard } from './biology.js';
 import { chooseWorld } from './world.js';
 import { cardDescription, eligibleCard, healthyCard } from './card-catalog.js';
+import { applySpecial } from './special-actions.js';
+import { specialCard } from './special-cards.js';
 export { categories };
 const pick = a => a[randomInt(a.length)];
 const id = () => randomBytes(18).toString('hex');
@@ -40,7 +42,7 @@ export function act(room, p, action, value) {
   const bot = room.players.find(x => x.id === room.turn);
   check(bot?.bot && bot.alive, 'Сейчас ход живого участника, а не бота.');
   if (!room.opened) {
-   const remaining = Object.keys(categories).filter(k => !bot.revealed.includes(k));
+   const remaining = Object.keys(bot.cards).filter(k => bot.cards[k] && !bot.revealed.includes(k));
    if (remaining.length) act(room, bot, 'reveal', room.round === 1 ? 'profession' : pick(remaining));
   }
   act(room, bot, 'next');
@@ -75,15 +77,17 @@ export function act(room, p, action, value) {
   }
   room.phase = 'turn'; room.round = 1; room.turn = room.players[0].id; room.opened = false;
   room.log.push('Шлюз закрыт. Начинается знакомство.');
+ } else if (action === 'use_special') {
+  applySpecial(room, p, value);
  } else if (action === 'reveal') {
   check(room.phase === 'turn' && room.turn === p.id && p.alive, 'Сейчас ход другого игрока.');
-  check(!room.opened && Object.hasOwn(categories,value) && !p.revealed.includes(value), 'Эту карточку сейчас нельзя открыть.');
+  check(!room.opened && Object.hasOwn(categories,value) && p.cards[value] && !p.revealed.includes(value), 'Эту карточку сейчас нельзя открыть.');
   check(room.round !== 1 || value === 'profession', 'В первом круге откройте профессию.');
   p.revealed.push(value); room.opened = true;
   room.log.push(`${p.name} открывает: ${categories[value]}.`);
  } else if (action === 'next') {
   check(room.phase === 'turn' && room.turn === p.id, 'Передать слово может только текущий игрок.');
-  check(room.opened || p.revealed.length === Object.keys(categories).length, 'Сначала откройте карточку.');
+  check(room.opened || !Object.keys(p.cards).some(k => p.cards[k] && !p.revealed.includes(k)), 'Сначала откройте карточку.');
   const alive = room.players.filter(x=>x.alive); const pos = alive.findIndex(x=>x.id === p.id);
   if (pos < alive.length - 1) { room.turn = alive[pos+1].id; room.opened = false; }
   else if (room.round >= room.firstVote) { room.phase = 'vote'; room.votes = {}; room.log.push(`Круг ${room.round}: начинается голосование.`); }
@@ -109,7 +113,7 @@ export function act(room, p, action, value) {
 function newRound(room) { room.round++; room.phase='turn'; room.turn=room.players.find(x=>x.alive).id; room.opened=false; room.votes={}; }
 export function view(room, me) {
  const { players, votes, ...rest } = room;
- return { ...rest, categories, me: me.id, hasVoted: Object.hasOwn(votes,me.id), voteCount: Object.keys(votes).length,
+ return { ...rest, categories, me: me.id, specialAvailable: Boolean(specialCard(me.cards.special)) && !me.specialUsed, hasVoted: Object.hasOwn(votes,me.id), voteCount: Object.keys(votes).length,
   pendingBotVotes: players.filter(p => p.bot && !Object.hasOwn(votes,p.id)).length,
   players: players.map(({token, cards, ...p}) => {
    const visible = p.id===me.id || room.phase==='finished' ? cards : Object.fromEntries(p.revealed.map(k=>[k,cards[k]]));
