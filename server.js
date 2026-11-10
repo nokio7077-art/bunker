@@ -1,10 +1,11 @@
 import http from 'node:http';
-import { readFileSync, mkdirSync, writeFileSync, renameSync, existsSync } from 'node:fs';
+import { readFileSync, mkdirSync, writeFileSync, renameSync, existsSync, statSync, createReadStream } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { join as pathJoin } from 'node:path';
 import { randomInt } from 'node:crypto';
 import { player, createRoom, join, act, view } from './game.js';
 import { specialOptions } from './special-actions.js';
+import { disasterImages } from './public/card-images.js';
 
 const root = fileURLToPath(new URL('.', import.meta.url));
 const dataDir = process.env.DATA_DIR || pathJoin(root,'.data');
@@ -15,13 +16,26 @@ const save=()=>{writeFileSync(file+'.tmp',JSON.stringify([...rooms]),{mode:0o600
 const limits=new Map();
 function rate(req) { const key=req.socket.remoteAddress; const now=Date.now(); let x=limits.get(key); if(!x || now-x.time>60000) { x={time:now,count:0}; limits.set(key,x); } if(++x.count>120) throw new Error('Слишком много запросов. Подождите минуту.'); }
 async function body(req) { let text=''; for await (const chunk of req) {text+=chunk; if(text.length>4096) throw new Error('Слишком большой запрос.');} return JSON.parse(text || '{}'); }
-const assets={'/':['index.html','text/html; charset=utf-8'],'/app.js':['app.js','text/javascript; charset=utf-8'],'/style.css':['style.css','text/css; charset=utf-8']};
+const assets={'/':['index.html','text/html; charset=utf-8'],'/app.js':['app.js','text/javascript; charset=utf-8'],'/card-images.js':['card-images.js','text/javascript; charset=utf-8'],'/style.css':['style.css','text/css; charset=utf-8'],'/theme.css':['theme.css','text/css; charset=utf-8'],'/favicon.svg':['favicon.svg','image/svg+xml']};
+// Only registered images and fonts are public; never serve arbitrary repository files.
+const binaryAssets=new Map(Object.values(disasterImages).map(image=>[image.src,{path:pathJoin(root,'public',image.src),type:'image/png'}]));
+for(const [url,type] of [['/images/ui/bunker-landscape.png','image/png'],['/fonts/RubikMonoOne-Regular.ttf','font/ttf']])binaryAssets.set(url,{path:pathJoin(root,'public',url),type});
 export const server=http.createServer(async(req,res)=>{
  res.setHeader('X-Content-Type-Options','nosniff'); res.setHeader('Cache-Control','no-store');
  res.setHeader('Content-Security-Policy',"default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self'; img-src 'self' data:; frame-ancestors 'none'; base-uri 'none'; form-action 'self'");
  const send=(status,obj)=>{res.writeHead(status,{'Content-Type':'application/json; charset=utf-8'});res.end(JSON.stringify(obj));};
  try {
   const url=new URL(req.url,'http://localhost');
+  if((req.method==='GET'||req.method==='HEAD') && binaryAssets.has(url.pathname)) {
+   const {path,type}=binaryAssets.get(url.pathname);
+   if(!existsSync(path)) return send(404,{error:'Файл оформления не найден.'});
+   const stat=statSync(path), etag=`"${stat.size.toString(16)}-${Math.trunc(stat.mtimeMs).toString(16)}"`;
+   res.setHeader('Cache-Control','public, max-age=0, must-revalidate');res.setHeader('ETag',etag);
+   if(req.headers['if-none-match']===etag){res.writeHead(304);return res.end();}
+   res.writeHead(200,{'Content-Type':type,'Content-Length':stat.size});
+   if(req.method==='HEAD')return res.end();
+   createReadStream(path).on('error',()=>res.destroy()).pipe(res);return;
+  }
   if(req.method==='GET' && assets[url.pathname]) {const [f,t]=assets[url.pathname];res.writeHead(200,{'Content-Type':t});return res.end(readFileSync(pathJoin(root,'public',f)));}
   if(req.method==='GET' && url.pathname==='/health') return send(200,{ok:true});
   if(!url.pathname.startsWith('/api/')) return send(404,{error:'Не найдено.'});

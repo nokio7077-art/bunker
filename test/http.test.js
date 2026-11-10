@@ -1,17 +1,46 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
-import { mkdtemp, rm } from 'node:fs/promises';
+import { mkdtemp, rm, readFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { once } from 'node:events';
-test('HTTP sessions, privacy, errors and durable restart',async()=>{
+import { disasterImages } from '../public/card-images.js';
+import { disasters } from '../world.js';
+test('HTTP sessions, private cards, registered artwork, caching and durable restart',async()=>{
  const dir=await mkdtemp(join(tmpdir(),'bunker-test-'));let child,base;
  async function start(){child=spawn(process.execPath,['server.js'],{cwd:new URL('..',import.meta.url),env:{...process.env,PORT:'0',HOST:'127.0.0.1',DATA_DIR:dir},stdio:['ignore','pipe','pipe']});let output='';await new Promise((resolve,reject)=>{const timeout=setTimeout(()=>reject(new Error('Server startup timed out')),8000);child.on('error',reject);child.stdout.on('data',chunk=>{output+=chunk;const m=output.match(/port (\d+)/);if(m){clearTimeout(timeout);base='http://127.0.0.1:'+m[1];resolve();}});child.on('exit',code=>{clearTimeout(timeout);reject(new Error('Server exited: '+code));});});}
  async function stop(){if(child&&child.exitCode===null){const done=once(child,'exit');child.kill();await done;}}
  async function request(path,body,token){const r=await fetch(base+path,{method:body?'POST':'GET',headers:{'Content-Type':'application/json','Connection':'close',...(token?{Authorization:'Bearer '+token}:{})},body:body?JSON.stringify(body):undefined});return {status:r.status,data:await r.json()};}
  try{
   await start();assert.equal((await request('/health')).data.ok,true);
+  assert.deepEqual(Object.keys(disasterImages).map(Number).sort((a,b)=>a-b),disasters.map(d=>d.id).sort((a,b)=>a-b));
+  for(const disaster of disasters){
+   const image=disasterImages[disaster.id];assert.equal(image.name,disaster.name);
+   const response=await fetch(base+image.src,{headers:{Connection:'close'}});
+   assert.equal(response.status,200);assert.equal(response.headers.get('content-type'),'image/png');
+   const bytes=Buffer.from(await response.arrayBuffer());
+   assert.deepEqual(bytes,await readFile(new URL('../public'+image.src,import.meta.url)));
+   assert.equal(bytes.readUInt32BE(16),image.width);assert.equal(bytes.readUInt32BE(20),image.height);
+   assert.equal(Number(response.headers.get('content-length')),bytes.length);
+  }
+  const imagePath=disasterImages[1].src;
+  const head=await fetch(base+imagePath,{method:'HEAD',headers:{Connection:'close'}});
+  assert.equal(head.status,200);assert.equal((await head.arrayBuffer()).byteLength,0);
+  const cached=await fetch(base+imagePath,{headers:{Connection:'close','If-None-Match':head.headers.get('etag')}});
+  assert.equal(cached.status,304);assert.equal((await cached.arrayBuffer()).byteLength,0);
+  for(const path of ['/images/cards/disasters/999.png','/images/cards/disasters/01.png','/images/cards/disasters/%2e%2e/%2e%2e/%2e%2e/server.js','/images/cards/disasters/%2e%2e%2f%2e%2e%2f.data%2frooms.json','/.data/rooms.json','/1.png']){
+   assert.equal((await request(path)).status,404,path);
+  }
+  const imageModule=await fetch(base+'/card-images.js',{headers:{Connection:'close'}});
+  assert.equal(imageModule.status,200);assert.match(await imageModule.text(),/export const disasterImages/);
+  for(const [path,type] of [['/images/ui/bunker-landscape.png','image/png'],['/fonts/RubikMonoOne-Regular.ttf','font/ttf']]){
+   const response=await fetch(base+path,{headers:{Connection:'close'}});
+   assert.equal(response.status,200);assert.equal(response.headers.get('content-type'),type);
+   assert.deepEqual(Buffer.from(await response.arrayBuffer()),await readFile(new URL('../public'+path,import.meta.url)));
+  }
+  const theme=await fetch(base+'/theme.css',{headers:{Connection:'close'}});
+  assert.equal(theme.status,200);assert.match(theme.headers.get('content-type'),/text\/css/);assert.match(await theme.text(),/\.landing-shell/);
   const solo=(await request('/api/rooms',{name:'Тестировщик'})).data;
   const soloPath='/api/rooms/'+solo.code;
   let demo=await request(soloPath+'/action',{action:'start_test'},solo.token);
