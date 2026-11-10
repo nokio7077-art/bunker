@@ -1,6 +1,6 @@
 import { randomInt } from 'node:crypto';
 import { decks, categories } from './cards.js';
-import { eligibleCard, cardDescription } from './card-catalog.js';
+import { eligibleCard } from './card-catalog.js';
 import { specialCard } from './special-cards.js';
 
 const check = (ok, message) => { if (!ok) throw new Error(message); };
@@ -13,12 +13,7 @@ function usable(room, player) {
 }
 
 export function specialOptions(room, player) {
- const card = usable(room, player);
- // Offer the public deck, not the undealt remainder: options must not reveal other hands.
- const choices = card.effect === 'choose' ? decks[card.category]
-  .filter(name => name !== player.cards[card.category] && eligibleCard(card.category, name, player.cards.biology, room.disaster))
-  .map(name => ({ name, description: cardDescription(card.category, name) })) : [];
- return { ...card, choices };
+ return { ...usable(room, player) };
 }
 
 export function applySpecial(room, player, value = {}) {
@@ -33,11 +28,11 @@ export function applySpecial(room, player, value = {}) {
  if (card.effect === 'discard') {
   check(target.cards[key], 'Эта карточка уже сброшена или отсутствует.');
   changes = [[target, null]];
- } else if (card.effect === 'choose') {
-  check(typeof value.card === 'string' && decks[key].includes(value.card), 'Выберите карточку из указанной колоды.');
-  check(value.card !== player.cards[key], 'Выберите другую карточку.');
-  check(eligibleCard(key, value.card, player.cards.biology, room.disaster), 'Карточка не подходит биологии персонажа или катастрофе.');
-  changes = [[player, value.card]];
+ } else if (card.effect === 'redraw') {
+  check(!Object.hasOwn(value, 'card'), 'Новая карточка определяется случайно. Обновите страницу и примените условие снова.');
+  const candidates = decks[key].filter(name => name !== player.cards[key] && eligibleCard(key, name, player.cards.biology, room.disaster));
+  check(candidates.length, 'В колоде нет другой подходящей карточки.');
+  changes = [[player, candidates[randomInt(candidates.length)]]];
  } else if (card.effect === 'swap') {
   check(target.id !== player.id, 'Для обмена выберите другого участника.');
   check(Object.hasOwn(target.cards, key) && Object.hasOwn(player.cards, key), 'Участник не получил эту категорию. Начните новую игру.');

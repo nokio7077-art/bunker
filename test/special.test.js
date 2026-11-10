@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { player, createRoom, act, view } from '../game.js';
 import { specialOptions } from '../special-actions.js';
 import { specialCards } from '../special-cards.js';
-import { catalog, eligibleCard } from '../card-catalog.js';
+import { catalog, eligibleCard, cardDescription } from '../card-catalog.js';
 
 function setup(name) {
  const host=player('Ведущий'), room=createRoom('123456',host);
@@ -40,38 +40,39 @@ test('invalid targets, phases, turn owners and empty slots never consume an acti
  unchanged(room,()=>act(room,host,'use_special',{targetId:host.id}));
 });
 
-test('selection uses the right public deck, respects biology, and keeps a closed card private',()=>{
- const {room,host,guest}=setup('Новое здоровье');
- host.cards.biology='Женщина · 15 лет · Гетеро · Не стерильна';
- host.cards.health='Хроническая бессонница';
- const options=specialOptions(room,host);
- assert.ok(options.choices.length>0);
- assert.ok(options.choices.every(c=>c.name!==host.cards.health&&eligibleCard('health',c.name,host.cards.biology,room.disaster)));
- assert.ok(!options.choices.some(c=>c.name==='Хронический простатит'));
- unchanged(room,()=>act(room,host,'use_special',{card:'Хронический простатит'}));
- unchanged(room,()=>act(room,host,'use_special',{card:host.cards.profession}));
- unchanged(room,()=>act(room,host,'use_special',{card:host.cards.health}));
- // Assign an option to somebody else: this must not remove it from the selection list.
- guest.cards.health=options.choices[0].name;
- assert.deepEqual(specialOptions(room,host),options);
- act(room,host,'use_special',{card:options.choices[0].name});
- assert.equal(host.cards.health,guest.cards.health);
- assert.equal(view(room,guest).players[0].cards.health,undefined);
- assert.ok(!room.log.join(' ').includes(host.cards.health));
+test('random replacement excludes the old card, respects biology, and keeps a closed card private',()=>{
+ for(let trial=0;trial<30;trial++){
+  const {room,host,guest}=setup('Новое здоровье');
+  host.cards.biology='Женщина · 15 лет · Гетеро · Не стерильна';
+  host.cards.health='Хроническая бессонница';
+  const options=specialOptions(room,host);
+  assert.equal(options.effect,'redraw');assert.equal(options.choices,undefined);
+  unchanged(room,()=>act(room,host,'use_special',{card:'Хронический простатит'}));
+  unchanged(room,()=>act(room,host,'use_special',{card:host.cards.health}));
+  const otherHealth=guest.cards.health;
+  act(room,host,'use_special');
+  assert.notEqual(host.cards.health,'Хроническая бессонница');
+  assert.ok(catalog.health.some(c=>c.name===host.cards.health));
+  assert.ok(eligibleCard('health',host.cards.health,host.cards.biology,room.disaster));
+  assert.equal(guest.cards.health,otherHealth);
+  assert.equal(view(room,guest).players[0].cards.health,undefined);
+  assert.ok(!room.log.join(' ').includes(host.cards.health));
+ }
 });
 
 test('replacement restores discarded cards and updates public descriptions',()=>{
  const {room,host,guest}=setup('Новая профессия');
  act(room,host,'reveal','profession');
- const choice=specialOptions(room,host).choices[0];
- act(room,host,'use_special',{card:choice.name});
- assert.equal(view(room,guest).players[0].cards.profession,choice.name);
- assert.equal(view(room,guest).players[0].descriptions.profession,choice.description);
+ const old=host.cards.profession;
+ act(room,host,'use_special');
+ assert.notEqual(host.cards.profession,old);
+ assert.equal(view(room,guest).players[0].cards.profession,host.cards.profession);
+ assert.equal(view(room,guest).players[0].descriptions.profession,cardDescription('profession',host.cards.profession));
  assert.equal(room.opened,true);
  const restored=setup('Новое здоровье');restored.host.cards.health=null;restored.host.revealed.push('health');
- const health=specialOptions(restored.room,restored.host).choices[0];
- act(restored.room,restored.host,'use_special',{card:health.name});
- assert.equal(view(restored.room,restored.guest).players[0].cards.health,health.name);
+ act(restored.room,restored.host,'use_special');
+ assert.ok(restored.host.cards.health);
+ assert.equal(view(restored.room,restored.guest).players[0].cards.health,restored.host.cards.health);
 });
 
 test('swaps preserve the visibility of slots and can transfer an empty slot',()=>{
@@ -107,10 +108,11 @@ test('shuffle preserves the exact multiset of open cards, including expelled pla
 test('all 16 special cards execute and persist through serialization',()=>{
  for(const card of specialCards){
   const {room,host,guest}=setup(card.name);let value={};
-  if(card.effect==='choose')value.card=specialOptions(room,host).choices[0].name;
+  const previous=host.cards[card.category];
   if(['discard','swap'].includes(card.effect))value.targetId=guest.id;
   if(card.effect==='shuffle'){host.revealed.push(card.category);guest.revealed.push(card.category);}
   act(room,host,'use_special',value);
+  if(card.effect==='redraw')assert.notEqual(host.cards[card.category],previous);
   const loaded=JSON.parse(JSON.stringify(room));
   assert.equal(loaded.players[0].specialUsed,true,card.name);
   unchanged(loaded,()=>act(loaded,loaded.players[0],'use_special',value));
