@@ -21,8 +21,8 @@ test('all 500 professions and imported cards have unique, concise descriptions',
  }
 });
 
-test('all 20 disasters and 81 shelters remain playable, with incompatible combinations excluded', () => {
- assert.equal(disasters.length,20);assert.equal(bunkers.length,81);
+test('all 23 disasters and 81 shelters remain playable, with incompatible combinations excluded', () => {
+ assert.equal(disasters.length,23);assert.equal(bunkers.length,81);
  const reachable = new Set();
  for (const disaster of disasters) {
   const matches=bunkers.filter(b=>incompatibilities(disaster,b).length===0);
