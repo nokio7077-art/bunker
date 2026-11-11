@@ -36,7 +36,7 @@ export function act(room, p, action, value) {
   }
   room.testMode = true;
   act(room, p, 'start');
-  room.log.push('Тестовая партия: ведущий запускает ходы и голоса ботов кнопками.');
+  room.log.push('Тестовая партия: ведущий запускает ходы ботов, их голоса поступают автоматически после голосов всех людей.');
  } else if (action === 'bot_step') {
   check(room.testMode && room.host === p.id && room.phase === 'turn', 'Управление ботами доступно ведущему в тестовой партии.');
   const bot = room.players.find(x => x.id === room.turn);
@@ -97,6 +97,10 @@ export function act(room, p, action, value) {
   check(!Object.hasOwn(room.votes,p.id), 'Ваш голос уже принят.');
   check(room.players.some(x=>x.id===value && x.alive), 'Выберите игрока в бункере.');
   room.votes[p.id] = value;
+  if (room.testMode && room.players.filter(x => !x.bot).every(x => Object.hasOwn(room.votes,x.id))) {
+   const candidates = room.players.filter(x => x.alive).map(x => x.id);
+   for (const bot of room.players.filter(x => x.bot && !Object.hasOwn(room.votes,x.id))) room.votes[bot.id] = pick(candidates);
+  }
   if (Object.keys(room.votes).length === room.players.length) {
    const scores = {}; for (const target of Object.values(room.votes)) scores[target] = (scores[target] || 0) + 1;
    const max = Math.max(...Object.values(scores)); const tied = Object.keys(scores).filter(k=>scores[k]===max);
@@ -113,7 +117,7 @@ export function act(room, p, action, value) {
 function newRound(room) { room.round++; room.phase='turn'; room.turn=room.players.find(x=>x.alive).id; room.opened=false; room.votes={}; }
 export function view(room, me) {
  const { players, votes, ...rest } = room;
- return { ...rest, categories, me: me.id, specialAvailable: Boolean(specialCard(me.cards.special)) && !me.specialUsed, hasVoted: Object.hasOwn(votes,me.id), voteCount: Object.keys(votes).length,
+ return { ...rest, categories, me: me.id, specialAvailable: Boolean(specialCard(me.cards.special)) && !me.specialUsed, hasVoted: Object.hasOwn(votes,me.id), votedFor: votes[me.id] || null, voteCount: Object.keys(votes).length,
   pendingBotVotes: players.filter(p => p.bot && !Object.hasOwn(votes,p.id)).length,
   players: players.map(({token, cards, ...p}) => {
    const visible = p.id===me.id || room.phase==='finished' ? cards : Object.fromEntries(p.revealed.map(k=>[k,cards[k]]));

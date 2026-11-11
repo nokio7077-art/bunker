@@ -5,7 +5,7 @@ import { mkdtemp, rm, readFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { once } from 'node:events';
-import { disasterImages } from '../public/card-images.js';
+import { disasterImages, landscapeImage } from '../public/card-images.js';
 import { disasters } from '../world.js';
 test('HTTP sessions, private cards, registered artwork, caching and durable restart',async()=>{
  const dir=await mkdtemp(join(tmpdir(),'bunker-test-'));let child,base;
@@ -23,6 +23,13 @@ test('HTTP sessions, private cards, registered artwork, caching and durable rest
    assert.deepEqual(bytes,await readFile(new URL('../public'+image.src,import.meta.url)));
    assert.equal(bytes.readUInt32BE(16),image.width);assert.equal(bytes.readUInt32BE(20),image.height);
    assert.equal(Number(response.headers.get('content-length')),bytes.length);
+  }
+  for(const path of [landscapeImage,...Object.values(disasterImages).map(image=>image.webp)]){
+   const response=await fetch(base+path);assert.equal(response.status,200);assert.equal(response.headers.get('content-type'),'image/webp');
+   assert.match(response.headers.get('cache-control'),/max-age=31536000, immutable/);
+   const bytes=Buffer.from(await response.arrayBuffer());assert.equal(bytes.toString('ascii',8,12),'WEBP');
+   assert.deepEqual(bytes,await readFile(new URL('../public'+path,import.meta.url)));
+   const cached=await fetch(base+path,{headers:{'If-None-Match':response.headers.get('etag')}});assert.equal(cached.status,304);
   }
   const imagePath=disasterImages[1].src;
   const head=await fetch(base+imagePath,{method:'HEAD',headers:{Connection:'close'}});

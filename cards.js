@@ -6,7 +6,7 @@ export const categories = { profession: 'Профессия', personality: 'Ха
 // Catalogs are curated from user-provided lists; specials have server-validated effects.
 export const decks = {
  profession: professions,
- personality: [...catalog.personality.map(card => card.name), 'Спокоен даже в кризис', 'Всегда ищет компромисс', 'Не доверяет незнакомцам', 'Предпочитает действовать в одиночку', 'Берёт ответственность на себя', 'Замечает мельчайшие детали', 'Склонен к рискованным решениям', 'Прямолинеен до неловкости', 'Соблюдает любые договорённости', 'Оптимист вопреки обстоятельствам', 'Тяжело переносит споры', 'Умеет слушать других', 'Сначала планирует, потом действует', 'Не выносит несправедливости', 'Очень бережлив', 'Любит соревноваться'],
+ personality: catalog.personality.map(card => card.name),
  health: catalog.health.map(card => card.name),
  phobia: catalog.phobia.map(card => card.name),
  luggage: catalog.luggage.map(card => card.name),

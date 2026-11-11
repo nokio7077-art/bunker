@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { professions } from '../professions.js';
 import { professionDescriptions } from '../profession-descriptions.js';
-import { catalog, eligibleCard } from '../card-catalog.js';
+import { catalog, eligibleCard, cardDescription } from '../card-catalog.js';
 import { disasters, bunkers, incompatibilities, chooseWorld } from '../world.js';
 import { player, createRoom, join, act, view } from '../game.js';
 
@@ -80,4 +80,11 @@ test('descriptions do not disclose hidden professions or other private cards', (
    if(category!=='biology')assert.ok(eligibleCard(category,name,p.cards.biology,r.disaster));
   }
  }
+});
+
+test('all 100 personality cards have distinct descriptions and remain in the dealt deck',async()=>{
+ const {decks}=await import('../cards.js');assert.equal(catalog.personality.length,100);assert.equal(decks.personality.length,100);
+ assert.ok(decks.personality.includes('Расист')&&decks.personality.includes('Гомофоб'));
+ assert.ok(decks.personality.includes('Умеет слушать других')&&decks.personality.includes('Терпеливый наставник'));
+ for(const name of decks.personality)assert.ok(cardDescription('personality',name).length>30,name);
 });

@@ -17,7 +17,7 @@ test('biology includes both age boundaries, all orientations and both fertility 
    const expected = female ? ['Гетеро', 'Лесбиянка', 'Би', 'Асексуальна'] : ['Гетеро', 'Гей', 'Би', 'Асексуален'];
    for (let index = 0; index < expected.length; index++) {
     for (const sterile of [0, 1]) {
-     const parts = withValues([female, age, index, sterile]).split(' · ');
+     const parts = withValues([female, age, [0,93,96,99][index], sterile]).split(' · ');
      assert.equal(parts.length, 4);
      assert.equal(parts[0], female ? 'Женщина' : 'Мужчина');
      assert.equal(parts[1], `${age} лет`);
@@ -48,4 +48,14 @@ test('new biology is dealt to real players and bots, stays private until reveale
  act(room,host,'reveal','biology');
  assert.equal(view(room,guest).players[0].cards.biology, host.cards.biology);
  assert.equal(view(room,host).players[1].cards.biology, undefined);
+});
+
+test('orientation weights cover all 100 outcomes exactly, independently of sex and fertility',()=>{
+ for(const female of [0,1]){
+  const counts={};for(let roll=0;roll<100;roll++){
+   const parts=withValues([female,30,roll,0]).split(' · ');counts[parts[2]]=(counts[parts[2]]||0)+1;
+   assert.match(parts[3],/^Не стерил/);
+  }
+  assert.deepEqual(counts,{'Гетеро':93,[female?'Лесбиянка':'Гей']:3,'Би':3,[female?'Асексуальна':'Асексуален']:1});
+ }
 });

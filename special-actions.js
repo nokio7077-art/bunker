@@ -49,6 +49,13 @@ export function applySpecial(room, player, value = {}) {
  for (const [recipient, name] of changes) {
   check(name === null || eligibleCard(key, name, recipient.cards.biology, room.disaster), 'Обмен несовместим с персонажем или катастрофой.');
  }
+ const results = changes.map(([recipient, name]) => ({
+  playerId: recipient.id,
+  playerName: recipient.name,
+  before: recipient.revealed.includes(key) ? recipient.cards[key] ?? 'Карточка сброшена' : 'Закрытая карточка',
+  after: name === null ? 'Карточка сброшена' : recipient.revealed.includes(key) ? name : 'Новая закрытая карточка',
+  unchanged: recipient.revealed.includes(key) && recipient.cards[key] === name
+ }));
  for (const [recipient, name] of changes) {
   recipient.cards[key] = name;
   // A discard is public, but its previous hidden value is never disclosed.
@@ -56,5 +63,8 @@ export function applySpecial(room, player, value = {}) {
  }
  player.specialUsed = true;
  if (!player.revealed.includes('special')) player.revealed.push('special');
- room.log.push(`${player.name} применяет «${card.name}»${target ? ` → ${target.name}` : ''}. Категория: ${categories[key]}.`);
+ const event = { actor: player.name, name: card.name, category: categories[key], round: room.round, results };
+ // Persist only public snapshots, so hidden cards never leak through events or the log.
+ room.specialEvents = [...(room.specialEvents || []), event].slice(-16);
+ room.log.push(`${player.name} применяет «${card.name}». ${categories[key]}: ${results.map(r => `${r.playerName} — ${r.before} → ${r.after}${r.unchanged ? ' (без изменений)' : ''}`).join('; ')}.`);
 }

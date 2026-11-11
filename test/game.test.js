@@ -68,7 +68,7 @@ test('a solo host can complete a full test game, even after expulsion',()=>{
     act(r,host,'next');
    }else act(r,host,'bot_step');
   }else if(!forcedExpulsion){
-   for(const p of r.players)act(r,p,'vote',host.id);
+   for(const p of [...r.players.filter(p=>p.bot),host])act(r,p,'vote',host.id);
    assert.equal(host.alive,false);forcedExpulsion=true;
   }else{
    act(r,host,'bot_votes');
@@ -93,4 +93,17 @@ test('test controls are host-only and never reveal private bot or human cards',(
  assert.throws(()=>act(ordinary,ordinary.players[0],'bot_step'));
  const collision=createRoom('123456',player('Бот 1'));act(collision,collision.players[0],'start_test');
  assert.equal(new Set(collision.players.map(p=>p.name)).size,5);
+});
+
+test('test bots vote automatically only after every human, including an expelled host, has voted',()=>{
+ const r=setup(2),[host,guest]=r.players;act(r,host,'start_test');r.phase='vote';r.votes={};host.alive=false;
+ act(r,guest,'vote',guest.id);assert.equal(r.phase,'vote');assert.equal(Object.keys(r.votes).length,1);
+ assert.equal(view(r,guest).votedFor,guest.id);assert.equal(view(r,host).votedFor,null);
+ act(r,host,'vote',guest.id);assert.notEqual(r.phase,'vote');assert.equal(Object.values(r.lastVote.scores).reduce((a,b)=>a+b,0),5);
+ assert.throws(()=>act(r,host,'vote',guest.id));
+});
+test('one human vote completes a solo test ballot with no bot action',()=>{
+ const r=setup(1),host=r.players[0];act(r,host,'start_test');r.phase='vote';r.votes={};
+ act(r,host,'vote',r.players[1].id);assert.equal(r.phase,'turn');assert.equal(r.players.filter(p=>p.alive).length,4);
+ assert.equal(Object.values(r.lastVote.scores).reduce((a,b)=>a+b,0),5);
 });

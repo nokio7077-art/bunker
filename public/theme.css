@@ -12,7 +12,7 @@
 .landing-shell .header-right>.signal{width:7px;height:12px;border-radius:0;box-shadow:-5px 3px 0 -1px #8dab33,5px -3px 0 -1px #d4ef5a}
 .landing-shell .header-right .text-btn{border:1px solid #b3ca65;min-height:44px;margin-left:18px;padding:10px 20px;font-size:15px;color:#f0f2cd;background:linear-gradient(#1b2b0d,#0b1408);white-space:nowrap}
 .landing-shell .landing{position:relative;isolation:isolate;max-width:none;min-height:calc(100svh - 180px);padding:36px clamp(24px,3.5vw,58px) 48px;grid-template-columns:minmax(0,1.35fr) minmax(350px,.85fr);gap:clamp(30px,4vw,70px);align-items:start;margin:0}
-.landing-shell .landing:before{content:'';position:absolute;inset:0;z-index:-3;background:#071108 url('/images/ui/bunker-landscape.png') left bottom / 82% auto no-repeat}
+.landing-shell .landing:before{content:'';position:absolute;inset:0;z-index:-3;background:#071108 url('/images/ui/bunker-landscape.5b43dbd11d46.webp') left bottom / 82% auto no-repeat}
 .landing-shell .landing:after{content:'';position:absolute;inset:0;z-index:-1;background:linear-gradient(90deg,#06100655,transparent 65%,#06100644),linear-gradient(#07110855,transparent 35%)}
 .landing-shell .hero{min-width:0;padding-top:14px;padding-bottom:140px}
 .landing-shell .hero-chip{display:inline-flex;gap:9px;max-width:100%;padding:9px 12px;border:1px solid #c2db56;background:#091506d9;color:#e7f582;font-size:12px;letter-spacing:.7px;line-height:1.5;text-align:center;box-shadow:inset 0 0 0 3px #22340a}
@@ -194,3 +194,34 @@ dialog{max-height:calc(100dvh - 24px);overflow-y:auto;overscroll-behavior:contai
 .motion-toggle{display:inline-flex;align-items:center;min-height:44px;margin-top:12px;padding:8px 13px;border:1px solid #9cb25a;background:#091506e8;color:#e9efbd;font-size:12px;line-height:1.4}
 .motion-toggle:hover{background:#203412}
 @media(max-width:860px){.landing-video{top:0;bottom:auto;width:100%;height:550px;object-fit:cover;object-position:60% top}}
+
+/* The room has one clear masthead, with a compact navigation bar above it. */
+.game-header{height:80px;min-height:80px;max-width:1296px;margin:0 auto;padding:0 22px;gap:24px;border-bottom:1px solid #34452b;background:#0c160e}
+.game-header .brand{font-family:BunkerDisplay,monospace;font-size:25px;font-weight:400;letter-spacing:0;gap:14px;padding:0;color:#e8edcd}
+.game-header .brand-mark{display:none}
+.game-header .edition{font:10px monospace;letter-spacing:1px;color:#9fb380;border:0;padding:0;margin:0}
+.game-header .header-right{gap:10px;font:10px monospace;color:#adc18c;letter-spacing:1px}
+.game-header .header-right .text-btn{border:1px solid #354d2d;background:#152313;margin:0;padding:10px 17px;border-radius:5px;font:13px Arial,sans-serif;letter-spacing:0}
+.game-header .header-right .text-btn:hover{border-color:#a5c46e;color:#deefb7}
+.game-header .header-right [data-action="exit"]{background:transparent;border-color:transparent;color:#9eac96}
+.game .room-heading{position:relative;isolation:isolate;overflow:hidden;min-height:188px;padding:28px 30px;margin-bottom:24px;gap:24px;border:1px solid #52663c;border-radius:10px;background:linear-gradient(90deg,#111f10 20%,#111f10ed 55%,#111f1055),url('/images/ui/bunker-landscape.5b43dbd11d46.webp') right 54% / cover}
+.game .room-heading:after{content:'';position:absolute;bottom:0;left:30px;width:60px;height:3px;background:#cce583}
+.game .room-heading .eyebrow{font:10px monospace;letter-spacing:2px;color:#bbce91}
+.game .room-heading h1{font-family:BunkerDisplay,monospace;font-weight:400;font-size:clamp(23px,2.5vw,34px);letter-spacing:-1px;line-height:1.25;margin:13px 0 10px;color:#f1efd7}
+.room-subtitle{margin:0;color:#b9c5a8;font-size:14px;line-height:1.5}
+.room-code{flex-shrink:0;text-align:left;display:grid;gap:6px;padding:16px 22px;border:1px solid #6f8948;border-radius:6px;background:#101b0eee;color:#d5eb9b;min-height:100px}
+.room-code>span{font:10px monospace;letter-spacing:1.5px;color:#acbe8e}
+.room-code strong{font:700 30px monospace;letter-spacing:3px}
+.room-code strong span{font-size:20px;letter-spacing:0;margin-left:8px}
+.room-code small{font-size:11px;color:#b6c29f}
+.room-code:hover{border-color:#d4eb91;background:#1b2c14}
+.special-results{margin:0 0 24px;padding:20px 24px;border:1px solid #6a8347;border-left:4px solid #c8e18b;border-radius:5px;background:#172213;color:#e6ecd9}
+.special-results h3{font-size:19px;line-height:1.4;margin:10px 0 14px;overflow-wrap:anywhere}
+.special-results ul{padding:0;margin:0;list-style:none;display:grid;gap:10px}
+.special-results li{padding:12px 14px;background:#0d170c;border:1px solid #35472c;border-radius:3px;min-width:0;overflow-wrap:anywhere}
+.special-results li strong{font-size:13px}.special-results li strong span{font-weight:400;color:#b0c593}
+.special-results li p{margin:7px 0 0;font-size:14px;line-height:1.55;color:#b7c4a6}.special-results li p b{font-weight:500;color:#e5f6b7}
+.special-results li p>span{color:#d1ea92;padding:0 6px}.special-results-note{margin:13px 0 0;font-size:12px;line-height:1.5;color:#afbf9b}
+@media(max-width:860px){.game-header{margin:0;padding:0 20px}.game-header .edition,.game-header .header-right>.signal,.game-header .header-right>span{display:none}.game .room-heading{padding:24px;min-height:168px}.room-code{padding:14px 16px}.room-code strong{font-size:27px}}
+@media(max-width:540px){.game-header{height:auto;min-height:72px;flex-wrap:wrap;padding:14px;gap:12px}.game-header .brand{font-size:21px}.game-header .header-right{gap:5px}.game-header .header-right .text-btn{font-size:12px;padding:9px 11px}.game .room-heading{align-items:stretch;flex-direction:column;padding:22px;gap:18px;background-position:65% center}.game .room-heading h1{font-size:24px}.room-subtitle{font-size:13px}.room-code{min-height:0;width:100%;grid-template-columns:1fr auto;align-items:center;gap:6px 12px;padding:12px 14px}.room-code>span{font-size:9px;letter-spacing:.5px}.room-code strong{grid-column:2;grid-row:1/3;font-size:25px;letter-spacing:1px}.room-code strong span{font-size:16px;margin-left:3px}.room-code small{font-size:10px}.special-results{padding:16px;margin-bottom:20px}.special-results h3{font-size:17px}.special-results .eyebrow{font-size:9px;letter-spacing:1px}}
+@media(max-width:350px){.game-header .brand{font-size:19px}.game-header .header-right .text-btn{padding:9px 8px}.game .room-heading{padding:18px}.room-code{grid-template-columns:1fr}.room-code strong{grid-column:1;grid-row:auto}.room-code small{grid-row:3}}

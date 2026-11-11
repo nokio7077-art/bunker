@@ -5,7 +5,7 @@ import { join as pathJoin } from 'node:path';
 import { randomInt } from 'node:crypto';
 import { player, createRoom, join, act, view } from './game.js';
 import { specialOptions } from './special-actions.js';
-import { disasterImages } from './public/card-images.js';
+import { disasterImages, landscapeImage } from './public/card-images.js';
 
 const root = fileURLToPath(new URL('.', import.meta.url));
 const dataDir = process.env.DATA_DIR || pathJoin(root,'.data');
@@ -19,6 +19,8 @@ async function body(req) { let text=''; for await (const chunk of req) {text+=ch
 const assets={'/':['index.html','text/html; charset=utf-8'],'/app.js':['app.js','text/javascript; charset=utf-8'],'/card-images.js':['card-images.js','text/javascript; charset=utf-8'],'/style.css':['style.css','text/css; charset=utf-8'],'/theme.css':['theme.css','text/css; charset=utf-8'],'/favicon.svg':['favicon.svg','image/svg+xml']};
 // Only registered media and fonts are public; never serve arbitrary repository files.
 const binaryAssets=new Map(Object.values(disasterImages).map(image=>[image.src,{path:pathJoin(root,'public',image.src),type:'image/png'}]));
+for(const image of Object.values(disasterImages))binaryAssets.set(image.webp,{path:pathJoin(root,'public',image.webp),type:'image/webp',immutable:true});
+binaryAssets.set(landscapeImage,{path:pathJoin(root,'public',landscapeImage),type:'image/webp',immutable:true});
 for(const [url,type] of [['/images/ui/bunker-landscape.png','image/png'],['/fonts/RubikMonoOne-Regular.ttf','font/ttf'],['/videos/bunker-entrance.mp4','video/mp4']])binaryAssets.set(url,{path:pathJoin(root,'public',url),type});
 export const server=http.createServer(async(req,res)=>{
  res.setHeader('X-Content-Type-Options','nosniff'); res.setHeader('Cache-Control','no-store');
@@ -27,10 +29,10 @@ export const server=http.createServer(async(req,res)=>{
  try {
   const url=new URL(req.url,'http://localhost');
   if((req.method==='GET'||req.method==='HEAD') && binaryAssets.has(url.pathname)) {
-   const {path,type}=binaryAssets.get(url.pathname);
+   const {path,type,immutable}=binaryAssets.get(url.pathname);
    if(!existsSync(path)) return send(404,{error:'Файл оформления не найден.'});
    const stat=statSync(path), etag=`"${stat.size.toString(16)}-${Math.trunc(stat.mtimeMs).toString(16)}"`;
-   res.setHeader('Cache-Control','public, max-age=0, must-revalidate');res.setHeader('ETag',etag);
+   res.setHeader('Cache-Control',immutable?'public, max-age=31536000, immutable':'public, max-age=0, must-revalidate');res.setHeader('ETag',etag);
    if(type==='video/mp4')res.setHeader('Accept-Ranges','bytes');
    if(req.headers['if-none-match']===etag){res.writeHead(304);return res.end();}
    if(type==='video/mp4'&&req.method==='GET'&&req.headers.range&&(!req.headers['if-range']||req.headers['if-range']===etag)){

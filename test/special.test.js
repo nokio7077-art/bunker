@@ -140,3 +140,27 @@ test('phobias are separately dealt and private; fatal insomnia is excluded while
  room.round=2;act(room,host,'reveal','phobia');
  assert.equal(view(room,guest).players[0].cards.phobia,host.cards.phobia);
 });
+
+test('special results show before and after for open cards and persist for every observer',()=>{
+ const {room,host,guest}=setup('Новая профессия');act(room,host,'reveal','profession');const old=host.cards.profession;
+ act(room,host,'use_special');
+ const event=view(room,guest).specialEvents.at(-1);assert.equal(event.category,'Профессия');assert.equal(event.results[0].before,old);assert.equal(event.results[0].after,host.cards.profession);
+ const saved=JSON.parse(JSON.stringify(room));assert.deepEqual(view(saved,saved.players[1]).specialEvents,[event]);
+});
+test('public event snapshots never disclose hidden values, including closed-to-closed swaps and discarded cards',()=>{
+ for(const special of ['Обмен багажом','Новое здоровье','Сброс здоровья']){
+  const {room,host,guest}=setup(special),key=special==='Обмен багажом'?'luggage':'health';
+  const hidden=[host.cards[key],guest.cards[key]];act(room,host,'use_special',{targetId:guest.id});hidden.push(host.cards[key],guest.cards[key]);
+  const publicText=JSON.stringify({events:view(room,guest).specialEvents,log:room.log});
+  for(const name of hidden.filter(Boolean))assert.ok(!publicText.includes(name),name);
+  const event=room.specialEvents.at(-1);assert.equal(event.category,special==='Обмен багажом'?'Багаж':'Здоровье');
+  assert.ok(event.results.every(r=>r.before==='Закрытая карточка'));
+  assert.ok(event.results.every(r=>r.after===(special==='Сброс здоровья'?'Карточка сброшена':'Новая закрытая карточка')));
+ }
+});
+test('shuffle results list all open recipients and report unchanged outcomes honestly',()=>{
+ const {room,host,guest}=setup('Перетасовка открытого багажа');host.revealed.push('luggage');guest.revealed.push('luggage');
+ const before=new Map([host,guest].map(p=>[p.id,p.cards.luggage]));act(room,host,'use_special');
+ const results=room.specialEvents.at(-1).results;assert.equal(results.length,2);
+ for(const result of results){const p=room.players.find(p=>p.id===result.playerId);assert.equal(result.before,before.get(p.id));assert.equal(result.after,p.cards.luggage);assert.equal(result.unchanged,result.before===result.after);}
+});
