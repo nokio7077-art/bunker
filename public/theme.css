@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Rubik:wght@400;500;600;700&display=swap');
+
 @font-face{font-family:BunkerDisplay;src:url('/fonts/RubikMonoOne-Regular.ttf') format('truetype');font-weight:400;font-style:normal;font-display:swap}
 
 /* The artwork is a backdrop. All labels, inputs and buttons remain real HTML. */
@@ -286,3 +288,87 @@ dialog{max-height:calc(100dvh - 24px);overflow-y:auto;overscroll-behavior:contai
 .ending-image{image-rendering:auto}
 .ending-screen-actions{position:relative;z-index:2}
 @media(max-height:500px) and (orientation:landscape){.ending-image{max-height:calc(100dvh - 76px)}.ending-screen{gap:6px;padding:6px}}
+
+
+/* -------------------------------------------------------
+   BUNKER TYPOGRAPHY SYSTEM
+   Cyrillic-first pairing: Rubik + Rubik Mono One + IBM Plex Mono.
+   ------------------------------------------------------- */
+:root{
+  --bunker-display:BunkerDisplay,'Rubik Mono One',monospace;
+  --bunker-ui:'Rubik',Arial,sans-serif;
+  --bunker-mono:'IBM Plex Mono','Courier New',monospace;
+  font-family:var(--bunker-ui);
+  font-synthesis:none;
+  text-rendering:optimizeLegibility;
+}
+body,button,input,select,textarea{
+  font-family:var(--bunker-ui);
+}
+.landing-shell{
+  font-family:var(--bunker-ui);
+}
+.landing-shell .brand,
+.landing-shell .hero h1{
+  font-family:var(--bunker-display);
+  font-weight:400;
+}
+.landing-shell .entry-panel h2{
+  font-family:var(--bunker-display);
+  font-weight:400;
+  letter-spacing:0;
+}
+.landing-shell .edition,
+.landing-shell .header-right,
+.landing-shell .hero-chip,
+.landing-shell .entry-kicker,
+.landing-shell .protocol,
+.landing-shell .landing-footer{
+  font-family:var(--bunker-mono);
+}
+.landing-shell .tabs button,
+.landing-shell label,
+.landing-shell input,
+.landing-shell .primary,
+.landing-shell .secondary{
+  font-family:var(--bunker-ui);
+}
+.game{
+  font-family:var(--bunker-ui);
+}
+.game .room-heading h1,
+.game .world h3,
+.game .banner h2,
+.game .section-title h3,
+.game .side-note h3{
+  font-family:var(--bunker-display);
+  font-weight:400;
+  letter-spacing:0;
+}
+.game .eyebrow,
+.game .card-label,
+.game .card-label small,
+.game .journal summary,
+.game .counter,
+.game .live-label,
+.game .section-title small{
+  font-family:var(--bunker-mono);
+}
+.game .player-top strong,
+.game .player-top small,
+.game .card strong,
+.game .card-description,
+.game .public-cards p,
+.game .world p,
+.game .side-note p,
+.game .banner p,
+.game .private-note,
+.game .special-note,
+.game .vote-btn,
+.game .primary,
+.game .secondary{
+  font-family:var(--bunker-ui);
+}
+.game .card strong{font-weight:600}
+.game .player-top strong{font-weight:600}
+.game .vote-btn,.game .primary,.game .secondary{font-weight:600}
