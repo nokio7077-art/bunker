@@ -21,7 +21,7 @@ const assets={'/':['index.html','text/html; charset=utf-8'],'/app.js':['app.js',
 const binaryAssets=new Map(Object.values(disasterImages).map(image=>[image.src,{path:pathJoin(root,'public',image.src),type:'image/png'}]));
 for(const image of Object.values(disasterImages))binaryAssets.set(image.webp,{path:pathJoin(root,'public',image.webp),type:'image/webp',immutable:true});
 binaryAssets.set(landscapeImage,{path:pathJoin(root,'public',landscapeImage),type:'image/webp',immutable:true});
-for(const [url,type] of [['/images/ui/bunker-landscape.png','image/png'],['/fonts/RubikMonoOne-Regular.ttf','font/ttf'],['/videos/bunker-entrance.mp4','video/mp4']])binaryAssets.set(url,{path:pathJoin(root,'public',url),type});
+for(const [url,type] of [['/images/ui/bunker-landscape.png','image/png'],['/fonts/RubikMonoOne-Regular.ttf','font/ttf'],['/videos/bunker-entrance.mp4','video/mp4'],['/videos/ending-out.mp4','video/mp4'],['/videos/ending-survived.mp4','video/mp4'],['/images/ui/ending-out.webp','image/webp'],['/images/ui/ending-survived.webp','image/webp']])binaryAssets.set(url,{path:pathJoin(root,'public',url),type});
 export const server=http.createServer(async(req,res)=>{
  res.setHeader('X-Content-Type-Options','nosniff'); res.setHeader('Cache-Control','no-store');
  res.setHeader('Content-Security-Policy',"default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self'; img-src 'self' data:; frame-ancestors 'none'; base-uri 'none'; form-action 'self'");

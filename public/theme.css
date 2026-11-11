@@ -230,3 +230,23 @@ dialog{max-height:calc(100dvh - 24px);overflow-y:auto;overscroll-behavior:contai
 .game .world-card-open,.game .vote-btn{min-height:44px}
 @media(max-width:860px){.game .hand{grid-template-columns:repeat(2,minmax(0,1fr))}.game .card{padding:16px;gap:12px}.game .card strong{font-size:15px;line-height:1.5}.game .card-description{font-size:13px;line-height:1.55}.game .public-cards p{font-size:14px}.game .world p,.game .side-note p{font-size:14px}}
 @media(max-width:440px){.game .hand,.game .public-cards{grid-template-columns:minmax(0,1fr)}.game .special-card{grid-column:auto}.game .card{min-height:0}}
+
+/* Fill the hero instead of limiting its art to 82% of the screen. */
+.landing-shell .landing:before{background-size:cover;background-position:center}
+.landing-video{width:100%;height:100%;object-fit:cover;object-position:center}
+.world-toggle{width:100%;display:flex;justify-content:space-between;gap:12px;text-align:left;min-height:48px;margin-bottom:14px}
+.world-section{margin-bottom:18px}#world-content[hidden]{display:none}
+.ending-screen{min-height:100dvh;background:#030b05;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;padding:24px}
+.ending-frame{width:min(1100px,100%);border:3px ridge #9ab64c;padding:8px;background:#081407;box-shadow:0 0 50px #8aa73a20}
+.ending-video{display:block;width:100%;max-height:60dvh;object-fit:contain;background:#030b05}
+.ending-caption{text-align:center;padding:14px;color:#d4ec7c}.ending-caption>p:first-child{font-family:BunkerDisplay,monospace;letter-spacing:3px;font-size:clamp(18px,3vw,32px)}
+.ending-caption h1{font-family:BunkerDisplay,monospace;font-size:clamp(22px,4vw,46px);line-height:1.3;background:#cce960;color:#091007;padding:15px;margin:10px 0;overflow-wrap:anywhere}
+.ending-caption p{margin:8px 0;font-size:14px}.ending-actions{display:flex;gap:12px;flex-wrap:wrap}.intro-isolation{font-size:13px;line-height:1.5;text-align:center;color:#e2ecbd;margin:8px 0}
+@media(max-width:860px){.landing-shell .landing:before{background-size:auto 550px;background-position:60% top}.landing-video{height:550px;object-position:60% top}}
+@media(max-width:480px){.ending-screen{padding:12px;gap:14px}.ending-caption{padding:10px}.ending-caption h1{font-size:22px;padding:12px}.ending-screen>.primary{width:100%;min-height:48px}.intro-isolation{font-size:11px}}
+
+/* The uploaded video is the complete end card: play once, with no duplicate caption. */
+.ending-frame{padding:0;border:0;box-shadow:none;background:transparent;width:min(1400px,100%)}
+.ending-video{max-height:calc(100dvh - 64px);object-fit:contain}
+.ending-close{position:absolute;right:16px;top:12px;width:44px;height:44px;border:1px solid #71894a;background:#091408;color:#d6eb9c;font-size:28px;line-height:1;z-index:2}
+.ending-screen{position:relative}
