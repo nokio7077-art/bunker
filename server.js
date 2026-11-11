@@ -16,7 +16,7 @@ const save=()=>{writeFileSync(file+'.tmp',JSON.stringify([...rooms]),{mode:0o600
 const limits=new Map();
 function rate(req) { const key=req.socket.remoteAddress; const now=Date.now(); let x=limits.get(key); if(!x || now-x.time>60000) { x={time:now,count:0}; limits.set(key,x); } if(++x.count>120) throw new Error('Слишком много запросов. Подождите минуту.'); }
 async function body(req) { let text=''; for await (const chunk of req) {text+=chunk; if(text.length>4096) throw new Error('Слишком большой запрос.');} return JSON.parse(text || '{}'); }
-const assets={'/':['index.html','text/html; charset=utf-8'],'/app.js':['app.js','text/javascript; charset=utf-8'],'/card-images.js':['card-images.js','text/javascript; charset=utf-8'],'/style.css':['style.css','text/css; charset=utf-8'],'/theme.css':['theme.css','text/css; charset=utf-8'],'/favicon.svg':['favicon.svg','image/svg+xml']};
+const assets={'/':['index.html','text/html; charset=utf-8'],'/app.js':['app.js','text/javascript; charset=utf-8'],'/card-images.js':['card-images.js','text/javascript; charset=utf-8'],'/style.css':['style.css','text/css; charset=utf-8'],'/theme.css':['theme.css','text/css; charset=utf-8'],'/game-pixel.css':['game-pixel.css','text/css; charset=utf-8'],'/favicon.svg':['favicon.svg','image/svg+xml']};
 // Only registered media and fonts are public; never serve arbitrary repository files.
 const binaryAssets=new Map(Object.values(disasterImages).map(image=>[image.src,{path:pathJoin(root,'public',image.src),type:'image/png'}]));
 for(const image of Object.values(disasterImages))binaryAssets.set(image.webp,{path:pathJoin(root,'public',image.webp),type:'image/webp',immutable:true});
