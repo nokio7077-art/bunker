@@ -57,7 +57,7 @@ export const server=http.createServer(async(req,res)=>{
    const stream=createReadStream(path);res.on('close',()=>stream.destroy());stream.on('error',()=>res.destroy()).pipe(res);return;
   }
   if(req.method==='GET' && assets[url.pathname]) {const [f,t]=assets[url.pathname];res.writeHead(200,{'Content-Type':t});return res.end(readFileSync(pathJoin(root,'public',f)));}
-  if(req.method==='GET' && url.pathname==='/health') return send(200,{ok:true});
+  if(req.method==='GET' && url.pathname==='/health') return send(200,{ok:true,uiVersion:'20261112-type-v3'});
   if(!url.pathname.startsWith('/api/')) return send(404,{error:'Не найдено.'});
   if(req.method==='POST') {
    rate(req);
