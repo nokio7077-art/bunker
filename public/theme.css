@@ -281,3 +281,8 @@ dialog{max-height:calc(100dvh - 24px);overflow-y:auto;overscroll-behavior:contai
  .ending-screen-actions button{flex:1 1 auto;min-width:105px;padding:10px 8px;font-size:12px}
 }
 @media(prefers-reduced-motion:reduce){.ending-image{animation:none}}
+
+/* Final image slots keep the picture fully visible on mobile and desktop. */
+.ending-image{image-rendering:auto}
+.ending-screen-actions{position:relative;z-index:2}
+@media(max-height:500px) and (orientation:landscape){.ending-image{max-height:calc(100dvh - 76px)}.ending-screen{gap:6px;padding:6px}}
