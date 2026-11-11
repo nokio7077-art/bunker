@@ -16,7 +16,7 @@ export function player(name) {
  return { id: id(), token: id(), name, alive: true, revealed: [], cards: {} };
 }
 export function createRoom(code, p) {
- return { code, host: p.id, players: [p], phase: 'lobby', round: 0, votes: {}, log: [], updated: Date.now() };
+ return { code, host: p.id, players: [p], phase: 'lobby', gameNumber: 1, round: 0, votes: {}, log: [], updated: Date.now() };
 }
 export function join(room, p) {
  check(room.phase === 'lobby', 'Игра уже началась. Присоединиться можно к новой комнате.');
@@ -25,7 +25,16 @@ export function join(room, p) {
  room.players.push(p);
 }
 export function act(room, p, action, value) {
- if (action === 'start_test') {
+ if (action === 'next_game') {
+  check(room.phase === 'finished' && room.host === p.id, 'Следующую партию готовит ведущий после завершения игры.');
+  const humans=room.players.filter(x=>!x.bot),next=humans[(humans.findIndex(x=>x.id===room.host)+1)%humans.length];
+  const index=room.players.findIndex(x=>x.id===next.id),players=[...room.players.slice(index),...room.players.slice(0,index)];
+  const gameNumber=(room.gameNumber||1)+1,testMode=room.testMode;
+  for(const person of players){person.alive=true;person.cards={};person.revealed=[];delete person.specialUsed;}
+  const fresh={...createRoom(room.code,next),players,gameNumber};if(testMode)fresh.testMode=true;
+  for(const key of Object.keys(room))delete room[key];Object.assign(room,fresh);
+  room.log.push(`Партия ${gameNumber}. Ведущий и первое слово: ${next.name}.`);
+ } else if (action === 'start_test') {
   check(room.host === p.id && room.phase === 'lobby', 'Тестовую игру запускает ведущий до начала партии.');
   check(room.players.length < 5, 'В комнате уже достаточно участников для обычной игры.');
   let number = 1;

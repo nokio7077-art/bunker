@@ -107,3 +107,21 @@ test('one human vote completes a solo test ballot with no bot action',()=>{
  act(r,host,'vote',r.players[1].id);assert.equal(r.phase,'turn');assert.equal(r.players.filter(p=>p.alive).length,4);
  assert.equal(Object.values(r.lastVote.scores).reduce((a,b)=>a+b,0),5);
 });
+
+test('same team rotates host and first speaker across matches, retaining sessions and clearing old state',()=>{
+ const r=setup(5),original=[...r.players],tokens=original.map(p=>p.token);
+ act(r,original[0],'start');
+ for(let n=1;n<=6;n++){
+  r.phase='finished';r.players[0].alive=false;r.specialEvents=[{old:true}];r.lastVote={old:true};r.players[0].specialUsed=true;
+  const host=r.players.find(p=>p.id===r.host);assert.throws(()=>act(r,r.players.find(p=>p.id!==r.host),'next_game'));
+  act(r,host,'next_game');const next=original[n%5];assert.equal(r.host,next.id);assert.equal(r.players[0].id,next.id);assert.equal(r.gameNumber,n+1);assert.equal(r.phase,'lobby');
+  assert.equal(r.specialEvents,undefined);assert.equal(r.lastVote,undefined);assert.equal(r.disaster,undefined);
+  for(const p of r.players){assert.equal(p.alive,true);assert.deepEqual(p.cards,{});assert.deepEqual(p.revealed,[]);assert.equal(p.specialUsed,undefined);}
+  assert.deepEqual(original.map(p=>p.token),tokens);assert.throws(()=>act(r,next,'next_game'));
+  act(r,next,'start');assert.equal(r.turn,next.id);assert.equal(Object.keys(next.cards).length,9);assert.equal(view(r,next).players[1].cards.profession,undefined);
+  const saved=JSON.parse(JSON.stringify(r));assert.equal(saved.host,r.host);assert.equal(saved.gameNumber,r.gameNumber);
+ }
+});
+test('test match host rotation skips bots and keeps solo tests usable',()=>{
+ for(const n of [1,2]){const r=setup(n),humans=[...r.players];act(r,humans[0],'start_test');r.phase='finished';act(r,humans[0],'next_game');assert.equal(r.host,humans[n===1?0:1].id);assert.equal(r.testMode,true);act(r,r.players[0],'start');assert.equal(r.turn,r.host);}
+});
