@@ -21,7 +21,7 @@ function endingScreen(){
  const kind=survived?'survived':'out';
  const mobile=matchMedia('(max-width:600px) and (orientation:portrait)').matches;
  const suffix=mobile?'-mobile':'';
- const imagePath=`/images/endings/ending-${kind}${suffix}.png`;
+ const imagePath=`/images/endings/ending-${kind}${suffix}.webp`;
  const fallbackPath=`/images/ui/ending-${kind}${suffix}.webp`;
  const label=survived?'Шлюз закрыт. Вы выжили':'Шлюз закрыт. Попрощайтесь с миром';
  const host=state.host===state.me;
