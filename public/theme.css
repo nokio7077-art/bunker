@@ -457,3 +457,83 @@ body,button,input,select,textarea{
 .game .special-results li p{
   font-family:var(--bunker-ui);
 }
+
+/* BUNKER / visible typography v3
+   Make the same locally shipped Cyrillic display face visible throughout the
+   game, even when Google Fonts is unreachable. */
+.game .room-heading h1,
+.game .section-title h3,
+.game .world h3,
+.game .banner h2,
+.game .side-note h3,
+.game .active-dossier h3{
+  font-family:BunkerDisplay,monospace;
+  font-weight:400;
+  text-transform:uppercase;
+  letter-spacing:.02em;
+}
+.game .player-top strong{
+  font-family:BunkerDisplay,monospace;
+  font-weight:400;
+  font-size:clamp(13px,1.1vw,17px);
+  line-height:1.5;
+  letter-spacing:.015em;
+}
+.game .player-top strong small{
+  font-family:var(--bunker-mono);
+  font-weight:600;
+  font-size:10px;
+}
+.game .primary,
+.game .banner .primary,
+.game .ending-screen-actions .primary{
+  font-family:BunkerDisplay,monospace;
+  font-weight:400;
+  font-size:clamp(11px,1.05vw,14px);
+  letter-spacing:0;
+  line-height:1.5;
+}
+.game .secondary,
+.game .vote-btn,
+.game .world-card-open,
+.game .ending-screen-actions .secondary{
+  font-family:var(--bunker-heading, BunkerDisplay, monospace);
+  font-weight:400;
+  line-height:1.4;
+}
+.game .card-label,
+.game .public-cards p>span,
+.game .eyebrow,
+.game .room-code>span,
+.game .section-title small{
+  font-family:var(--bunker-mono,'Courier New',monospace);
+  font-weight:700;
+  text-transform:uppercase;
+  letter-spacing:.045em;
+}
+.game .card strong{
+  font-family:var(--bunker-heading, BunkerDisplay, monospace);
+  font-weight:400;
+  font-size:clamp(12px,1.1vw,16px);
+  line-height:1.5;
+}
+.game .card-description,
+.game .world p,
+.game .side-note p,
+.game .banner p,
+.game .public-cards p,
+.game .private-note{
+  font-family:var(--bunker-ui,Arial,sans-serif);
+  line-height:1.6;
+}
+.game .room-code strong{
+  font-family:BunkerDisplay,monospace;
+  font-weight:400;
+  letter-spacing:0;
+}
+@media(max-width:620px){
+  .game .player-top strong{font-size:13px}
+  .game .card strong{font-size:13px}
+  .game .primary{font-size:12px}
+  .game .section-title h3{font-size:15px}
+}
