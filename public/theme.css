@@ -1143,14 +1143,6 @@ body,button,input,select,textarea,.landing-shell,.game,#rules,#special-dialog{
 .game .public-cards p{
  border-radius:0;
 }
-.game .dossier-grid .card::after,
-.game .dossier-public-card::after{
- content:'';
- position:absolute;top:0;right:0;
- width:18px;height:18px;
- background:linear-gradient(135deg,transparent 0 47%,#07160c 48% 100%);
- pointer-events:none;
-}
 .game .dossier-card-index{
  border:2px solid #a5c57a;
  box-shadow:3px 3px 0 #07130a;
@@ -1200,66 +1192,148 @@ body,button,input,select,textarea,.landing-shell,.game,#rules,#special-dialog{
 .landing-shell :is(.primary,.secondary,.tabs button){
  border-radius:0;
 }
-/* Desktop: the entrance belongs to the left illustration area, not below the form. */
-@media(min-width:861px){
- .landing-shell .landing{
-  grid-template-columns:minmax(0,1.28fr) minmax(350px,.9fr);
-  column-gap:clamp(30px,4vw,72px);
- }
- .landing-shell .landing::before{
-  background-position:left bottom;
-  background-size:min(61%,940px) auto;
- }
- .landing-shell .landing-video{
-  width:61%;
-  max-width:940px;
-  left:0;
- }
- .landing-shell .hero{
-  min-height:clamp(560px,58vw,790px);
- }
- .landing-shell .entry-panel{z-index:1}
+
+/* SELECTED DOSSIER CONCEPT 02 / v11
+   Square pixel record modules, bold category strips, two-column console.
+   No folded triangles. Onest for descriptive text; local pixel display for titles. */
+.game .dossier-file{
+ position:relative;
+ padding:clamp(14px,2.2vw,24px);
+ border:2px solid #819e56;
+ background:linear-gradient(#102518,#0b1c12);
+ box-shadow:inset 0 0 0 3px #102719;
+ min-width:0;
 }
-/* On phones / tablets the image gets its own reserved space ABOVE the form. */
-@media(max-width:860px){
- .landing-shell .landing{
-  grid-template-columns:minmax(0,1fr);
-  gap:18px;
-  background:#071108;
- }
- .landing-shell .landing::before{background-image:none}
- .landing-shell .landing::after{background:none}
- .landing-shell .hero{
-  position:relative;
-  isolation:isolate;
-  min-height:0;
-  padding:0 0 clamp(215px,50vw,375px);
- }
- .landing-shell .hero::after{
-  content:'';
-  position:absolute;
-  left:-12px;right:-12px;bottom:0;
-  height:clamp(200px,48vw,355px);
-  background:url('/images/ui/bunker-landscape.5b43dbd11d46.webp') center bottom / contain no-repeat;
-  z-index:-1;
-  pointer-events:none;
- }
- .landing-shell .landing-video{display:none !important}
- .landing-shell .motion-toggle{display:none}
- .landing-shell .entry-panel{
-  position:relative;
-  z-index:0;
-  margin:0 auto;
-  width:100%;
- }
+.game .dossier-file-heading{
+ display:flex;align-items:center;justify-content:center;gap:14px;
+ border:2px solid #a5c873;
+ padding:11px 12px;margin-bottom:16px;
+ background:#132c1a;
 }
-@media(max-width:480px){
- .landing-shell .hero{
-  padding-bottom:clamp(205px,61vw,280px);
- }
- .landing-shell .hero::after{
-  height:clamp(195px,59vw,270px);
-  left:-10px;right:-10px;
- }
- .landing-shell .stats{margin-bottom:0}
+.game .dossier-file-heading h3{
+ margin:0;
+ font:400 clamp(15px,2vw,23px)/1.5 BunkerDisplay,monospace;
+ color:#e9f3d0;letter-spacing:0;text-align:center;
+}
+.game .dossier-file-stripes{
+ color:#bedc84;font:700 20px/1 var(--bunker-mono,monospace);
+ letter-spacing:2px;flex-shrink:0;
+}
+.game .dossier-file-profile{
+ display:flex;align-items:center;gap:15px;
+ min-width:0;padding:14px 15px;margin-bottom:14px;
+ border:1px solid #607d47;background:#14291b;
+}
+.game .dossier-file-avatar{
+ flex:none;display:grid;place-items:center;
+ width:65px;height:65px;
+ background:#203d22;border:3px solid #9cbf67;
+ font:400 33px/1 BunkerDisplay,monospace;
+ color:#e7f4ce;
+ box-shadow:inset 0 0 0 3px #142b1a;
+}
+.game .dossier-file-identity{min-width:0;display:grid;gap:5px}
+.game .dossier-file-identity>strong{
+ font:400 clamp(15px,1.5vw,19px)/1.45 BunkerDisplay,monospace;
+ color:#edf3dc;overflow-wrap:anywhere;
+}
+.game .dossier-file-identity>small{
+ font:500 10px/1.5 var(--bunker-mono,monospace);
+ color:#aabb9c;overflow-wrap:anywhere;
+}
+.game .dossier-file-progress{
+ display:flex;justify-content:space-between;align-items:center;
+ gap:12px;margin:5px 0 8px;
+ font:600 11px/1.4 var(--bunker-mono,monospace);
+ letter-spacing:.035em;color:#c1d6ab;
+}
+.game .dossier-file-progress strong{
+ font:600 13px/1.2 var(--bunker-mono,monospace);color:#d6edaa;
+}
+.game .dossier-file .private-note{margin:0 0 15px;font-size:13px}
+.game .dossier-file .dossier-grid{
+ grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;
+}
+.game .dossier-file .dossier-grid .card{
+ min-height:172px;
+ border:2px solid #789951;
+ background:#0d2214;
+ box-shadow:inset 0 0 0 2px #192f1c;
+ clip-path:none;
+ border-radius:0;
+}
+.game .dossier-file .dossier-grid .card::after,
+.game .dossier-public-card::after{
+ content:none!important;display:none!important;
+}
+.game .dossier-file .dossier-card-top{
+ display:flex;
+ border-bottom:2px solid #789b4c;
+ background:#1f3e22;
+ padding:10px 11px;
+ gap:8px;
+ align-items:center;
+}
+.game .dossier-file .dossier-card-index{
+ min-width:28px;height:27px;
+ color:#d9efb4;
+ background:#314c28;
+ border:1px solid #a9ce73;
+ font-size:12px;
+ box-shadow:none;
+}
+.game .dossier-file .dossier-card-top .card-label{
+ flex:1;font-size:11px;letter-spacing:0;
+ color:#e4efd2;gap:6px;
+}
+.game .dossier-file .dossier-card-symbol{color:#c1e485}
+.game .dossier-file .dossier-card-status{
+ border:0;background:none;padding:0;
+ font-size:9px;color:#c1ceac;
+}
+.game .dossier-file .dossier-card-content{
+ padding:15px 13px;gap:10px;
+}
+.game .dossier-file .dossier-card-content strong{
+ font:650 clamp(15px,1.3vw,18px)/1.4 var(--bunker-reading,'Onest',sans-serif);
+ color:#eff4e7;
+}
+.game .dossier-file .dossier-card-content .card-description{
+ font:400 14px/1.6 var(--bunker-reading,'Onest',sans-serif);
+ color:#ccd9c6;margin:0;padding-top:8px;
+}
+.game .dossier-file .dossier-grid .card.available{
+ background:#183721;
+ border-color:#cbe88e;
+ box-shadow:inset 4px 0 #cce78e;
+}
+.game .dossier-file .dossier-grid .card.available .dossier-card-top{background:#31502a}
+.game .dossier-file .dossier-grid .reveal-hint{
+ margin:0 13px 13px;
+ font-size:11px;
+ border-color:#b5d78c;
+}
+.game .dossier-file .dossier-grid .card.revealed{
+ background:#0b1b11;border-color:#4b6843;
+}
+.game .dossier-file .dossier-grid .card.special-card{grid-column:1/-1}
+.game .dossier-file .dossier-progress{
+ height:9px;margin:0 0 12px;border-color:#64824a;
+}
+@media(max-width:1080px){
+ .game .dossier-file .dossier-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:540px){
+ .game .dossier-file{padding:12px}
+ .game .dossier-file-heading{gap:9px;margin-bottom:12px;padding:10px 7px}
+ .game .dossier-file-heading h3{font-size:clamp(13px,4vw,18px)}
+ .game .dossier-file-stripes{font-size:15px;letter-spacing:0}
+ .game .dossier-file-profile{padding:11px;gap:11px}
+ .game .dossier-file-avatar{width:50px;height:50px;font-size:25px}
+ .game .dossier-file-identity>strong{font-size:14px}
+ .game .dossier-file-identity>small{font-size:9px}
+ .game .dossier-file .dossier-grid{grid-template-columns:minmax(0,1fr)}
+ .game .dossier-file .dossier-grid .card{min-height:0}
+ .game .dossier-file .dossier-card-content strong{font-size:17px}
+ .game .dossier-file .dossier-card-content .card-description{font-size:15px}
 }
