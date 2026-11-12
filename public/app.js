@@ -1,4 +1,5 @@
 import { disasterImageFor } from './card-images.js';
+import { avatarDataUri } from './avatar-generator.js';
 const app=document.querySelector('#app');
 const escape=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const icons={profession:'⚒',personality:'◈',biology:'◎',health:'✚',phobia:'◉',luggage:'▣',hobby:'✦',interesting:'⌁',special:'⚑'};
@@ -132,7 +133,7 @@ function dossier(me,current,mine){
  const own=`<section class="dossier-file" data-dossier-key="${escape(state.code)}:${escape(me.id)}:${state.gameNumber||1}" data-progress-count="${opened}" aria-label="Досье выжившего">
  
  <div class="dossier-file-heading"><span class="dossier-file-stripes" aria-hidden="true">///</span><h3>ДОСЬЕ ВЫЖИВШЕГО</h3><span class="dossier-file-stripes" aria-hidden="true">///</span></div>
- <div class="dossier-file-profile"><img class="dossier-file-avatar" src="/images/ui/dossier-avatar.svg" alt="Пиксельный портрет выжившего" width="95" height="98" loading="lazy"><div class="dossier-file-identity"><strong>${escape(me.name)}</strong><small>УЧАСТНИК УБЕЖИЩА · ${escape(state.code)}</small><div class="dossier-file-progress"><span>ПРОФИЛЬ: ${percent}% РАСКРЫТО</span><strong>${opened} ИЗ ${total}</strong></div><div class="dossier-progress" role="progressbar" aria-label="Раскрыто характеристик" aria-valuemin="0" aria-valuemax="${total}" aria-valuenow="${opened}">${slots}</div></div></div>
+ <div class="dossier-file-profile"><img class="dossier-file-avatar" src="${avatarDataUri(me.cards.biology,me.id,state.gameNumber||1)}" alt="Пиксельный портрет персонажа" width="95" height="98" loading="lazy"><div class="dossier-file-identity"><strong>${escape(me.name)}</strong><small>УЧАСТНИК УБЕЖИЩА · ${escape(state.code)}</small><div class="dossier-file-progress"><span>ПРОФИЛЬ: ${percent}% РАСКРЫТО</span><strong>${opened} ИЗ ${total}</strong></div><div class="dossier-progress" role="progressbar" aria-label="Раскрыто характеристик" aria-valuemin="0" aria-valuemax="${total}" aria-valuenow="${opened}">${slots}</div></div></div>
  <div class="dossier-file-list">${keys.map(([k,label])=>handCard(me,mine,k,label)).join('')}</div>
  <p class="dossier-file-footnote">Закрытые карточки видны только вам. Открытые становятся доступны группе.</p>
  </section>`;
