@@ -89,8 +89,13 @@ test('all 100 personality cards have distinct descriptions and remain in the dea
  for(const name of decks.personality)assert.ok(cardDescription('personality',name).length>30,name);
 });
 
-test('isolation varies by disaster, stays at least 90 days, and has compatible stocked shelters',()=>{
- assert.ok(new Set(disasters.map(d=>d.isolation_days)).size>=8);
- for(const d of disasters){assert.ok(d.isolation_days>=90);const candidates=bunkers.filter(b=>!incompatibilities(d,b).length);assert.ok(candidates.length);for(const b of candidates){assert.ok(b.food_days>=d.isolation_days&&b.water_days>=d.isolation_days);}}
+test('all disasters use the 90-day isolation shown on the illustrations and have compatible shelters',()=>{
+ for(const d of disasters){
+  assert.equal(d.isolation_days,90,`Катастрофа ${d.id}`);
+  assert.ok(!/(?:10[05]|1[23568]0|165|210|240|270|300) суток/.test(d.description),d.name);
+  const candidates=bunkers.filter(b=>!incompatibilities(d,b).length);
+  assert.ok(candidates.length,d.name);
+  for(const b of candidates)assert.ok(b.food_days>=90&&b.water_days>=90);
+ }
  assert.ok(bunkers.every(b=>!b.description.includes('Остальные отсеки закрыты')));
 });
