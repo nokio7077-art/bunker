@@ -1,12 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
-import { mkdtemp, rm, readFile } from 'node:fs/promises';
+import { mkdtemp, rm, readFile, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { once } from 'node:events';
 import { disasterImages, landscapeImage } from '../public/card-images.js';
 import { disasters } from '../world.js';
+import { player, createRoom } from '../game.js';
 test('HTTP sessions, private cards, registered artwork, caching and durable restart',async()=>{
  const dir=await mkdtemp(join(tmpdir(),'bunker-test-'));let child,base;
  async function start(){child=spawn(process.execPath,['server.js'],{cwd:new URL('..',import.meta.url),env:{...process.env,PORT:'0',HOST:'127.0.0.1',DATA_DIR:dir},stdio:['ignore','pipe','pipe']});let output='';await new Promise((resolve,reject)=>{const timeout=setTimeout(()=>reject(new Error('Server startup timed out')),8000);child.on('error',reject);child.stdout.on('data',chunk=>{output+=chunk;const m=output.match(/port (\d+)/);if(m){clearTimeout(timeout);base='http://127.0.0.1:'+m[1];resolve();}});child.on('exit',code=>{clearTimeout(timeout);reject(new Error('Server exited: '+code));});});}
@@ -101,4 +102,32 @@ test('HTTP sessions, private cards, registered artwork, caching and durable rest
   assert.equal((await request(path+'/join',{name:'Опоздал'})).status,400);
   const page=await fetch(base,{headers:{Connection:'close'}});assert.equal(page.status,200);assert.ok(page.headers.get('content-security-policy').includes("default-src 'self'"));assert.ok((await page.text()).includes('lang="ru"'));
  }finally{await stop();await rm(dir,{recursive:true,force:true});}
+});
+
+test('room cleanup deletes abandoned lobbies but preserves recently active rooms',async()=>{
+ const dir=await mkdtemp(join(tmpdir(),'bunker-expiry-'));
+ const old=createRoom('111111',player('Забытый'));
+ const recent=createRoom('222222',player('Ожидающий'));
+ old.lastActivityAt=Date.now()-25*60*60*1000;
+ recent.lastActivityAt=Date.now()-60*60*1000;
+ await writeFile(join(dir,'rooms.json'),JSON.stringify([[old.code,old],[recent.code,recent]]));
+ const child=spawn(process.execPath,['server.js'],{cwd:new URL('..',import.meta.url),env:{...process.env,PORT:'0',HOST:'127.0.0.1',DATA_DIR:dir},stdio:['ignore','pipe','pipe']});
+ let base;
+ try{
+  base=await new Promise((resolve,reject)=>{
+   const timeout=setTimeout(()=>reject(new Error('Server startup timeout')),8000);
+   child.on('error',reject);
+   child.stdout.on('data',data=>{const match=data.toString().match(/port (\\d+)/);if(match){clearTimeout(timeout);resolve('http://127.0.0.1:'+match[1]);}});
+   child.on('exit',code=>{clearTimeout(timeout);reject(new Error('Server exited '+code));});
+  });
+  const create=await fetch(base+'/api/rooms',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:'Новый'})});
+  assert.equal(create.status,201);
+  const forgotten=await fetch(base+'/api/rooms/'+old.code,{headers:{Authorization:'Bearer '+old.players[0].token}});
+  const kept=await fetch(base+'/api/rooms/'+recent.code,{headers:{Authorization:'Bearer '+recent.players[0].token}});
+  assert.equal(forgotten.status,404);
+  assert.equal(kept.status,200);
+ }finally{
+  if(child.exitCode===null){const finished=once(child,'exit');child.kill();await finished;}
+  await rm(dir,{recursive:true,force:true});
+ }
 });
