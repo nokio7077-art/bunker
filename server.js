@@ -2,8 +2,8 @@ import http from 'node:http';
 import { readFileSync, mkdirSync, writeFileSync, renameSync, existsSync, statSync, createReadStream } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { join as pathJoin } from 'node:path';
-import { randomInt } from 'node:crypto';
-import { player, createRoom, join, act, view } from './game.js';
+import { randomInt, randomBytes } from 'node:crypto';
+import { player, createRoom, join, act, view, advanceRoom } from './game.js';
 import { specialOptions } from './special-actions.js';
 import { disasterImages, landscapeImage } from './public/card-images.js';
 
@@ -13,6 +13,27 @@ mkdirSync(dataDir,{recursive:true,mode:0o700});
 const file=pathJoin(dataDir,'rooms.json');
 const rooms=new Map(existsSync(file) ? JSON.parse(readFileSync(file,'utf8')) : []);
 const save=()=>{writeFileSync(file+'.tmp',JSON.stringify([...rooms]),{mode:0o600});renameSync(file+'.tmp',file);};
+// Idle room expiration depends on actual player activity, not automatic timer actions.
+const IDLE_LOBBY_MS=24*60*60*1000,IDLE_FINISHED_MS=24*60*60*1000,IDLE_GAME_MS=72*60*60*1000;
+function cleanupRooms(now=Date.now()){
+ let changed=false;
+ for(const [code,room] of rooms){
+  const ttl=room.phase==='lobby'?IDLE_LOBBY_MS:room.phase==='finished'?IDLE_FINISHED_MS:IDLE_GAME_MS;
+  if(now-(room.lastActivityAt??room.updated??now)>=ttl){rooms.delete(code);changed=true;}
+ }
+ return changed;
+}
+let maintenanceTicks=0;
+const maintenance=setInterval(()=>{
+ try{
+  const now=Date.now();
+  let changed=false;
+  for(const room of rooms.values())if(advanceRoom(room,now))changed=true;
+  if(++maintenanceTicks%60===0 && cleanupRooms(now))changed=true;
+  if(changed)save();
+ }catch(e){console.error('Bunker maintenance:',e);}
+},1000);
+maintenance.unref();
 const limits=new Map();
 function rate(req) { const key=req.socket.remoteAddress; const now=Date.now(); let x=limits.get(key); if(!x || now-x.time>60000) { x={time:now,count:0}; limits.set(key,x); } if(++x.count>120) throw new Error('Слишком много запросов. Подождите минуту.'); }
 async function body(req) { let text=''; for await (const chunk of req) {text+=chunk; if(text.length>4096) throw new Error('Слишком большой запрос.');} return JSON.parse(text || '{}'); }
@@ -64,19 +85,43 @@ export const server=http.createServer(async(req,res)=>{
    if(req.headers.origin && new URL(req.headers.origin).host!==req.headers.host) return send(403,{error:'Недопустимый источник запроса.'});
   }
   if(req.method==='POST' && url.pathname==='/api/rooms') {
+   if(cleanupRooms())save();
+   if(rooms.size>=500)return send(503,{error:'Временно достигнут лимит комнат. Попробуйте позже.'});
    const b=await body(req), p=player(b.name); let code;
    do {code=String(randomInt(100000,1000000));} while(rooms.has(code));
-   const room=createRoom(code,p);rooms.set(code,room);save();return send(201,{code,token:p.token});
+   const room=createRoom(code,p);room.lastActivityAt=Date.now();rooms.set(code,room);save();return send(201,{code,token:p.token,recoveryCode:p.recoveryCode});
   }
-  const match=url.pathname.match(/^\/api\/rooms\/(\d{6})(?:\/(join|action|special))?$/);
+  const match=url.pathname.match(/^\/api\/rooms\/(\d{6})(?:\/(join|action|special|recover))?$/);
   if(!match) return send(404,{error:'Не найдено.'});
   const room=rooms.get(match[1]);if(!room) return send(404,{error:'Комната не найдена. Проверьте код.'});
-  if(req.method==='POST' && match[2]==='join') {const b=await body(req),p=player(b.name);join(room,p);save();return send(201,{code:room.code,token:p.token});}
+  if(req.method==='POST' && match[2]==='join') {
+   const b=await body(req),p=player(b.name);join(room,p);room.lastActivityAt=Date.now();save();
+   return send(201,{code:room.code,token:p.token,recoveryCode:p.recoveryCode});
+  }
+  if(req.method==='POST' && match[2]==='recover'){
+   const b=await body(req);
+   const name=String(b.name??'').trim().toLowerCase(),recoveryCode=String(b.recoveryCode??'').trim().toLowerCase();
+   const found=room.players.find(p=>!p.bot&&p.name.toLowerCase()===name&&p.recoveryCode===recoveryCode);
+   if(!found || !/^[0-9a-f]{24}$/.test(recoveryCode))return send(403,{error:'Неверное имя или резервный код восстановления.'});
+   found.token=randomBytes(18).toString('hex');found.lastSeen=Date.now();room.lastActivityAt=Date.now();save();
+   return send(200,{code:room.code,token:found.token,recoveryCode:found.recoveryCode});
+  }
   const token=req.headers.authorization?.replace(/^Bearer /,''); const me=room.players.find(p=>p.token===token);
-  if(!me) return send(401,{error:'Сессия не найдена. Войдите в комнату заново.'});
+  if(!me) return send(401,{error:'Сессия не найдена. Используйте резервный код для восстановления роли.'});
+  const now=Date.now();
+  // Save heartbeats periodically, but not on every 1.5-second client poll.
+  let changed=false;
+  if(!me.recoveryCode){me.recoveryCode=randomBytes(12).toString('hex');changed=true;}
+  if(!me.lastSeen || now-me.lastSeen>=15000){me.lastSeen=now;room.lastActivityAt=now;changed=true;}
+  if(advanceRoom(room,now))changed=true;
+  if(changed)save();
   if(req.method==='GET' && !match[2]) return send(200,view(room,me));
   if(req.method==='GET' && match[2]==='special') return send(200,specialOptions(room,me));
-  if(req.method==='POST' && match[2]==='action') {const b=await body(req);act(room,me,b.action,b.value);save();return send(200,view(room,me));}
+  if(req.method==='POST' && match[2]==='action') {
+   const b=await body(req);act(room,me,b.action,b.value);
+   me.lastSeen=Date.now();room.lastActivityAt=Date.now();save();
+   return send(200,view(room,me));
+  }
   return send(405,{error:'Метод не поддерживается.'});
  } catch(e) {send(400,{error:e instanceof SyntaxError ? 'Некорректный запрос.' : e.message});}
 });
