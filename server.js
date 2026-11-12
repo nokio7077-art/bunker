@@ -15,6 +15,8 @@ const file=pathJoin(dataDir,'rooms.json');
 const rooms=new Map(existsSync(file) ? JSON.parse(readFileSync(file,'utf8')) : []);
 // Existing rooms predate the explicit idle clock; preserve their last real event.
 for(const room of rooms.values())if(!room.lastActivityAt)room.lastActivityAt=room.updated||Date.now();
+// On deployment, clamp previously issued five-minute turns to the new 3:16 maximum.
+for(const room of rooms.values())if(room.phase==='turn'&&room.turnDeadline){room.turnDeadline=Math.min(room.turnDeadline,Date.now()+196000);}
 // Existing live rooms may still hold a historical isolation duration.
 for(const room of rooms.values()){
  if(!room.disaster||Array.isArray(room.disaster))continue;
@@ -94,7 +96,7 @@ export const server=http.createServer(async(req,res)=>{
    const stream=createReadStream(path);res.on('close',()=>stream.destroy());stream.on('error',()=>res.destroy()).pipe(res);return;
   }
   if(req.method==='GET' && assets[url.pathname]) {const [f,t]=assets[url.pathname];res.writeHead(200,{'Content-Type':t});return res.end(readFileSync(pathJoin(root,'public',f)));}
-  if(req.method==='GET' && url.pathname==='/health') return send(200,{ok:true,uiVersion:'20261112-type-v3'});
+  if(req.method==='GET' && url.pathname==='/health') return send(200,{ok:true,uiVersion:'20261113-timer-v7'});
   if(!url.pathname.startsWith('/api/')) return send(404,{error:'Не найдено.'});
   if(req.method==='POST') {
    rate(req);
