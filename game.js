@@ -175,7 +175,7 @@ export function advanceRoom(room,now=Date.now()){
  return changed;
 }
 export function view(room, me) {
- const { players, votes, ...rest } = room;
+ const { players, votes, lastActivityAt, ...rest } = room;
  return { ...rest, categories, me: me.id, recoveryCode: me.recoveryCode, specialAvailable: Boolean(specialCard(me.cards.special)) && !me.specialUsed, hasVoted: Object.hasOwn(votes,me.id), votedFor: votes[me.id] || null, voteCount: Object.keys(votes).length,
   pendingBotVotes: players.filter(p => p.bot && !Object.hasOwn(votes,p.id)).length,
   players: players.map(({token, recoveryCode, lastSeen, cards, ...p}) => {
