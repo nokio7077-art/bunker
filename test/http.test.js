@@ -77,6 +77,16 @@ test('HTTP sessions, private cards, registered artwork, caching and durable rest
   assert.equal(demo.status,200);assert.equal(demo.data.players[1].revealed[0],'profession');
   assert.equal(Object.keys(demo.data.players[1].cards).length,1);
   const host=(await request('/api/rooms',{name:'Ведущий'})).data;const path='/api/rooms/'+host.code;
+  assert.match(host.recoveryCode,/^[a-f0-9]{24}$/);
+  const badRecovery=await request(path+'/recover',{name:'Ведущий',recoveryCode:'0'.repeat(24)});
+  assert.equal(badRecovery.status,403);
+  const restored=await request(path+'/recover',{name:'Ведущий',recoveryCode:host.recoveryCode});
+  assert.equal(restored.status,200);
+  assert.equal(restored.data.recoveryCode,host.recoveryCode);
+  assert.notEqual(restored.data.token,host.token);
+  assert.equal((await request(path,undefined,host.token)).status,401);
+  host.token=restored.data.token;
+  assert.equal((await request(path,undefined,host.token)).status,200);
   assert.equal((await request(path)).status,401);
   const people=[host];for(let i=2;i<=5;i++)people.push((await request(path+'/join',{name:'Участник '+i})).data);
   assert.equal((await request(path+'/action',{action:'start'},people[1].token)).status,400);
@@ -84,6 +94,7 @@ test('HTTP sessions, private cards, registered artwork, caching and durable rest
   assert.equal(Object.keys(started.data.players[1].cards).length,0);
   const reveal=await request(path+'/action',{action:'reveal',value:'profession'},host.token);assert.equal(reveal.status,200);
   const guest=(await request(path,undefined,people[1].token)).data;assert.deepEqual(Object.keys(guest.players[0].cards),['profession']);assert.ok(!JSON.stringify(guest).includes(host.token));
+  assert.ok(!JSON.stringify(guest).includes(host.recoveryCode));
   const before=(await request(path,undefined,host.token)).data;
   await stop();await start();const after=(await request(path,undefined,host.token)).data;assert.deepEqual(after,before);
   assert.deepEqual((await request(soloPath,undefined,solo.token)).data,demo.data);
