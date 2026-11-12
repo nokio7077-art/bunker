@@ -1,23 +1,32 @@
 import { disasterImageFor } from './card-images.js';
 import { avatarIdentity } from './avatar-generator.js';
-import { femaleAtlas, maleAtlas } from './avatar-atlases.js';
 const app=document.querySelector('#app');
-const avatarSheets={female:new Image(),male:new Image()};
-avatarSheets.female.src=femaleAtlas;
-avatarSheets.male.src=maleAtlas;
+// Load only the gender atlas that the current character needs.
+// Portraits are cropped from original 128px images, at 96px resolution.
+const avatarSheets={};
+function avatarSheet(gender){
+ if(!['female','male'].includes(gender))return null;
+ if(!avatarSheets[gender]){
+  const img=new Image();
+  img.addEventListener('load',paintAvatars);
+  img.addEventListener('error',()=>console.warn('Не удалось загрузить галерею портретов.'));
+  img.src='/images/ui/avatars-'+gender+'-96.webp';
+  avatarSheets[gender]=img;
+ }
+ return avatarSheets[gender];
+}
 function paintAvatar(canvas){
- const sheet=avatarSheets[canvas.dataset.gender];
- if(!sheet || !sheet.complete || !sheet.naturalWidth)return;
+ const sheet=avatarSheet(canvas.dataset.gender);
+ if(!sheet||!sheet.complete||sheet.naturalWidth!==960||sheet.naturalHeight!==2400)return;
  const index=Number(canvas.dataset.index);
  if(!Number.isInteger(index)||index<0||index>=250)return;
  const context=canvas.getContext('2d');
  if(!context)return;
  context.imageSmoothingEnabled=false;
- context.clearRect(0,0,32,32);
- context.drawImage(sheet,(index%10)*32,Math.floor(index/10)*32,32,32,0,0,32,32);
+ context.clearRect(0,0,96,96);
+ context.drawImage(sheet,(index%10)*96,Math.floor(index/10)*96,96,96,0,0,96,96);
 }
 function paintAvatars(){document.querySelectorAll('canvas.dossier-file-avatar').forEach(paintAvatar);}
-for(const sheet of Object.values(avatarSheets))sheet.addEventListener('load',paintAvatars);
 
 const escape=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const icons={profession:'⚒',personality:'◈',biology:'◎',health:'✚',phobia:'◉',luggage:'▣',hobby:'✦',interesting:'⌁',special:'⚑'};
@@ -151,7 +160,7 @@ function dossier(me,current,mine){
  const own=`<section class="dossier-file" data-dossier-key="${escape(state.code)}:${escape(me.id)}:${state.gameNumber||1}" data-progress-count="${opened}" aria-label="Досье выжившего">
  
  <div class="dossier-file-heading"><span class="dossier-file-stripes" aria-hidden="true">///</span><h3>ДОСЬЕ ВЫЖИВШЕГО</h3><span class="dossier-file-stripes" aria-hidden="true">///</span></div>
- <div class="dossier-file-profile"><canvas class="dossier-file-avatar" data-gender="${avatarIdentity(me.cards.biology,me.id,state.gameNumber||1).gender}" data-index="${avatarIdentity(me.cards.biology,me.id,state.gameNumber||1).index}" role="img" aria-label="Пиксельный портрет персонажа из коллекции" width="32" height="32"></canvas><div class="dossier-file-identity"><strong>${escape(me.name)}</strong><small>УЧАСТНИК УБЕЖИЩА · ${escape(state.code)}</small><div class="dossier-file-progress"><span>ПРОФИЛЬ: ${percent}% РАСКРЫТО</span><strong>${opened} ИЗ ${total}</strong></div><div class="dossier-progress" role="progressbar" aria-label="Раскрыто характеристик" aria-valuemin="0" aria-valuemax="${total}" aria-valuenow="${opened}">${slots}</div></div></div>
+ <div class="dossier-file-profile"><canvas class="dossier-file-avatar" data-gender="${avatarIdentity(me.cards.biology,me.id,state.gameNumber||1).gender}" data-index="${avatarIdentity(me.cards.biology,me.id,state.gameNumber||1).index}" role="img" aria-label="Пиксельный портрет персонажа из коллекции" width="96" height="96"></canvas><div class="dossier-file-identity"><strong>${escape(me.name)}</strong><small>УЧАСТНИК УБЕЖИЩА · ${escape(state.code)}</small><div class="dossier-file-progress"><span>ПРОФИЛЬ: ${percent}% РАСКРЫТО</span><strong>${opened} ИЗ ${total}</strong></div><div class="dossier-progress" role="progressbar" aria-label="Раскрыто характеристик" aria-valuemin="0" aria-valuemax="${total}" aria-valuenow="${opened}">${slots}</div></div></div>
  <div class="dossier-file-list">${keys.map(([k,label])=>handCard(me,mine,k,label)).join('')}</div>
  <p class="dossier-file-footnote">Закрытые карточки видны только вам. Открытые становятся доступны группе.</p>
  </section>`;
