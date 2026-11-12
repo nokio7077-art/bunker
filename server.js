@@ -6,6 +6,7 @@ import { randomInt, randomBytes } from 'node:crypto';
 import { player, createRoom, join, act, view, advanceRoom } from './game.js';
 import { specialOptions } from './special-actions.js';
 import { disasterImages, landscapeImage } from './public/card-images.js';
+import { disasters as canonicalDisasters } from './world.js';
 
 const root = fileURLToPath(new URL('.', import.meta.url));
 const dataDir = process.env.DATA_DIR || pathJoin(root,'.data');
@@ -14,6 +15,18 @@ const file=pathJoin(dataDir,'rooms.json');
 const rooms=new Map(existsSync(file) ? JSON.parse(readFileSync(file,'utf8')) : []);
 // Existing rooms predate the explicit idle clock; preserve their last real event.
 for(const room of rooms.values())if(!room.lastActivityAt)room.lastActivityAt=room.updated||Date.now();
+// Existing live rooms may still hold a historical isolation duration.
+for(const room of rooms.values()){
+ if(!room.disaster||Array.isArray(room.disaster))continue;
+ const canonical=canonicalDisasters.find(d=>d.id===room.disaster.id);
+ if(!canonical)continue;
+ room.disaster={...room.disaster,description:canonical.description,isolation_days:90};
+ if(room.bunker&&!Array.isArray(room.bunker)&&Array.isArray(room.bunker.scenario_notes)){
+  room.bunker.scenario_notes=room.bunker.scenario_notes.map(note=>
+   /^Запасы покрывают первые \d+ суток обязательной изоляции\.$/.test(note)
+    ? 'Запасы покрывают первые 90 суток обязательной изоляции.' : note);
+ }
+}
 const save=()=>{writeFileSync(file+'.tmp',JSON.stringify([...rooms]),{mode:0o600});renameSync(file+'.tmp',file);};
 // Idle room expiration depends on actual player activity, not automatic timer actions.
 const IDLE_LOBBY_MS=24*60*60*1000,IDLE_FINISHED_MS=24*60*60*1000,IDLE_GAME_MS=72*60*60*1000;
