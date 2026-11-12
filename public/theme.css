@@ -1134,3 +1134,132 @@ body,button,input,select,textarea,.landing-shell,.game,#rules,#special-dialog{
 @media(prefers-reduced-motion:reduce){
  .game .dossier-progress>span{transition:none}
 }
+
+/* PIXEL DETAIL + LANDING ART COMPOSITION / v10
+   Pixel geometry in frames and controls, while Onest remains legible. */
+.game .dossier-grid .card,
+.game .dossier-public-card,
+.game .player,
+.game .public-cards p{
+ border-radius:0;
+}
+.game .dossier-grid .card::after,
+.game .dossier-public-card::after{
+ content:'';
+ position:absolute;top:0;right:0;
+ width:18px;height:18px;
+ background:linear-gradient(135deg,transparent 0 47%,#07160c 48% 100%);
+ pointer-events:none;
+}
+.game .dossier-card-index{
+ border:2px solid #a5c57a;
+ box-shadow:3px 3px 0 #07130a;
+ border-radius:0;
+}
+.game .dossier-card-top{
+ border-bottom:2px solid #59744d;
+ background:repeating-linear-gradient(90deg,#182d20 0 18px,#1a3123 18px 19px);
+}
+.game .dossier-grid .card.available{
+ box-shadow:inset 4px 0 #c4e58b,0 0 0 2px #07140b;
+}
+.game .dossier-progress{
+ height:9px;
+ border:2px solid #587448;
+ background:repeating-linear-gradient(90deg,#16281a 0 9px,#213825 9px 11px);
+ border-radius:0;
+}
+.game .dossier-progress>span{
+ background:repeating-linear-gradient(90deg,#bddc82 0 10px,#97b862 10px 12px);
+ border-radius:0;
+}
+.game .dossier-grid .reveal-hint{
+ border:1px solid #98ba74;
+ background:#1b3421;
+ padding:10px 12px;
+ font-size:11px;
+}
+.game .dossier-grid .card.available:hover .reveal-hint{
+ background:#294a2f;
+ border-color:#cce99e;
+}
+.game .dossier-card-status{
+ padding:4px 6px;
+ border:1px solid #506d47;
+ background:#0e2116;
+}
+.game .dossier-grid .card.available .dossier-card-status{
+ border-color:#a9cc7c;color:#dbf0c5;
+}
+.game .section-title h3,
+.game .room-heading h1,
+.game .banner h2{
+ text-shadow:none;
+}
+.game :is(.primary,.secondary,.vote-btn),
+.landing-shell :is(.primary,.secondary,.tabs button){
+ border-radius:0;
+}
+/* Desktop: the entrance belongs to the left illustration area, not below the form. */
+@media(min-width:861px){
+ .landing-shell .landing{
+  grid-template-columns:minmax(0,1.28fr) minmax(350px,.9fr);
+  column-gap:clamp(30px,4vw,72px);
+ }
+ .landing-shell .landing::before{
+  background-position:left bottom;
+  background-size:min(61%,940px) auto;
+ }
+ .landing-shell .landing-video{
+  width:61%;
+  max-width:940px;
+  left:0;
+ }
+ .landing-shell .hero{
+  min-height:clamp(560px,58vw,790px);
+ }
+ .landing-shell .entry-panel{z-index:1}
+}
+/* On phones / tablets the image gets its own reserved space ABOVE the form. */
+@media(max-width:860px){
+ .landing-shell .landing{
+  grid-template-columns:minmax(0,1fr);
+  gap:18px;
+  background:#071108;
+ }
+ .landing-shell .landing::before{background-image:none}
+ .landing-shell .landing::after{background:none}
+ .landing-shell .hero{
+  position:relative;
+  isolation:isolate;
+  min-height:0;
+  padding:0 0 clamp(215px,50vw,375px);
+ }
+ .landing-shell .hero::after{
+  content:'';
+  position:absolute;
+  left:-12px;right:-12px;bottom:0;
+  height:clamp(200px,48vw,355px);
+  background:url('/images/ui/bunker-landscape.5b43dbd11d46.webp') center bottom / contain no-repeat;
+  z-index:-1;
+  pointer-events:none;
+ }
+ .landing-shell .landing-video{display:none !important}
+ .landing-shell .motion-toggle{display:none}
+ .landing-shell .entry-panel{
+  position:relative;
+  z-index:0;
+  margin:0 auto;
+  width:100%;
+ }
+}
+@media(max-width:480px){
+ .landing-shell .hero{
+  padding-bottom:clamp(205px,61vw,280px);
+ }
+ .landing-shell .hero::after{
+  height:clamp(195px,59vw,270px);
+  left:-10px;right:-10px;
+ }
+ .landing-shell .stats{margin-bottom:0}
+}
