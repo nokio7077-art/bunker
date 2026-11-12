@@ -11,7 +11,7 @@ const id = () => randomBytes(18).toString('hex');
 const check = (ok, message) => { if (!ok) throw new Error(message); };
 export const firstVoteRound = n => Math.max(1, 9 - n);
 // Server-authoritative deadlines: absence must not block an entire session.
-export const TURN_TIMEOUT_MS = 5 * 60 * 1000;
+export const TURN_TIMEOUT_MS = 3 * 60 * 1000 + 16 * 1000;
 export const VOTE_TIMEOUT_MS = 2 * 60 * 1000;
 export const HOST_INACTIVE_MS = 3 * 60 * 1000;
 const human = p => !p.bot;
