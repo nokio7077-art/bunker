@@ -1560,3 +1560,6 @@ body,button,input,select,textarea,.landing-shell,.game,#rules,#special-dialog{
 
 /* Packed avatar collection: 500 real archive portraits, 32px per atlas tile. */
 .game canvas.dossier-file-avatar{display:block;width:100%;height:auto;aspect-ratio:1/1;image-rendering:pixelated;background:#091c10;object-fit:contain}
+
+/* Higher-resolution source portrait with deliberate pixel boundaries, no extra overlays. */
+.game canvas.dossier-file-avatar{aspect-ratio:1/1;image-rendering:pixelated;max-width:100%;height:auto}
