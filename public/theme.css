@@ -839,3 +839,94 @@ body,button,input,select,textarea{
 @media(prefers-reduced-motion:reduce){
  .game .player{transition:none}
 }
+
+
+/* MOBILE-FIRST GAMEPLAY / v6
+   Unobtrusive bottom navigation: only user-initiated jumps, never auto-scroll.
+   Keep world detail collapsed on handhelds and voting candidates legible. */
+.game .vote-instruction{
+  font-family:var(--bunker-ui,'Rubik',sans-serif);
+  padding:12px 15px;margin:0 0 12px;
+  color:#e8f3d8;background:#152718;border-left:3px solid #cbe96b;
+  font-size:14px;line-height:1.55;
+}
+.game.phase-vote .players{gap:12px}
+.game.phase-vote .player{
+  border:1px solid #668346;
+  background:linear-gradient(120deg,#122a18,#0b1a10);
+}
+.game.phase-vote .player.out{opacity:.7}
+.game.phase-vote .vote-btn{
+  border:1px solid #d4ad77;
+  background:#3c271b;
+  color:#ffe3be;
+  min-height:48px;
+  min-width:118px;
+  font-family:var(--bunker-heading,'Russo One',sans-serif);
+  font-weight:400;
+  font-size:13px;
+  padding:10px 16px;
+  letter-spacing:0;
+}
+.game.phase-vote .vote-btn:hover:enabled{
+  background:#65402a;border-color:#ffcd88;color:#fff1db;
+}
+.game.phase-vote .vote-btn:active{background:#835139}
+.game.phase-vote .player:has(.vote-btn){
+  border-color:#aa8354;
+}
+.mobile-playbar{display:none}
+@media(max-width:760px){
+  body:has(.game){padding-bottom:calc(110px + env(safe-area-inset-bottom))}
+  .game{padding:14px 14px 28px}
+  .game .room-heading{min-height:0;margin:0 0 12px;padding:18px 16px}
+  .game .room-heading h1{font-size:clamp(20px,5vw,26px);margin:7px 0}
+  .game .room-subtitle{font-size:13px}
+  .game .room-code{min-height:0}
+  .game .world-section{margin-bottom:10px}
+  .game .world-toggle{min-height:44px;font-size:12px;margin-bottom:0}
+  .game .banner{margin-bottom:12px;padding:16px;gap:12px}
+  .game .banner h2{font-size:clamp(17px,4vw,22px)}
+  .game .game-columns{gap:20px}
+  .game .game-columns>aside{order:-1}
+  .game.phase-vote .game-columns>section{order:-1}
+  .game.phase-vote .game-columns>aside{order:0}
+  .game .phase-timer{display:none}
+  .game .section-title{scroll-margin-top:12px}
+  #active-dossier{scroll-margin-top:12px}
+  .mobile-playbar{
+    position:fixed;
+    display:grid;
+    grid-template-columns:minmax(0,1fr) auto;
+    gap:5px 12px;
+    align-items:center;
+    left:0;right:0;bottom:0;
+    z-index:12;
+    padding:11px max(14px,env(safe-area-inset-right)) calc(11px + env(safe-area-inset-bottom)) max(14px,env(safe-area-inset-left));
+    background:#08170deF;
+    border-top:2px solid #c1e46c;
+    box-shadow:0 -10px 30px #020702aa;
+    backdrop-filter:blur(12px);
+    color:#ecf4d9;
+  }
+  .mobile-playbar-status{display:grid;min-width:0;gap:3px}
+  .mobile-playbar-status>span{font:600 10px/1.2 var(--bunker-mono,monospace);color:#bdd58a;letter-spacing:.06em}
+  .mobile-playbar-status>strong{font:400 13px/1.2 var(--bunker-heading,'Russo One',sans-serif);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .mobile-playbar-clock{font:400 19px/1.1 BunkerDisplay,monospace;font-variant-numeric:tabular-nums;color:#d1f17e}
+  .mobile-playbar-actions{grid-column:1/-1;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+  .mobile-playbar-actions button{
+    appearance:none;min-height:44px;padding:9px 12px;
+    border:1px solid #9bb66c;background:#1b301b;color:#f0f4dd;
+    font:500 14px/1.2 var(--bunker-ui,'Rubik',sans-serif);
+    cursor:pointer;
+  }
+  .mobile-playbar-actions button:last-child{background:#cbe96b;color:#0b1a0e;border-color:#d6f395;font-weight:700}
+  .mobile-playbar-actions button:focus-visible{outline:2px solid white;outline-offset:2px}
+  .game.phase-vote .vote-btn{min-width:114px;min-height:48px;font-size:13px;padding:10px 14px}
+  .game .public-cards p{font-size:15px}
+}
+@media(max-width:400px){
+  .mobile-playbar{padding-left:10px;padding-right:10px}
+  .mobile-playbar-status>strong{font-size:12px}
+  .game.phase-vote .vote-btn{min-width:106px}
+}
