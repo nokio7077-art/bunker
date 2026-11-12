@@ -58,6 +58,7 @@ const assets={'/':['index.html','text/html; charset=utf-8'],'/app.js':['app.js',
 // Only registered media and fonts are public; never serve arbitrary repository files.
 const binaryAssets=new Map(Object.values(disasterImages).map(image=>[image.src,{path:pathJoin(root,'public',image.src),type:'image/png'}]));
 for(const asset of ['dossier-avatar.svg','dossier-icons.svg'])binaryAssets.set(`/images/ui/${asset}`,{path:pathJoin(root,'public','images','ui',asset),type:'image/svg+xml'});
+for(const category of ['profession','health','luggage','phobia','hobby','biology','personality','interesting','special']){const asset=`dossier-${category}.svg`;binaryAssets.set(`/images/ui/${asset}`,{path:pathJoin(root,'public','images','ui',asset),type:'image/svg+xml'});}
 for(const image of Object.values(disasterImages))binaryAssets.set(image.webp,{path:pathJoin(root,'public',image.webp),type:'image/webp',immutable:true});
 binaryAssets.set(landscapeImage,{path:pathJoin(root,'public',landscapeImage),type:'image/webp',immutable:true});
 // Four responsive still-image endings. Only explicitly listed files may be served.
