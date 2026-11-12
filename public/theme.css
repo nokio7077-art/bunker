@@ -1026,3 +1026,111 @@ body,button,input,select,textarea,.landing-shell,.game,#rules,#special-dialog{
  .game .public-cards p{font-size:15px}
  .landing-shell .lead{line-height:1.65}
 }
+
+
+/* SURVIVOR DOSSIER / v9 — characteristic records, mobile-first. */
+.game .dossier-progress{
+ height:5px;margin:0 0 16px;background:#263b29;
+ border:1px solid #455c3a;overflow:hidden;
+}
+.game .dossier-progress>span{
+ display:block;height:100%;background:#b9d883;transition:width .2s ease;
+}
+.game .dossier-grid{gap:12px}
+.game .dossier-grid .card,
+.game .dossier-public-card{
+ position:relative;min-width:0;
+ padding:0;gap:0;min-height:160px;
+ overflow:hidden;text-align:left;
+ background:#102018;
+ border:1px solid #647d55;
+ box-shadow:none;
+ color:#e7efe1;
+}
+.game .dossier-grid .card.available{
+ background:#172d20;border:1px solid #bdd98e;
+ box-shadow:inset 3px 0 #bedb8a;
+}
+.game .dossier-grid .card.revealed{border-color:#425f48;background:#0d1b15}
+.game .dossier-grid .card:disabled{opacity:1}
+.game .dossier-card-top{
+ display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+ border-bottom:1px solid #43583f;
+ padding:11px 14px;background:#192a1f;
+ font:600 11px/1.4 var(--bunker-mono,monospace);
+}
+.game .dossier-card-index{
+ display:inline-grid;place-items:center;flex-shrink:0;
+ min-width:27px;height:27px;padding:0 3px;
+ border:1px solid #91a980;
+ color:#d8ebc5;font:600 12px/1 var(--bunker-mono,monospace);
+}
+.game .dossier-card-top .card-label{
+ min-width:0;flex:1;
+ display:inline-flex;gap:7px;align-items:center;
+ font:600 11px/1.5 var(--bunker-mono,monospace);
+ color:#c6dfad;text-transform:uppercase;letter-spacing:.045em;
+}
+.game .dossier-card-symbol{font-size:15px;line-height:1;color:#c1df99}
+.game .dossier-card-status{
+ font:600 9px/1.4 var(--bunker-mono,monospace);
+ color:#b9c6b0;letter-spacing:.04em;
+}
+.game .dossier-grid .card.available .dossier-card-status{
+ color:#e6f6ca;
+}
+.game .dossier-card-content{
+ display:flex;flex:1;flex-direction:column;gap:9px;
+ padding:18px 16px 16px;min-width:0;
+}
+.game .dossier-card-content strong{
+ font:650 clamp(16px,1.5vw,20px)/1.35 var(--bunker-reading,'Onest',sans-serif);
+ color:#f0f4e9;letter-spacing:-.015em;overflow-wrap:anywhere;
+}
+.game .dossier-card-content .card-description{
+ display:block;margin:0;padding-top:10px;
+ border-top:1px solid #39513d;
+ font:400 14px/1.65 var(--bunker-reading,'Onest',sans-serif);
+ color:#c8d8c6;letter-spacing:0;
+}
+.game .dossier-grid .reveal-hint{
+ display:flex;align-items:center;gap:8px;margin:0 16px 15px;
+ align-self:flex-start;padding:8px 0;
+ border-bottom:1px solid #afcd88;
+ background:transparent;color:#d8eeb8;
+ font:600 11px/1.4 var(--bunker-mono,monospace);
+}
+.game .dossier-grid .card.available:hover{
+ background:#1b3726;transform:none;border-color:#d9efa8;
+}
+.game .dossier-grid .card.special-card{grid-column:1/-1}
+.game .dossier-grid .special-card .special-note{
+ margin:0 16px 14px;color:#c3d3c0;
+ font-size:14px;line-height:1.55;
+}
+.game .dossier-grid .special-card>button{
+ margin:0 16px 14px;align-self:stretch;
+ min-height:46px;white-space:normal;
+}
+.game .dossier-public-card .dossier-card-content{padding:16px}
+.game .dossier-public-card .dossier-card-top{padding:10px 14px}
+@media(max-width:900px){
+ .game .dossier-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .game .dossier-card-content strong{font-size:17px}
+}
+@media(max-width:600px){
+ .game .dossier-grid{grid-template-columns:minmax(0,1fr);gap:11px}
+ .game .dossier-grid .card,
+ .game .dossier-public-card{min-height:0}
+ .game .dossier-card-top{padding:12px 14px}
+ .game .dossier-card-top .card-label{font-size:11px}
+ .game .dossier-card-status{font-size:10px}
+ .game .dossier-card-content{padding:17px 15px}
+ .game .dossier-card-content strong{font-size:18px}
+ .game .dossier-card-content .card-description{font-size:15px}
+ .game .dossier-grid .reveal-hint{font-size:12px}
+ .game .dossier-grid .special-card>button{width:calc(100% - 32px)}
+}
+@media(prefers-reduced-motion:reduce){
+ .game .dossier-progress>span{transition:none}
+}
