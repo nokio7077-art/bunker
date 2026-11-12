@@ -12,6 +12,8 @@ const dataDir = process.env.DATA_DIR || pathJoin(root,'.data');
 mkdirSync(dataDir,{recursive:true,mode:0o700});
 const file=pathJoin(dataDir,'rooms.json');
 const rooms=new Map(existsSync(file) ? JSON.parse(readFileSync(file,'utf8')) : []);
+// Existing rooms predate the explicit idle clock; preserve their last real event.
+for(const room of rooms.values())if(!room.lastActivityAt)room.lastActivityAt=room.updated||Date.now();
 const save=()=>{writeFileSync(file+'.tmp',JSON.stringify([...rooms]),{mode:0o600});renameSync(file+'.tmp',file);};
 // Idle room expiration depends on actual player activity, not automatic timer actions.
 const IDLE_LOBBY_MS=24*60*60*1000,IDLE_FINISHED_MS=24*60*60*1000,IDLE_GAME_MS=72*60*60*1000;
@@ -112,7 +114,7 @@ export const server=http.createServer(async(req,res)=>{
   // Save heartbeats periodically, but not on every 1.5-second client poll.
   let changed=false;
   if(!me.recoveryCode){me.recoveryCode=randomBytes(12).toString('hex');changed=true;}
-  if(!me.lastSeen || now-me.lastSeen>=15000){me.lastSeen=now;room.lastActivityAt=now;changed=true;}
+  if(!me.lastSeen || now-me.lastSeen>=15000){me.lastSeen=now;changed=true;}
   if(advanceRoom(room,now))changed=true;
   if(changed)save();
   if(req.method==='GET' && !match[2]) return send(200,view(room,me));
