@@ -537,3 +537,104 @@ body,button,input,select,textarea{
   .game .primary{font-size:12px}
   .game .section-title h3{font-size:15px}
 }
+
+
+/* BUNKER / readable prose v4 — rules and descriptions should never look
+   like tiny default system text. Keep pixel lettering for display only. */
+:root{--bunker-reading:var(--bunker-ui,'Rubik',Arial,sans-serif)}
+#rules,
+#special-dialog,
+.game .card-description,
+.game .world p,
+.game .side-note p,
+.game .banner p,
+.game .public-cards p,
+.game .special-note,
+.game .private-note{
+  font-family:var(--bunker-reading);
+  font-weight:400;
+  letter-spacing:.005em;
+  -webkit-font-smoothing:antialiased;
+}
+#rules,#special-dialog{
+  font-family:var(--bunker-reading);
+  font-size:16px;
+  line-height:1.72;
+  color:#e7ecd9;
+}
+#rules p,#rules li,#special-dialog p,#special-dialog li{
+  font-family:inherit;
+  font-size:16px;
+  line-height:1.72;
+  color:#e3e9d7;
+}
+#rules p{margin:14px 0}
+#rules ol{padding-left:1.65em;margin:16px 0}
+#rules li{padding-left:5px;margin-bottom:16px}
+#rules h2,#special-dialog h2{
+  font-family:var(--bunker-display);
+  font-size:clamp(20px,2.3vw,27px);
+  font-weight:400;
+  line-height:1.35;
+  overflow-wrap:anywhere;
+  letter-spacing:0;
+}
+#rules .eyebrow,#special-dialog .eyebrow{
+  font-family:var(--bunker-mono);
+  font-size:12px;
+  letter-spacing:.09em;
+}
+#rules{max-width:720px;padding:clamp(22px,4vw,38px)}
+.game .card-description{
+  display:block;
+  font-size:14px;
+  line-height:1.65;
+  color:#d2dbc9;
+}
+.game .public-cards .card-description{
+  font-size:13px;
+  line-height:1.6;
+  color:#cbd7bf;
+}
+.game .public-cards p{
+  font-size:14px;
+  line-height:1.62;
+  color:#e4e9dc;
+}
+.game .world p,.game .side-note p,.game .banner p{
+  font-size:15px;
+  line-height:1.7;
+  color:#dce5d3;
+}
+.game .private-note,.game .special-note{
+  font-size:14px;
+  line-height:1.65;
+  color:#d4dfca;
+}
+.game .world-details,
+.game .world-details li,
+.game .world-details dd,
+.game .world-details dt,
+.game .world-hint,
+.game .special-results li p,
+.game .journal p{
+  font-family:var(--bunker-reading);
+  font-size:14px;
+  line-height:1.65;
+  color:#d4ddca;
+}
+.game .room-subtitle{
+  font-family:var(--bunker-reading);
+  font-size:15px;
+  line-height:1.6;
+}
+@media(max-width:620px){
+  #rules,#special-dialog{font-size:16px;line-height:1.68}
+  #rules p,#rules li,#special-dialog p,#special-dialog li{font-size:16px;line-height:1.68}
+  #rules{padding:22px;width:calc(100% - 20px)}
+  .game .card-description{font-size:15px;line-height:1.65}
+  .game .public-cards p{font-size:15px;line-height:1.65}
+  .game .public-cards .card-description{font-size:14px;line-height:1.65}
+  .game .world p,.game .side-note p,.game .banner p{font-size:16px;line-height:1.65}
+  .game .private-note,.game .special-note{font-size:14px}
+}
