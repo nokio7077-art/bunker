@@ -100,6 +100,14 @@ test('HTTP sessions, private cards, registered artwork, caching and durable rest
   await stop();await start();const after=(await request(path,undefined,host.token)).data;assert.deepEqual(after,before);
   assert.deepEqual((await request(soloPath,undefined,solo.token)).data,demo.data);
   assert.equal((await request(path+'/join',{name:'Опоздал'})).status,400);
+  for(const asset of ['dossier-avatar.svg','dossier-icons.svg']){
+   const response=await fetch(base+'/images/ui/'+asset);
+   assert.equal(response.status,200);
+   assert.equal(response.headers.get('content-type'),'image/svg+xml');
+   const content=await response.text();
+   assert.ok(content.includes('<svg'));
+   assert.ok(content.length>500);
+  }
   const page=await fetch(base,{headers:{Connection:'close'}});assert.equal(page.status,200);assert.ok(page.headers.get('content-security-policy').includes("default-src 'self'"));assert.ok((await page.text()).includes('lang="ru"'));
  }finally{await stop();await rm(dir,{recursive:true,force:true});}
 });
