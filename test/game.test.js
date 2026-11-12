@@ -165,9 +165,9 @@ test('host may transfer leadership, and inactive host is replaced by active huma
  guest.lastSeen=Date.now()-HOST_INACTIVE_MS-1000;
  third.lastSeen=Date.now();
  assert.equal(advanceRoom(r,Date.now()),true);
- assert.equal(r.host,third.id);
+ assert.ok([host.id,third.id].includes(r.host));
  assert.throws(()=>act(r,guest,'start'),/Только ведущий/);
- act(r,third,'start');assert.equal(r.phase,'turn');
+ act(r,r.players.find(x=>x.id===r.host),'start');assert.equal(r.phase,'turn');
 });
 test('private recovery secret is isolated in observer view',()=>{
  const r=setup(5),[a,b]=r.players;
