@@ -117,7 +117,7 @@ test('room cleanup deletes abandoned lobbies but preserves recently active rooms
   base=await new Promise((resolve,reject)=>{
    const timeout=setTimeout(()=>reject(new Error('Server startup timeout')),8000);
    child.on('error',reject);
-   child.stdout.on('data',data=>{const match=data.toString().match(/port (\\d+)/);if(match){clearTimeout(timeout);resolve('http://127.0.0.1:'+match[1]);}});
+   child.stdout.on('data',data=>{const match=data.toString().match(/port (\d+)/);if(match){clearTimeout(timeout);resolve('http://127.0.0.1:'+match[1]);}});
    child.on('exit',code=>{clearTimeout(timeout);reject(new Error('Server exited '+code));});
   });
   const create=await fetch(base+'/api/rooms',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:'Новый'})});
