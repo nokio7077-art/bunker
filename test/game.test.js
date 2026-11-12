@@ -128,6 +128,18 @@ test('test match host rotation skips bots and keeps solo tests usable',()=>{
  for(const n of [1,2]){const r=setup(n),humans=[...r.players];act(r,humans[0],'start_test');r.phase='finished';act(r,humans[0],'next_game');assert.equal(r.host,humans[n===1?0:1].id);assert.equal(r.testMode,true);act(r,r.players[0],'start');assert.equal(r.turn,r.host);}
 });
 
+test('new turn timer is exactly three minutes sixteen seconds and survives read-only views',()=>{
+ assert.equal(TURN_TIMEOUT_MS,196000);
+ const r=setup(5),host=r.players[0];
+ const before=Date.now();act(r,host,'start');const after=Date.now();
+ assert.ok(r.turnDeadline>=before+196000&&r.turnDeadline<=after+196000);
+ const deadline=r.turnDeadline;
+ for(let i=0;i<5;i++)assert.equal(view(r,host).turnDeadline,deadline);
+ act(r,host,'reveal','profession');
+ assert.equal(r.turnDeadline,deadline,'revealing a card does not reset the timer');
+ act(r,host,'next');
+ assert.ok(r.turnDeadline>=deadline-196000+196000);
+});
 test('deadline auto-opens a mandatory profession and advances without absent player',()=>{
  const r=setup(8),first=r.players[0];act(r,first,'start');
  assert.equal(r.turn,first.id);assert.equal(r.phase,'turn');
