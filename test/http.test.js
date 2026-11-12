@@ -114,6 +114,17 @@ test('HTTP sessions, private cards, registered artwork, caching and durable rest
    assert.ok(content.includes('<svg'));
    assert.ok(content.length>500);
   }
+  for(const gender of ['female','male']){
+   const response=await fetch(base+'/images/ui/avatars-'+gender+'-96.webp');
+   assert.equal(response.status,200);
+   assert.equal(response.headers.get('content-type'),'image/webp');
+   const bytes=Buffer.from(await response.arrayBuffer());
+   assert.equal(bytes.toString('ascii',0,4),'RIFF');
+   assert.equal(bytes.toString('ascii',8,12),'WEBP');
+   assert.ok(bytes.length>300000,'HD portrait atlas must retain image detail');
+   const cached=await fetch(base+'/images/ui/avatars-'+gender+'-96.webp',{headers:{'If-None-Match':response.headers.get('etag')}});
+   assert.equal(cached.status,304);
+  }
   const page=await fetch(base,{headers:{Connection:'close'}});assert.equal(page.status,200);assert.ok(page.headers.get('content-security-policy').includes("default-src 'self'"));assert.ok((await page.text()).includes('lang="ru"'));
  }finally{await stop();await rm(dir,{recursive:true,force:true});}
 });
