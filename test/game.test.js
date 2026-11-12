@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { player, createRoom, join, act, view, categories, firstVoteRound } from '../game.js';
+import { player, createRoom, join, act, view, categories, firstVoteRound, advanceRoom, TURN_TIMEOUT_MS, VOTE_TIMEOUT_MS, HOST_INACTIVE_MS } from '../game.js';
 function setup(n){const host=player('Игрок 1'),r=createRoom('123456',host);for(let i=2;i<=n;i++)join(r,player('Игрок '+i));return r;}
 test('first voting rounds and capacities for 5–16 players',()=>{
  for(let n=5;n<=16;n++){
@@ -22,7 +22,7 @@ test('every supported party reaches the correct final survivors; expelled player
    }else{
     assert.ok(r.round>=r.firstVote);votes++;
     const target=r.players.find(p=>p.alive);
-    for(const p of r.players)act(r,p,'vote',target.id);
+    for(const p of r.players)act(r,p,'vote',p.id===target.id?r.players.find(x=>x.alive&&x.id!==p.id).id:target.id);
    }
   }
   assert.equal(votes,n-Math.floor(n/2));assert.equal(r.players.filter(p=>p.alive).length,Math.floor(n/2));
@@ -44,12 +44,13 @@ test('limits, duplicate names, invalid actions and votes',()=>{
  for(const p of r.players){act(r,p,'reveal','profession');act(r,p,'next');}
  assert.equal(r.phase,'vote');assert.throws(()=>act(r,r.players[0],'vote','invalid'));
  act(r,r.players[0],'vote',r.players[1].id);assert.throws(()=>act(r,r.players[0],'vote',r.players[2].id));
- assert.equal(view(r,r.players[1]).voteCount,1);assert.equal(view(r,r.players[1]).votes,undefined);
+ assert.equal(view(r,r.players[1]).voteCount,1);
+ assert.throws(()=>act(r,r.players[2],'vote',r.players[2].id),/Нельзя голосовать за себя/);assert.equal(view(r,r.players[1]).votes,undefined);
 });
 test('tied vote expels exactly one tied candidate across 100 trials',()=>{
  for(let trial=0;trial<100;trial++){
  const r=setup(8);act(r,r.players[0],'start');for(const p of r.players){act(r,p,'reveal','profession');act(r,p,'next');}
- r.players.forEach((p,i)=>act(r,p,'vote',r.players[i%2].id));
+ r.players.forEach((p,i)=>act(r,p,'vote',r.players[i<2?1-i:i%2].id));
  assert.equal(r.lastVote.tie,true);assert.ok(r.players.slice(0,2).some(p=>p.id===r.lastVote.eliminated));assert.equal(r.players.filter(p=>!p.alive).length,1);assert.equal(r.round,2);
  }
 });
@@ -68,7 +69,8 @@ test('a solo host can complete a full test game, even after expulsion',()=>{
     act(r,host,'next');
    }else act(r,host,'bot_step');
   }else if(!forcedExpulsion){
-   for(const p of [...r.players.filter(p=>p.bot),host])act(r,p,'vote',host.id);
+   for(const p of r.players.filter(p=>p.bot))act(r,p,'vote',host.id);
+   act(r,host,'vote',r.players.find(p=>p.bot&&p.alive).id);
    assert.equal(host.alive,false);forcedExpulsion=true;
   }else{
    act(r,host,'bot_votes');
@@ -97,8 +99,8 @@ test('test controls are host-only and never reveal private bot or human cards',(
 
 test('test bots vote automatically only after every human, including an expelled host, has voted',()=>{
  const r=setup(2),[host,guest]=r.players;act(r,host,'start_test');r.phase='vote';r.votes={};host.alive=false;
- act(r,guest,'vote',guest.id);assert.equal(r.phase,'vote');assert.equal(Object.keys(r.votes).length,1);
- assert.equal(view(r,guest).votedFor,guest.id);assert.equal(view(r,host).votedFor,null);
+ act(r,guest,'vote',r.players.find(p=>p.bot&&p.alive).id);assert.equal(r.phase,'vote');assert.equal(Object.keys(r.votes).length,1);
+ assert.notEqual(view(r,guest).votedFor,guest.id);assert.equal(view(r,host).votedFor,null);
  act(r,host,'vote',guest.id);assert.notEqual(r.phase,'vote');assert.equal(Object.values(r.lastVote.scores).reduce((a,b)=>a+b,0),5);
  assert.throws(()=>act(r,host,'vote',guest.id));
 });
@@ -124,4 +126,54 @@ test('same team rotates host and first speaker across matches, retaining session
 });
 test('test match host rotation skips bots and keeps solo tests usable',()=>{
  for(const n of [1,2]){const r=setup(n),humans=[...r.players];act(r,humans[0],'start_test');r.phase='finished';act(r,humans[0],'next_game');assert.equal(r.host,humans[n===1?0:1].id);assert.equal(r.testMode,true);act(r,r.players[0],'start');assert.equal(r.turn,r.host);}
+});
+
+test('deadline auto-opens a mandatory profession and advances without absent player',()=>{
+ const r=setup(8),first=r.players[0];act(r,first,'start');
+ assert.equal(r.turn,first.id);assert.equal(r.phase,'turn');
+ assert.equal(advanceRoom(r,r.turnDeadline-1),false);
+ assert.equal(advanceRoom(r,r.turnDeadline+1),true);
+ assert.ok(first.revealed.includes('profession'));
+ assert.equal(r.turn,r.players[1].id);
+ assert.ok(r.turnDeadline>0);
+});
+test('vote deadline counts missing ballots as abstentions and always eliminates exactly one',()=>{
+ const r=setup(8);act(r,r.players[0],'start');
+ for(const p of r.players){act(r,p,'reveal','profession');act(r,p,'next');}
+ assert.equal(r.phase,'vote');
+ act(r,r.players[0],'vote',r.players[1].id);
+ assert.equal(advanceRoom(r,r.voteDeadline+1),true);
+ assert.equal(r.lastVote.abstained,7);
+ assert.equal(r.lastVote.eliminated,r.players[1].id);
+ assert.equal(r.players.filter(x=>!x.alive).length,1);
+ assert.equal(r.phase,'turn');
+});
+test('zero-vote timeout uses a draw rather than locking the game',()=>{
+ const r=setup(8);act(r,r.players[0],'start');
+ for(const p of r.players){act(r,p,'reveal','profession');act(r,p,'next');}
+ assert.equal(advanceRoom(r,r.voteDeadline+1),true);
+ assert.equal(r.lastVote.abstained,8);
+ assert.equal(Object.keys(r.lastVote.scores).length,0);
+ assert.equal(r.players.filter(x=>!x.alive).length,1);
+});
+test('host may transfer leadership, and inactive host is replaced by active human',()=>{
+ const r=setup(5),[host,guest,third]=r.players;
+ assert.throws(()=>act(r,guest,'transfer_host',third.id));
+ assert.throws(()=>act(r,host,'transfer_host',host.id));
+ act(r,host,'transfer_host',guest.id);
+ assert.equal(r.host,guest.id);
+ guest.lastSeen=Date.now()-HOST_INACTIVE_MS-1000;
+ third.lastSeen=Date.now();
+ assert.equal(advanceRoom(r,Date.now()),true);
+ assert.equal(r.host,third.id);
+ assert.throws(()=>act(r,guest,'start'),/Только ведущий/);
+ act(r,third,'start');assert.equal(r.phase,'turn');
+});
+test('private recovery secret is isolated in observer view',()=>{
+ const r=setup(5),[a,b]=r.players;
+ const mine=view(r,a);const theirs=view(r,b);
+ assert.equal(mine.recoveryCode,a.recoveryCode);
+ assert.ok(!JSON.stringify(mine).includes(b.recoveryCode));
+ assert.ok(!JSON.stringify(theirs).includes(a.recoveryCode));
+ assert.match(a.recoveryCode,/^[a-f0-9]{24}$/);
 });
