@@ -102,18 +102,7 @@ function specialDialog(){
  return `<dialog id="special-dialog"><button class="close text-btn" data-action="special-close">Закрыть ✕</button><span class="eyebrow">ОДИН РАЗ ЗА ПАРТИЮ</span><h2>${escape(d.name)}</h2><p>${escape(d.description)}</p><p class="muted">Применяется в свой ход дополнительно к обычному раскрытию. Само особое условие станет открытым.</p><div class="special-controls">${needsTarget?`<label for="special-target">Участник</label><select id="special-target"><option value="">Выберите участника</option>${state.players.filter(p=>d.effect!=='swap'||p.id!==state.me).map(p=>`<option value="${p.id}" ${d.targetId===p.id?'selected':''}>${escape(p.name)}${p.id===state.me?' (вы)':''}${!p.alive?' · изгнан':''}</option>`).join('')}</select>`:''}${d.effect==='redraw'?'<p>Игра случайно выдаст другую подходящую карточку. Узнаете результат после применения; выбрать или отменить выпавшую карту нельзя.</p>':''}${d.effect==='shuffle'?'<p>Пустые и закрытые карточки останутся на месте. Случайная перетасовка может оставить часть карт у прежних владельцев.</p>':''}<button class="primary full" data-action="use_special">Применить один раз →</button></div></dialog>`;
 }
 // Inline icons avoid incomplete external SVG <use> rendering on mobile browsers.
-const dossierIconPaths={
- profession:'<path d="M7 5l20 20-3 3L4 8zM25 5 5 25l3 3L28 8z" />',
- health:'<path d="M16 27 5 17C-2 10 6 2 12 7l4 4 4-4c6-5 14 3 7 10z"/><path d="M7 17h5l3-5 3 9 3-4h4"/>',
- luggage:'<rect x="5" y="10" width="22" height="19"/><path d="M11 10V5h10v5M5 17h22M12 17v5m8-5v5"/>',
- phobia:'<ellipse cx="16" cy="18" rx="7" ry="8"/><path d="M12 11 8 6m12 5 4-5M9 17H3m26 0h-6M9 22l-5 5m19-5 5 5M14 10V4m4 6V4M14 25v4m4-4v4"/>',
- hobby:'<path d="M3 7h10l3 3 3-3h10v20H19l-3 2-3-2H3zM16 10v19M7 13h5m-5 5h5m8-5h5m-5 5h5"/>',
- biology:'<path d="M9 3c0 10 14 16 14 26M23 3C23 13 9 19 9 29M10 8h12M10 14h12M10 20h12M10 25h12"/>',
- personality:'<path d="M16 3 28 9v14L16 29 4 23V9zM11 13h2m6 0h2M11 21c4 3 6 3 10 0"/>',
- interesting:'<path d="M16 3v6m0 14v6M3 16h6m14 0h6M7 7l4 4m10 10 4 4m0-18-4 4M11 21l-4 4"/><path d="m16 11 5 5-5 5-5-5z"/>',
- special:'<path d="M7 29V3m1 2h19l-5 8 5 8H8"/>'
-};
-function dossierIcon(category){return `<svg class="dossier-category-icon" viewBox="0 0 32 32" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="square" stroke-linejoin="miter">${dossierIconPaths[category]||dossierIconPaths.interesting}</svg>`;}
+function dossierIcon(category){const key=/^(profession|health|luggage|phobia|hobby|biology|personality|interesting|special)$/.test(category)?category:'interesting';return `<img class="dossier-category-icon" src="/images/ui/dossier-${key}.svg" alt="" aria-hidden="true" width="48" height="48" loading="lazy" decoding="async">`;}
 function handCard(me, mine, k, label){
  const open=me.revealed.includes(k), empty=me.cards[k]===null;
  const can=mine&&!state.opened&&!open&&!empty&&(state.round!==1||k==='profession');
