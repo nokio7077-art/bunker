@@ -57,6 +57,7 @@ async function body(req) { let text=''; for await (const chunk of req) {text+=ch
 const assets={'/':['index.html','text/html; charset=utf-8'],'/app.js':['app.js','text/javascript; charset=utf-8'],'/card-images.js':['card-images.js','text/javascript; charset=utf-8'],'/style.css':['style.css','text/css; charset=utf-8'],'/theme.css':['theme.css','text/css; charset=utf-8'],'/game-pixel.css':['game-pixel.css','text/css; charset=utf-8'],'/favicon.svg':['favicon.svg','image/svg+xml']};
 // Only registered media and fonts are public; never serve arbitrary repository files.
 const binaryAssets=new Map(Object.values(disasterImages).map(image=>[image.src,{path:pathJoin(root,'public',image.src),type:'image/png'}]));
+for(const asset of ['dossier-avatar.svg','dossier-icons.svg'])binaryAssets.set(`/images/ui/${asset}`,{path:pathJoin(root,'public','images','ui',asset),type:'image/svg+xml'});
 for(const image of Object.values(disasterImages))binaryAssets.set(image.webp,{path:pathJoin(root,'public',image.webp),type:'image/webp',immutable:true});
 binaryAssets.set(landscapeImage,{path:pathJoin(root,'public',landscapeImage),type:'image/webp',immutable:true});
 // Four responsive still-image endings. Only explicitly listed files may be served.
