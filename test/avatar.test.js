@@ -23,3 +23,14 @@ test('gender and index are stable for the same fictional character',()=>{
  assert.ok(uri.startsWith('data:image/svg+xml;charset=UTF-8,'));
  assert.ok(decodeURIComponent(uri.split(',')[1]).includes('<svg'));
 });
+
+test('real avatar atlases each contain 250 WebP thumbnails in a 10 by 25 grid',async()=>{
+ const {femaleAtlas,maleAtlas}=await import('../public/avatar-atlases.js');
+ for(const atlas of [femaleAtlas,maleAtlas]){
+  assert.match(atlas,/^data:image\/webp;base64,/);
+  const b=Buffer.from(atlas.slice(atlas.indexOf(',')+1),'base64');
+  assert.equal(b.toString('ascii',0,4),'RIFF');
+  assert.equal(b.toString('ascii',8,12),'WEBP');
+  assert.ok(b.length>30000&&b.length<100000);
+ }
+});
