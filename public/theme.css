@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Rubik:wght@400;500;600;700&family=Russo+One&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Onest:wght@400;500;600;700;800&family=Rubik:wght@400;500;600;700&family=Russo+One&display=swap');
 
 @font-face{font-family:BunkerDisplay;src:url('/fonts/RubikMonoOne-Regular.ttf') format('truetype');font-weight:400;font-style:normal;font-display:swap}
 
@@ -929,4 +929,100 @@ body,button,input,select,textarea{
   .mobile-playbar{padding-left:10px;padding-right:10px}
   .mobile-playbar-status>strong{font-size:12px}
   .game.phase-vote .vote-btn{min-width:106px}
+}
+
+
+/* VISUAL POLISH / v8 — clean Cyrillic reading font, no lettering shadows
+   No black-on-neon CTAs: use dark filled buttons with light readable labels. */
+:root{
+ --bunker-ui:'Onest','Rubik',Arial,sans-serif;
+ --bunker-reading:'Onest','Rubik',Arial,sans-serif;
+ --bunker-text:#e8efe0;
+ --bunker-text-soft:#cad7c1;
+ --bunker-text-muted:#abbd9d;
+}
+body,button,input,select,textarea,.landing-shell,.game,#rules,#special-dialog{
+ font-family:var(--bunker-ui);
+}
+.landing-shell *, .game *, #rules *, #special-dialog *,
+.ending-screen *, .disaster-intro *{
+ text-shadow:none !important;
+}
+.landing-shell .hero h1{color:#f3f3e2;text-shadow:none}
+.landing-shell .lead,
+.landing-shell .entry-panel>p,
+.landing-shell .entry-note,
+.game .room-subtitle,
+.game .world p,
+.game .side-note p,
+.game .banner p,
+.game .private-note,
+.game .special-note,
+.game .card-description,
+.game .public-cards p,
+.game .journal p,
+#rules p,#rules li,#special-dialog p,#special-dialog li{
+ font-family:var(--bunker-reading);
+ color:var(--bunker-text-soft);
+ font-weight:450;
+ text-shadow:none;
+ letter-spacing:0;
+}
+.game .card-description,.game .public-cards .card-description{
+ color:#d0ddc7;
+ line-height:1.67;
+}
+.game .public-cards p,
+.game .card strong,
+.game .player-top strong{
+ color:var(--bunker-text);
+}
+.game .player-top>div>small,
+.game .section-title small,
+.game .card-label small,
+.game .world-details dd{color:var(--bunker-text-muted)}
+.game .primary,
+.game .banner .primary,
+.game .ending-screen-actions .primary,
+.landing-shell .primary,
+.ending-screen-actions .primary{
+ background:#25412b;
+ color:#f0f6df;
+ border:1px solid #b8d575;
+ box-shadow:none;
+}
+.game .primary:hover:enabled,
+.game .banner .primary:hover:enabled,
+.landing-shell .primary:hover:enabled,
+.ending-screen-actions .primary:hover:enabled{
+ background:#355536;color:#f7fae8;border-color:#d4e99c;
+}
+.game .secondary,
+.game .vote-btn,
+.landing-shell .secondary,
+.ending-screen-actions .secondary{
+ background:#152a1a;color:#eaf2df;border-color:#819e5b;
+ box-shadow:none;
+}
+.game .secondary:hover:enabled,
+.game .vote-btn:hover:enabled,
+.landing-shell .secondary:hover:enabled{
+ background:#233b25;color:#f1f7e7;
+}
+.mobile-playbar-actions button:last-child{
+ background:#29462d;color:#f1f6df;border-color:#b5d477;
+}
+.mobile-playbar-actions button:last-child:hover{
+ background:#36563a;color:#fff;
+}
+.landing-shell .primary:focus-visible,
+.game :is(.primary,.secondary,.vote-btn):focus-visible,
+.mobile-playbar-actions button:focus-visible{
+ outline:2px solid #def59d;outline-offset:3px;
+}
+@media(max-width:760px){
+ .game .card-description{font-size:15px}
+ .game .public-cards .card-description{font-size:14px}
+ .game .public-cards p{font-size:15px}
+ .landing-shell .lead{line-height:1.65}
 }
