@@ -101,12 +101,25 @@ function specialDialog(){
  const d=specialDraft, needsTarget=['discard','swap'].includes(d.effect);
  return `<dialog id="special-dialog"><button class="close text-btn" data-action="special-close">Закрыть ✕</button><span class="eyebrow">ОДИН РАЗ ЗА ПАРТИЮ</span><h2>${escape(d.name)}</h2><p>${escape(d.description)}</p><p class="muted">Применяется в свой ход дополнительно к обычному раскрытию. Само особое условие станет открытым.</p><div class="special-controls">${needsTarget?`<label for="special-target">Участник</label><select id="special-target"><option value="">Выберите участника</option>${state.players.filter(p=>d.effect!=='swap'||p.id!==state.me).map(p=>`<option value="${p.id}" ${d.targetId===p.id?'selected':''}>${escape(p.name)}${p.id===state.me?' (вы)':''}${!p.alive?' · изгнан':''}</option>`).join('')}</select>`:''}${d.effect==='redraw'?'<p>Игра случайно выдаст другую подходящую карточку. Узнаете результат после применения; выбрать или отменить выпавшую карту нельзя.</p>':''}${d.effect==='shuffle'?'<p>Пустые и закрытые карточки останутся на месте. Случайная перетасовка может оставить часть карт у прежних владельцев.</p>':''}<button class="primary full" data-action="use_special">Применить один раз →</button></div></dialog>`;
 }
+// Inline icons avoid incomplete external SVG <use> rendering on mobile browsers.
+const dossierIconPaths={
+ profession:'<path d="M7 5l20 20-3 3L4 8zM25 5 5 25l3 3L28 8z" />',
+ health:'<path d="M16 27 5 17C-2 10 6 2 12 7l4 4 4-4c6-5 14 3 7 10z"/><path d="M7 17h5l3-5 3 9 3-4h4"/>',
+ luggage:'<rect x="5" y="10" width="22" height="19"/><path d="M11 10V5h10v5M5 17h22M12 17v5m8-5v5"/>',
+ phobia:'<ellipse cx="16" cy="18" rx="7" ry="8"/><path d="M12 11 8 6m12 5 4-5M9 17H3m26 0h-6M9 22l-5 5m19-5 5 5M14 10V4m4 6V4M14 25v4m4-4v4"/>',
+ hobby:'<path d="M3 7h10l3 3 3-3h10v20H19l-3 2-3-2H3zM16 10v19M7 13h5m-5 5h5m8-5h5m-5 5h5"/>',
+ biology:'<path d="M9 3c0 10 14 16 14 26M23 3C23 13 9 19 9 29M10 8h12M10 14h12M10 20h12M10 25h12"/>',
+ personality:'<path d="M16 3 28 9v14L16 29 4 23V9zM11 13h2m6 0h2M11 21c4 3 6 3 10 0"/>',
+ interesting:'<path d="M16 3v6m0 14v6M3 16h6m14 0h6M7 7l4 4m10 10 4 4m0-18-4 4M11 21l-4 4"/><path d="m16 11 5 5-5 5-5-5z"/>',
+ special:'<path d="M7 29V3m1 2h19l-5 8 5 8H8"/>'
+};
+function dossierIcon(category){return `<svg class="dossier-category-icon" viewBox="0 0 32 32" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="square" stroke-linejoin="miter">${dossierIconPaths[category]||dossierIconPaths.interesting}</svg>`;}
 function handCard(me, mine, k, label){
  const open=me.revealed.includes(k), empty=me.cards[k]===null;
  const can=mine&&!state.opened&&!open&&!empty&&(state.round!==1||k==='profession');
  const number=String(Object.keys(state.categories).indexOf(k)+1).padStart(2,'0');
  const status=empty?'СБРОШЕНО':k==='special'&&me.specialUsed?'ИСПОЛЬЗОВАНО':open?'РАСКРЫТО':'ЗАКРЫТО';
- const body=`<span class="dossier-card-top"><span class="dossier-card-index">${number}</span><span class="card-label"><svg class="dossier-category-icon" aria-hidden="true"><use href="/images/ui/dossier-icons.svg#${k}"></use></svg>${escape(label)}</span><small class="dossier-card-status">${status}</small></span><span class="dossier-card-content"><strong>${empty?'Карточка сброшена':escape(me.cards[k])}</strong>${me.descriptions?.[k]?`<span class="card-description">${escape(me.descriptions[k])}</span>`:''}</span>`;
+ const body=`<span class="dossier-card-top"><span class="dossier-card-index">${number}</span><span class="card-label">${dossierIcon(k)}${escape(label)}</span><small class="dossier-card-status">${status}</small></span><span class="dossier-card-content"><strong>${empty?'Карточка сброшена':escape(me.cards[k])}</strong>${me.descriptions?.[k]?`<span class="card-description">${escape(me.descriptions[k])}</span>`:''}</span>`;
  if(k==='special')return `<article class="card special-card ${open?'revealed':''}">${body}<p class="special-note">${me.specialUsed?'Действие уже применено.':state.specialAvailable?'Можно применить один раз в свой ход.':'Сюжетная карта из старой партии. Для карт действий начните новую игру.'}</p>${can?'<button class="secondary" data-card="special">Раскрыть без применения</button>':''}${state.specialAvailable?`<button class="primary" data-action="special-open" ${mine&&me.alive?'':'disabled'}>Применить условие →</button>`:''}</article>`;
  return `<button class="card ${open?'revealed':''} ${can?'available':''}" data-card="${k}" ${can?'':'disabled'}>${body}${can?'<span class="reveal-hint">Раскрыть карточку →</span>':''}</button>`;
 }
@@ -128,14 +141,14 @@ function dossier(me,current,mine){
  const percent=total?Math.round(opened/total*100):0;
  const slots=keys.map(([k],i)=>`<span class="dossier-meter-slot ${me.revealed.includes(k)?'is-filled':''}" aria-hidden="true"></span>`).join('');
  const own=`<section class="dossier-file" data-dossier-key="${escape(state.code)}:${escape(me.id)}:${state.gameNumber||1}" data-progress-count="${opened}" aria-label="Досье выжившего">
- <div class="dossier-file-art" aria-hidden="true"></div>
+ 
  <div class="dossier-file-heading"><span class="dossier-file-stripes" aria-hidden="true">///</span><h3>ДОСЬЕ ВЫЖИВШЕГО</h3><span class="dossier-file-stripes" aria-hidden="true">///</span></div>
  <div class="dossier-file-profile"><img class="dossier-file-avatar" src="/images/ui/dossier-avatar.svg" alt="Пиксельный портрет выжившего" width="95" height="98" loading="lazy"><div class="dossier-file-identity"><strong>${escape(me.name)}</strong><small>УЧАСТНИК УБЕЖИЩА · ${escape(state.code)}</small><div class="dossier-file-progress"><span>ПРОФИЛЬ: ${percent}% РАСКРЫТО</span><strong>${opened} ИЗ ${total}</strong></div><div class="dossier-progress" role="progressbar" aria-label="Раскрыто характеристик" aria-valuemin="0" aria-valuemax="${total}" aria-valuenow="${opened}">${slots}</div></div></div>
  <div class="dossier-file-list">${keys.map(([k,label])=>handCard(me,mine,k,label)).join('')}</div>
  <p class="dossier-file-footnote">Закрытые карточки видны только вам. Открытые становятся доступны группе.</p>
  </section>`;
  if(state.phase!=='turn'||mine)return `<div id="active-dossier">${own}</div>`;
- return `<section id="active-dossier" class="active-dossier"><span class="eyebrow">СЕЙЧАС СЛОВО У</span><h3>${escape(current.name)}</h3><p class="private-note">Открытые карточки участника</p><div class="hand">${current.revealed.filter(k=>Object.hasOwn(current.cards,k)).map(k=>`<article class="card dossier-public-card"><span class="dossier-card-top"><span class="card-label"><svg class="dossier-category-icon" aria-hidden="true"><use href="/images/ui/dossier-icons.svg#${k}"></use></svg>${escape(state.categories[k])}</span><small class="dossier-card-status">РАСКРЫТО</small></span><span class="dossier-card-content"><strong>${current.cards[k]===null?'Карточка сброшена':escape(current.cards[k])}</strong>${current.descriptions?.[k]?`<p class="card-description">${escape(current.descriptions[k])}</p>`:''}</span></article>`).join('')||'<p class="muted">Участник ещё не открыл карточки.</p>'}</div></section><details class="own-dossier"><summary>Ваше досье · посмотреть свои карточки</summary>${own}</details>`;
+ return `<section id="active-dossier" class="active-dossier"><span class="eyebrow">СЕЙЧАС СЛОВО У</span><h3>${escape(current.name)}</h3><p class="private-note">Открытые карточки участника</p><div class="hand">${current.revealed.filter(k=>Object.hasOwn(current.cards,k)).map(k=>`<article class="card dossier-public-card"><span class="dossier-card-top"><span class="card-label">${dossierIcon(k)}${escape(state.categories[k])}</span><small class="dossier-card-status">РАСКРЫТО</small></span><span class="dossier-card-content"><strong>${current.cards[k]===null?'Карточка сброшена':escape(current.cards[k])}</strong>${current.descriptions?.[k]?`<p class="card-description">${escape(current.descriptions[k])}</p>`:''}</span></article>`).join('')||'<p class="muted">Участник ещё не открыл карточки.</p>'}</div></section><details class="own-dossier"><summary>Ваше досье · посмотреть свои карточки</summary>${own}</details>`;
 }
 function room(){const me=state.players.find(p=>p.id===state.me), current=state.players.find(p=>p.id===state.turn), alive=state.players.filter(p=>p.alive), mine=state.phase==='turn'&&state.turn===me.id;
  const status=state.phase==='lobby'?'ЗАЛ ОЖИДАНИЯ':state.phase==='finished'?'СОСТАВ ОПРЕДЕЛЁН':state.phase==='vote'?'ВРЕМЯ РЕШАТЬ':`КРУГ ${state.round} / ОБСУЖДЕНИЕ`;
