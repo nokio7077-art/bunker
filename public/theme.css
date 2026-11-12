@@ -1388,3 +1388,160 @@ body,button,input,select,textarea,.landing-shell,.game,#rules,#special-dialog{
 .game .dossier-file .dossier-progress>.dossier-meter-slot{display:block;width:auto;height:auto;min-width:0;background:#192c18;border:1px solid #42613a;box-shadow:none;transition:none}
 .game .dossier-file .dossier-progress>.dossier-meter-slot.is-filled{background:#d7f47e;border-color:#e9fa9c;box-shadow:inset 0 2px #ecffa5}
 .game .dossier-file .dossier-progress>.dossier-meter-slot.is-new{animation:dossier-slot-unlock .55s steps(4,end)}
+
+/* MOBILE DOSSIER REPAIR / v13: no cropped words, intact icons, clean portrait. */
+.game .dossier-file-art{display:none!important}
+.game .dossier-file-heading{
+ margin:0 auto 17px;
+ width:100%;
+ max-width:100%;
+ box-shadow:inset 0 0 0 2px #203a20;
+ background:#102819;
+}
+.game .dossier-file-heading h3{overflow-wrap:anywhere;min-width:0;line-height:1.4}
+.game .dossier-file-profile{min-width:0}
+.game .dossier-file-avatar{
+ width:100%;
+ min-width:0;
+ aspect-ratio:72/77;
+ object-fit:cover;
+ overflow:hidden;
+ border:2px solid #b7d97c;
+ box-shadow:0 0 0 2px #122b17;
+}
+.game .dossier-file-identity,.game .dossier-card-content,.game .dossier-card-top,.game .dossier-card-top .card-label{
+ min-width:0;
+ max-width:100%;
+}
+.game .dossier-file-list .dossier-category-icon{
+ display:block;
+ width:35px;height:35px;
+ min-width:35px;min-height:35px;
+ overflow:visible;
+ flex-shrink:0;
+ stroke:#d4eea1;
+ color:#d4eea1;
+ fill:none;
+}
+.game .dossier-file-list .dossier-card-top .card-label{
+ font-family:var(--bunker-reading,'Onest',sans-serif);
+ font-weight:750;
+ font-size:12px;
+ line-height:1.25;
+ letter-spacing:0;
+ overflow-wrap:anywhere;
+ word-break:normal;
+ white-space:normal;
+ hyphens:auto;
+}
+.game .dossier-file-list .dossier-card-content strong,
+.game .dossier-file-list .dossier-card-content .card-description,
+.game .dossier-file-identity>strong,
+.game .dossier-file-identity>small{
+ min-width:0;max-width:100%;
+ overflow-wrap:anywhere;word-break:normal;white-space:normal;
+}
+.game .dossier-file-list .dossier-card-status{
+ max-width:calc(100% - 22px);
+ white-space:normal;
+ overflow-wrap:anywhere;
+ text-align:center;
+}
+.game .dossier-file-list>.card{min-width:0;max-width:100%}
+.game .dossier-file-list .dossier-card-top{min-width:0}
+.game .dossier-file-list>.special-card .dossier-card-top .card-label{font-size:13px}
+@media(max-width:760px){
+ .game .dossier-file{min-width:0;max-width:100%;padding:10px}
+ .game .dossier-file-profile{
+  grid-template-columns:minmax(65px,85px) minmax(0,1fr);
+  gap:12px;
+  padding-bottom:13px;
+ }
+ .game .dossier-file-heading{margin-bottom:13px}
+ .game .dossier-file-heading h3{font-size:clamp(12px,3.3vw,18px)}
+ .game .dossier-file-list>.card{
+  display:flex;
+  flex-direction:column;
+  align-items:stretch;
+  min-height:0;
+  max-width:100%;
+  gap:0;
+ }
+ .game .dossier-file-list .dossier-card-top{
+  position:static;
+  display:flex;
+  flex-direction:row;
+  align-items:center;
+  justify-content:space-between;
+  height:auto;
+  min-height:57px;
+  width:100%;
+  gap:8px;
+  padding:8px 10px;
+  border-right:0;
+  border-bottom:2px solid #709b4c;
+ }
+ .game .dossier-file-list .dossier-card-top .card-label{
+  display:flex;
+  flex-direction:row;
+  justify-content:flex-start;
+  align-items:center;
+  flex:1 1 auto;
+  min-width:0;
+  gap:9px;
+  font-family:var(--bunker-reading,'Onest',sans-serif);
+  font-size:clamp(12px,3.2vw,15px);
+  line-height:1.25;
+  font-weight:750;
+  text-align:left;
+  overflow-wrap:anywhere;
+ }
+ .game .dossier-file-list .dossier-category-icon{
+  width:32px;height:32px;min-width:32px;min-height:32px;
+ }
+ .game .dossier-file-list .dossier-card-status{
+  position:static;
+  display:block;
+  flex:0 1 auto;
+  max-width:40%;
+  margin-left:auto;
+  padding:5px 7px;
+  font-size:clamp(9px,2.3vw,11px);
+  line-height:1.2;
+  white-space:normal;
+  overflow-wrap:anywhere;
+ }
+ .game .dossier-file-list .dossier-card-content{
+  width:100%;
+  padding:13px 13px 14px;
+  gap:7px;
+ }
+ .game .dossier-file-list .dossier-card-content strong{
+  font-size:clamp(16px,4vw,19px);
+  line-height:1.35;
+ }
+ .game .dossier-file-list .dossier-card-content .card-description{
+  font-size:clamp(14px,3.4vw,16px);
+  line-height:1.6;
+ }
+ .game .dossier-file-list>.card .reveal-hint{
+  align-self:flex-start;
+  margin:0 13px 13px;
+  max-width:calc(100% - 26px);
+  width:auto;
+  overflow-wrap:anywhere;
+ }
+ .game .dossier-file-list>.special-card .dossier-card-top{
+  flex-direction:row;
+ }
+ .game .dossier-file-list>.special-card .dossier-card-top .card-label{font-size:13px}
+ .game .dossier-file-list>.special-card .dossier-card-content{padding:13px}
+}
+@media(max-width:360px){
+ .game .dossier-file{padding:8px}
+ .game .dossier-file-profile{grid-template-columns:65px minmax(0,1fr);gap:9px}
+ .game .dossier-file-list .dossier-card-top{padding:8px}
+ .game .dossier-file-list .dossier-category-icon{width:28px;height:28px;min-width:28px;min-height:28px}
+ .game .dossier-file-list .dossier-card-top .card-label{font-size:12px;gap:6px}
+ .game .dossier-file-list .dossier-card-status{font-size:9px;padding:4px 5px}
+}
