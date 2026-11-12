@@ -137,7 +137,7 @@ function finishVote(room,now=Date.now()){
  const scores={};for(const target of Object.values(room.votes))scores[target]=(scores[target]||0)+1;
  const max=Math.max(0,...Object.values(scores));
  const candidates=max===0?room.players.filter(x=>x.alive).map(x=>x.id):Object.keys(scores).filter(k=>scores[k]===max);
- const loser=room.players.find(x=>x.id===pick(candidates));loser.alive=false;
+ const loserId=pick(candidates);const loser=room.players.find(x=>x.id===loserId);loser.alive=false;
  room.lastVote={scores,eliminated:loser.id,tie:candidates.length>1,abstained:room.players.length-Object.keys(room.votes).length};
  room.log.push(`${loser.name} покидает бункер (${max} голосов)${candidates.length>1?'. При равенстве или отсутствии голосов решает случайный жребий':''}.`);
  if(room.players.filter(x=>x.alive).length<=room.capacity){room.phase='finished';room.turn=null;delete room.turnDeadline;delete room.voteDeadline;room.log.push('Состав убежища определён.');}
