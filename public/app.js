@@ -2,7 +2,7 @@ import { disasterImageFor } from './card-images.js';
 import { avatarIdentity } from './avatar-generator.js';
 const app=document.querySelector('#app');
 // Load only the gender atlas that the current character needs.
-// Portraits are cropped once from the original 128px PNGs to 92px tiles.
+// Lossless atlases preserve all original PNG pixels in 144px transparent tiles.
 const avatarSheets={};
 function avatarSheet(gender){
  if(!['female','male'].includes(gender))return null;
@@ -10,22 +10,22 @@ function avatarSheet(gender){
   const img=new Image();
   img.addEventListener('load',paintAvatars);
   img.addEventListener('error',()=>console.warn('Не удалось загрузить галерею портретов.'));
-  img.src='/images/ui/avatars-'+gender+'-92.webp';
+  img.src='/images/ui/avatars-'+gender+'-144.webp';
   avatarSheets[gender]=img;
  }
  return avatarSheets[gender];
 }
 function paintAvatar(canvas){
  const sheet=avatarSheet(canvas.dataset.gender);
- if(!sheet||!sheet.complete||sheet.naturalWidth!==920||sheet.naturalHeight!==(canvas.dataset.gender==='female'?2760:2668))return;
+ if(!sheet||!sheet.complete||sheet.naturalWidth!==1440||sheet.naturalHeight!==(canvas.dataset.gender==='female'?4320:4176))return;
  const index=Number(canvas.dataset.index);
  if(!Number.isInteger(index)||index<0||index>=(canvas.dataset.gender==='female'?298:290))return;
  const context=canvas.getContext('2d');
  if(!context)return;
  context.imageSmoothingEnabled=false;
- context.clearRect(0,0,92,92);
- // Tile already cropped cleanly from the 128px original: never crop or upscale again.
- context.drawImage(sheet,(index%10)*92,Math.floor(index/10)*92,92,92,0,0,92,92);
+ context.clearRect(0,0,144,144);
+ // Copy the full-resolution tile without resampling.
+ context.drawImage(sheet,(index%10)*144,Math.floor(index/10)*144,144,144,0,0,144,144);
 }
 function paintAvatars(){document.querySelectorAll('canvas.dossier-file-avatar').forEach(paintAvatar);}
 
@@ -154,7 +154,7 @@ function dossier(me,current,mine){
  const own=`<section class="dossier-file" data-dossier-key="${escape(state.code)}:${escape(me.id)}:${state.gameNumber||1}" data-progress-count="${opened}" aria-label="Досье выжившего">
  
  <div class="dossier-file-heading"><span class="dossier-file-stripes" aria-hidden="true">///</span><h3>ДОСЬЕ ВЫЖИВШЕГО</h3><span class="dossier-file-stripes" aria-hidden="true">///</span></div>
- <div class="dossier-file-profile"><canvas class="dossier-file-avatar" data-gender="${avatarIdentity(me.cards.biology,me.id,state.gameNumber||1).gender}" data-index="${avatarIdentity(me.cards.biology,me.id,state.gameNumber||1).index}" role="img" aria-label="Пиксельный портрет персонажа из коллекции" width="92" height="92"></canvas><div class="dossier-file-identity"><strong>${escape(me.name)}</strong><small>УЧАСТНИК УБЕЖИЩА · ${escape(state.code)}</small><div class="dossier-file-progress"><span>ПРОФИЛЬ: ${percent}% РАСКРЫТО</span><strong>${opened} ИЗ ${total}</strong></div><div class="dossier-progress" role="progressbar" aria-label="Раскрыто характеристик" aria-valuemin="0" aria-valuemax="${total}" aria-valuenow="${opened}">${slots}</div></div></div>
+ <div class="dossier-file-profile"><canvas class="dossier-file-avatar" data-gender="${avatarIdentity(me.cards.biology,me.id,state.gameNumber||1).gender}" data-index="${avatarIdentity(me.cards.biology,me.id,state.gameNumber||1).index}" role="img" aria-label="Пиксельный портрет персонажа из коллекции" width="144" height="144"></canvas><div class="dossier-file-identity"><strong>${escape(me.name)}</strong><small>УЧАСТНИК УБЕЖИЩА · ${escape(state.code)}</small><div class="dossier-file-progress"><span>ПРОФИЛЬ: ${percent}% РАСКРЫТО</span><strong>${opened} ИЗ ${total}</strong></div><div class="dossier-progress" role="progressbar" aria-label="Раскрыто характеристик" aria-valuemin="0" aria-valuemax="${total}" aria-valuenow="${opened}">${slots}</div></div></div>
  <div class="dossier-file-list">${keys.map(([k,label])=>handCard(me,mine,k,label)).join('')}</div>
  <p class="dossier-file-footnote">Закрытые карточки видны только вам. Открытые становятся доступны группе.</p>
  </section>`;
