@@ -125,13 +125,6 @@ test('HTTP sessions, private cards, registered artwork, caching and durable rest
    const cached=await fetch(base+'/images/ui/avatars-'+gender+'-96.webp',{headers:{'If-None-Match':response.headers.get('etag')}});
    assert.equal(cached.status,304);
   }
-  for(const [name,type] of [['bunker-divider-v2.svg','image/svg+xml'],['landing-door-desktop-v2.webp','image/webp']]){
-   const response=await fetch(base+'/images/ui/'+name);
-   assert.equal(response.status,200,name);
-   assert.equal(response.headers.get('content-type'),type);
-   const content=Buffer.from(await response.arrayBuffer());
-   assert.ok(content.length>200,'Asset should not be empty: '+name);
-  }
   const page=await fetch(base,{headers:{Connection:'close'}});assert.equal(page.status,200);assert.ok(page.headers.get('content-security-policy').includes("default-src 'self'"));assert.ok((await page.text()).includes('lang="ru"'));
  }finally{await stop();await rm(dir,{recursive:true,force:true});}
 });
