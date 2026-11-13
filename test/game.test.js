@@ -189,3 +189,22 @@ test('private recovery secret is isolated in observer view',()=>{
  assert.ok(!JSON.stringify(theirs).includes(a.recoveryCode));
  assert.match(a.recoveryCode,/^[a-f0-9]{24}$/);
 });
+
+
+test('all shelter areas and descriptions stay within the agreed 30–350 m² range',async()=>{
+ const {bunkers:active,chooseWorld,disasters}=await import('../world.js');
+ const {readFile}=await import('node:fs/promises');
+ const mirrored=JSON.parse(await readFile(new URL('../bunkers.json',import.meta.url),'utf8'));
+ assert.equal(active.length,mirrored.length);
+ const byId=new Map(mirrored.map(b=>[b.id,b]));
+ for(const bunker of active){
+  assert.ok(Number.isInteger(bunker.area_sqm)&&bunker.area_sqm>=30&&bunker.area_sqm<=350,`Invalid area for ${bunker.name}: ${bunker.area_sqm}`);
+  assert.match(bunker.description,new RegExp(`общая площадь ${bunker.area_sqm} м²`));
+  assert.equal(byId.get(bunker.id)?.area_sqm,bunker.area_sqm);
+ }
+ assert.ok(new Set(active.map(b=>b.area_sqm)).size>=15,'Shelter sizes should be varied');
+ for(let i=0;i<disasters.length;i++){
+  const picked=chooseWorld(3,n=>0);
+  assert.ok(picked.bunker.area_sqm<=350&&picked.bunker.area_sqm>=30);
+ }
+});
