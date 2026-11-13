@@ -1876,25 +1876,60 @@ body,button,input,select,textarea,.landing-shell,.game,#rules,#special-dialog{
 .game .winners-count{margin-top:8px;font-size:13px;color:#d5eea9}
 @media(max-width:600px){.ending-winners{padding:12px 14px;margin:8px auto 12px}}
 
-/* VHS playback texture only on the final result screen. All overlay layers ignore clicks. */
+/* Strong analog VHS playback on final ending only; controls remain interactive. */
 .ending-screen{isolation:isolate}
-.ending-screen::before,.ending-screen::after{content:"";position:fixed;inset:0;z-index:5;pointer-events:none}
+.ending-screen::before,.ending-screen::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:5}
 .ending-screen::before{
- background:repeating-linear-gradient(to bottom,rgba(0,0,0,.13) 0px,rgba(0,0,0,.13) 1px,rgba(130,235,145,.035) 2px,transparent 4px);
- opacity:.38;animation:bunker-vhs-flicker 6.8s steps(1,end) infinite;
+ background:
+   repeating-linear-gradient(0deg,rgba(1,10,3,.24) 0 2px,rgba(161,249,155,.065) 3px,transparent 5px),
+   repeating-linear-gradient(0deg,transparent 0 61px,rgba(0,0,0,.18) 62px 65px,transparent 67px 119px);
+ mix-blend-mode:screen;
+ opacity:.72;
+ animation:bunker-vhs-flicker 2.6s steps(1,end) infinite,bunker-vhs-scan 1.8s linear infinite;
 }
 .ending-screen::after{
- inset:-30% 0;
- background:linear-gradient(to bottom,transparent 0%,transparent 42%,rgba(215,255,202,.09) 48%,rgba(5,30,14,.12) 51%,transparent 55%,transparent 100%);
- opacity:.7;transform:translateY(-65%);animation:bunker-vhs-tracking 9s linear infinite;
+ inset:-35% 0;
+ background:linear-gradient(to bottom,transparent 0%,transparent 39%,rgba(140,255,154,.06) 43%,rgba(214,255,208,.25) 46%,rgba(13,57,23,.35) 49%,rgba(2,9,5,.11) 53%,transparent 57%);
+ opacity:.95;
+ animation:bunker-vhs-tracking 3.6s linear infinite,bunker-vhs-flicker 4.1s steps(1,end) infinite;
 }
-.ending-screen .ending-frame{position:relative}
-.ending-screen .ending-image{animation:bunker-vhs-image-jitter 8.5s steps(1,end) infinite}
-@keyframes bunker-vhs-flicker{0%,95%,98%,100%{opacity:.38}96%{opacity:.2}97%{opacity:.52}99%{opacity:.25}}
+.ending-screen .ending-frame{position:relative;overflow:hidden}
+.ending-screen .ending-image{
+ animation:bunker-vhs-image-jitter 3.7s steps(1,end) infinite,bunker-vhs-chroma 5.3s steps(1,end) infinite;
+ will-change:transform,filter;
+}
+@keyframes bunker-vhs-flicker{
+ 0%,12%,19%,30%,55%,70%,100%{opacity:.7}
+ 13%,31%,71%{opacity:.42}
+ 14%,32%,72%{opacity:.96}
+ 15%,33%,73%{opacity:.58}
+}
+@keyframes bunker-vhs-scan{0%{background-position:0 0,0 0}100%{background-position:0 18px,0 120px}}
 @keyframes bunker-vhs-tracking{0%{transform:translateY(-65%)}100%{transform:translateY(65%)}}
-@keyframes bunker-vhs-image-jitter{0%,96%,100%{transform:translateX(0)}97%{transform:translateX(1px)}98%{transform:translateX(-1px)}99%{transform:translateX(0)}}
+@keyframes bunker-vhs-image-jitter{
+ 0%,11%,15%,37%,42%,63%,70%,91%,100%{transform:translate(0,0) skewX(0deg)}
+ 12%{transform:translate(4px,-1px) skewX(-.3deg)}
+ 13%{transform:translate(-3px,1px) skewX(.2deg)}
+ 38%{transform:translate(-5px,0) skewX(.35deg)}
+ 39%{transform:translate(2px,1px)}
+ 64%{transform:translate(3px,-2px)}
+ 65%{transform:translate(-2px,0)}
+ 92%{transform:translate(5px,1px)}
+ 93%{transform:translate(-3px,0)}
+}
+@keyframes bunker-vhs-chroma{
+ 0%,26%,29%,66%,69%,100%{filter:none}
+ 27%,67%{filter:drop-shadow(3px 0 rgba(241,88,116,.48)) drop-shadow(-3px 0 rgba(82,237,218,.45)) contrast(1.13)}
+ 28%,68%{filter:contrast(1.2) brightness(1.13)}
+}
+@media(prefers-reduced-motion:reduce){
+ .ending-screen::before,.ending-screen::after,.ending-screen .ending-image{animation:none!important}
+ .ending-screen::after{display:none}
+ .ending-screen::before{opacity:.16}
+ .ending-screen .ending-image{filter:none!important;transform:none!important}
+}
 /* The footer no longer contains text: simple high contrast apocalypse symbols. */
 .landing-shell .landing-footer.apocalypse-footer{display:flex;flex-direction:row;flex-wrap:nowrap;align-items:center;justify-content:center;gap:clamp(12px,5vw,60px);min-height:74px;padding:12px 18px}
 .landing-shell .apocalypse-footer .apocalypse-symbol{display:inline-flex;align-items:center;justify-content:center;max-width:none;width:clamp(42px,7vw,65px);height:48px;color:#d1ec75;font:700 clamp(27px,4vw,40px)/1 'Segoe UI Symbol','DejaVu Sans',sans-serif;text-shadow:0 0 11px rgba(181,232,88,.25);filter:drop-shadow(0 0 4px rgba(164,223,70,.12))}
 @media(max-width:480px){.landing-shell .landing-footer.apocalypse-footer{flex-direction:row;gap:clamp(8px,3vw,20px);min-height:60px;padding:9px 8px}.landing-shell .apocalypse-footer .apocalypse-symbol{width:40px;height:40px;font-size:29px}}
-@media(prefers-reduced-motion:reduce){.ending-screen::before,.ending-screen::after,.ending-screen .ending-image{animation:none!important}.ending-screen::after{display:none}.ending-screen::before{opacity:.14}}
+
