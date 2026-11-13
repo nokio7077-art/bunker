@@ -162,8 +162,8 @@ test('public event snapshots never disclose hidden values, including closed-to-c
 test('shuffle results list all open recipients and report unchanged outcomes honestly',()=>{
  const {room,host,guest}=setup('Перетасовка открытого багажа');host.revealed.push('luggage');guest.revealed.push('luggage');
  const before=new Map([host,guest].map(p=>[p.id,p.cards.luggage]));act(room,host,'use_special');
- const results=room.specialEvents.at(-1).results;assert.equal(results.length,2);
- for(const result of results){const p=room.players.find(p=>p.id===result.playerId);assert.equal(result.before,before.get(p.id));assert.equal(result.after,p.cards.luggage);assert.equal(result.unchanged,result.before===result.after);}
+ const results=room.specialEvents.at(-1).results;assert.equal(results.length,room.players.length);
+ for(const result of results){const p=room.players.find(p=>p.id===result.playerId);if(p.revealed.includes('luggage')){assert.equal(result.before,before.get(p.id));assert.equal(result.after,p.cards.luggage);assert.equal(result.unchanged,result.before===result.after);}else{assert.equal(result.before,'Закрытая карточка');assert.equal(result.after,'Новая закрытая карточка');assert.equal(result.unchanged,false);}}
 });
 
 
