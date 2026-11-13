@@ -4,9 +4,6 @@ const app=document.querySelector('#app');
 // Load lossless 144px WebP sheets in small 50-portrait chunks, only when visible.
 // Preserves the exact pixels and alpha of the original uploaded PNG portraits.
 const avatarSheets=new Map();
-const avatarVisibility=typeof IntersectionObserver==='function'?new IntersectionObserver(entries=>{
- for(const entry of entries){if(entry.isIntersecting){avatarVisibility.unobserve(entry.target);paintAvatar(entry.target);}}
-},{rootMargin:'240px'}):null;
 function avatarSheet(gender,part){
  if(!['female','male'].includes(gender)||!Number.isInteger(part)||part<0||part>5)return null;
  const key=gender+':'+part;
@@ -39,9 +36,9 @@ function paintAvatar(canvas){
  context.drawImage(sheet,(localIndex%10)*144,Math.floor(localIndex/10)*144,144,144,0,0,144,144);
 }
 function paintAvatars(){
- document.querySelectorAll('canvas.dossier-file-avatar, canvas.player-portrait').forEach(canvas=>{
-  if(avatarVisibility)avatarVisibility.observe(canvas);else paintAvatar(canvas);
- });
+ // Start every required chunk request immediately, including the owner's hidden dossier.
+ // Loaded sheets are cached in avatarSheets and repainted after each game state refresh.
+ document.querySelectorAll('canvas.dossier-file-avatar, canvas.player-portrait').forEach(paintAvatar);
 }
 
 const escape=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
