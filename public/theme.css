@@ -1749,3 +1749,6 @@ body,button,input,select,textarea,.landing-shell,.game,#rules,#special-dialog{
  #rules .rules-metrics span{font-size:9px}
  #rules .rules-footer button{width:100%}
 }
+
+/* Two entry actions after removing recovery tab. */
+.landing-shell .tabs{grid-template-columns:repeat(2,minmax(0,1fr))}
