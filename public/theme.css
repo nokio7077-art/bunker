@@ -1831,3 +1831,18 @@ body,button,input,select,textarea,.landing-shell,.game,#rules,#special-dialog{
   max-width:44px;max-height:44px;
  }
 }
+
+/* Avatar appears in the public player list after profession + biology are revealed. */
+.game canvas.player-portrait{
+ display:block;
+ flex:0 0 42px;
+ width:42px;
+ height:42px;
+ padding:0;
+ border:1px solid #93b453;
+ border-radius:0;
+ background:#223c20;
+ image-rendering:auto;
+ object-fit:contain;
+}
+@media(max-width:600px){.game canvas.player-portrait{flex-basis:38px;width:38px;height:38px}}
