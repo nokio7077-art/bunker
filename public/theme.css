@@ -1875,3 +1875,26 @@ body,button,input,select,textarea,.landing-shell,.game,#rules,#special-dialog{
 .ending-winners small{display:block;margin-top:8px;color:#bed19a}
 .game .winners-count{margin-top:8px;font-size:13px;color:#d5eea9}
 @media(max-width:600px){.ending-winners{padding:12px 14px;margin:8px auto 12px}}
+
+/* VHS playback texture only on the final result screen. All overlay layers ignore clicks. */
+.ending-screen{isolation:isolate}
+.ending-screen::before,.ending-screen::after{content:"";position:fixed;inset:0;z-index:5;pointer-events:none}
+.ending-screen::before{
+ background:repeating-linear-gradient(to bottom,rgba(0,0,0,.13) 0px,rgba(0,0,0,.13) 1px,rgba(130,235,145,.035) 2px,transparent 4px);
+ opacity:.38;animation:bunker-vhs-flicker 6.8s steps(1,end) infinite;
+}
+.ending-screen::after{
+ inset:-30% 0;
+ background:linear-gradient(to bottom,transparent 0%,transparent 42%,rgba(215,255,202,.09) 48%,rgba(5,30,14,.12) 51%,transparent 55%,transparent 100%);
+ opacity:.7;transform:translateY(-65%);animation:bunker-vhs-tracking 9s linear infinite;
+}
+.ending-screen .ending-frame{position:relative}
+.ending-screen .ending-image{animation:bunker-vhs-image-jitter 8.5s steps(1,end) infinite}
+@keyframes bunker-vhs-flicker{0%,95%,98%,100%{opacity:.38}96%{opacity:.2}97%{opacity:.52}99%{opacity:.25}}
+@keyframes bunker-vhs-tracking{0%{transform:translateY(-65%)}100%{transform:translateY(65%)}}
+@keyframes bunker-vhs-image-jitter{0%,96%,100%{transform:translateX(0)}97%{transform:translateX(1px)}98%{transform:translateX(-1px)}99%{transform:translateX(0)}}
+/* The footer no longer contains text: simple high contrast apocalypse symbols. */
+.landing-shell .landing-footer.apocalypse-footer{display:flex;flex-direction:row;flex-wrap:nowrap;align-items:center;justify-content:center;gap:clamp(12px,5vw,60px);min-height:74px;padding:12px 18px}
+.landing-shell .apocalypse-footer .apocalypse-symbol{display:inline-flex;align-items:center;justify-content:center;max-width:none;width:clamp(42px,7vw,65px);height:48px;color:#d1ec75;font:700 clamp(27px,4vw,40px)/1 'Segoe UI Symbol','DejaVu Sans',sans-serif;text-shadow:0 0 11px rgba(181,232,88,.25);filter:drop-shadow(0 0 4px rgba(164,223,70,.12))}
+@media(max-width:480px){.landing-shell .landing-footer.apocalypse-footer{flex-direction:row;gap:clamp(8px,3vw,20px);min-height:60px;padding:9px 8px}.landing-shell .apocalypse-footer .apocalypse-symbol{width:40px;height:40px;font-size:29px}}
+@media(prefers-reduced-motion:reduce){.ending-screen::before,.ending-screen::after,.ending-screen .ending-image{animation:none!important}.ending-screen::after{display:none}.ending-screen::before{opacity:.14}}
