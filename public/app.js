@@ -110,7 +110,7 @@ function landing(){return `<div class="landing-shell">${header()}<main class="la
  ${localStorage.getItem('bunker-session')?'<button class="secondary full resume-button" data-action="resume">Вернуться в сохранённую комнату <span aria-hidden="true">→</span></button>':''}
  <div class="entry-note"><span aria-hidden="true">${uiIcon('person')}</span><p>Регистрация не требуется.<br>Просто создайте комнату и пригласите друзей.</p></div>
  <ol class="protocol"><li><b>01 /</b><span>ПОЛУЧИТЕ<br>РОЛЬ</span></li><li><b>02 /</b><span>УБЕДИТЕ<br>ГРУППУ</span></li><li><b>03 /</b><span>ОСТАНЬТЕСЬ<br>ВНУТРИ</span></li></ol>
- </section></main><footer class="landing-footer apocalypse-footer" aria-label="Сведения об игре и символы апокалипсиса"><div class="footer-stats"><div class="stats"><div><strong>${uiIcon('people')} 5–16</strong><span>ИГРОКОВ</span></div><div><strong>${uiIcon('cards')} 9</strong><span>КАРТОЧЕК</span></div><div><strong>${uiIcon('bunker')} ½</strong><span>ОСТАНУТСЯ</span></div></div></div><div class="footer-symbols" aria-label="Символы апокалипсиса"><span class="apocalypse-symbol" role="img" aria-label="Радиационная опасность">☢︎</span><span class="apocalypse-symbol" role="img" aria-label="Биологическая опасность">☣︎</span><span class="apocalypse-symbol" role="img" aria-label="Предупреждение об опасности">⚠︎</span><span class="apocalypse-symbol" role="img" aria-label="Опасность">⛔︎</span></div></footer></div>${rules}`;}
+ </section></main><footer class="landing-footer apocalypse-footer" aria-label="Сведения об игре и символы апокалипсиса"><div class="footer-layout"><div class="footer-symbols footer-symbols-left" aria-label="Угрозы радиации и инфекции"><span class="apocalypse-symbol" role="img" aria-label="Радиационная опасность">☢︎</span><span class="apocalypse-symbol" role="img" aria-label="Биологическая опасность">☣︎</span></div><div class="footer-stats"><div class="stats"><div><strong>${uiIcon('people')} 5–16</strong><span>ИГРОКОВ</span></div><div><strong>${uiIcon('cards')} 9</strong><span>КАРТОЧЕК</span></div><div><strong>${uiIcon('bunker')} ½</strong><span>ОСТАНУТСЯ</span></div></div></div><div class="footer-symbols footer-symbols-right" aria-label="Предупреждающие знаки"><span class="apocalypse-symbol" role="img" aria-label="Предупреждение об опасности">⚠︎</span><span class="apocalypse-symbol" role="img" aria-label="Опасность">⛔︎</span></div></div></footer></div>${rules}`;}
 function disasterIntroKey(){return `bunker-intro:${state.code}:${state.me}${(state.gameNumber||1)>1?':'+state.gameNumber:''}`;}
 function introArtwork(){
  const image=disasterImageFor(state.disaster);
@@ -184,8 +184,8 @@ function room(){const me=state.players.find(p=>p.id===state.me), current=state.p
  const hostTools=state.host===me.id&&state.players.some(p=>!p.bot&&p.id!==me.id)?`<div class="host-tools"><label for="host-target">Передать роль ведущего</label><select id="host-target">${state.players.filter(p=>!p.bot&&p.id!==me.id).map(p=>`<option value="${p.id}">${escape(p.name)}</option>`).join('')}</select><button class="secondary" data-action="transfer_host">Передать управление</button></div>`:'';
 
  const mobilePlayAction=state.phase==='lobby'
-  ?(state.host===me.id&&state.players.length>=5
-    ?'<button type="button" data-action="start">Начать игру →</button>':'')
+  ?(state.host===me.id
+    ?`<button type="button" data-action="start" ${state.players.length<5?'disabled':''}>${state.players.length<5?'Начать игру · нужно 5 игроков':'Начать игру →'}</button>`:'')
   :state.phase==='turn'
     ?(mine?`<button type="button" data-action="next" ${!state.opened&&Object.keys(me.cards).some(k=>me.cards[k]&&!me.revealed.includes(k))?'disabled':''}>Передать слово →</button>`
       :current?.bot&&state.host===me.id?`<button type="button" data-action="bot_step" aria-label="Передать ход боту ${escape(current.name)}">Передать ход боту →</button>`:'')
