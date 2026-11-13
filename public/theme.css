@@ -1763,3 +1763,71 @@ body,button,input,select,textarea,.landing-shell,.game,#rules,#special-dialog{
   font-size:12px;
  }
 }
+
+
+/* DOSSIER ARTWORK v23 — original, self-framed 112x112 SVG files from uploaded ZIP.
+   Show each badge in full. No second border, padding, transform or clip. */
+.game .dossier-file-list img.dossier-category-icon,
+.game .dossier-public-card img.dossier-category-icon{
+ display:block;
+ flex:0 0 56px;
+ width:56px;
+ height:56px;
+ min-width:56px;
+ min-height:56px;
+ max-width:56px;
+ max-height:56px;
+ margin:0;
+ padding:0;
+ background:none;
+ border:0;
+ border-radius:0;
+ box-shadow:none;
+ clip-path:none;
+ transform:none;
+ object-fit:contain;
+ image-rendering:auto;
+ overflow:visible;
+}
+.game .dossier-file-list .dossier-card-top .card-label{
+ min-width:0;
+ display:flex;
+ align-items:center;
+ gap:10px;
+}
+.game canvas.dossier-file-avatar{
+ display:block;
+ box-sizing:border-box;
+ width:100%;
+ height:auto;
+ max-width:100%;
+ aspect-ratio:1/1;
+ margin:0;
+ padding:0;
+ border:2px solid #b7d97c;
+ border-radius:0;
+ background:#091c10;
+ box-shadow:none;
+ object-fit:contain;
+ image-rendering:pixelated;
+}
+@media(max-width:760px){
+ .game .dossier-file-list img.dossier-category-icon{
+  flex-basis:52px;
+  width:52px;height:52px;
+  min-width:52px;min-height:52px;
+  max-width:52px;max-height:52px;
+ }
+ .game .dossier-file-list .dossier-card-top{
+  min-height:68px;
+  gap:9px;
+ }
+}
+@media(max-width:360px){
+ .game .dossier-file-list img.dossier-category-icon{
+  flex-basis:44px;
+  width:44px;height:44px;
+  min-width:44px;min-height:44px;
+  max-width:44px;max-height:44px;
+ }
+}
