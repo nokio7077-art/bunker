@@ -82,12 +82,14 @@ test('descriptions do not disclose hidden professions or other private cards', (
  }
 });
 
-test('all 120 personality cards and 53 interesting facts remain in the dealt decks',async()=>{
- const {decks}=await import('../cards.js');assert.equal(catalog.personality.length,120);assert.equal(decks.personality.length,120);
+test('all 140 personality cards and 53 interesting facts remain in the dealt decks',async()=>{
+ const {decks}=await import('../cards.js');assert.equal(catalog.personality.length,140);assert.equal(decks.personality.length,140);
  assert.equal(catalog.interesting.length,53);assert.equal(decks.interesting.length,53);
  for(const name of ['Подделал медицинский диплом','Бросил напарника во время эвакуации','Работал на мошенническую секту'])assert.ok(decks.interesting.includes(name));
  assert.ok(!decks.interesting.includes('Украл аварийный запас воды'));
  assert.ok(decks.personality.includes('Моральный шантажист'));
+ assert.ok(decks.personality.includes('Непоколебимая порядочность'));
+ assert.equal(catalog.personality.filter(c=>c.category==='Положительная черта характера').length,20);
  assert.ok(decks.personality.includes('Расист')&&decks.personality.includes('Гомофоб'));
  assert.ok(decks.personality.includes('Умеет слушать других')&&decks.personality.includes('Терпеливый наставник'));
  for(const name of decks.personality)assert.ok(cardDescription('personality',name).length>30,name);
