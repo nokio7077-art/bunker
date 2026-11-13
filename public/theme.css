@@ -1563,3 +1563,150 @@ body,button,input,select,textarea,.landing-shell,.game,#rules,#special-dialog{
 
 /* Higher-resolution source portrait with deliberate pixel boundaries, no extra overlays. */
 .game canvas.dossier-file-avatar{aspect-ratio:1/1;image-rendering:pixelated;max-width:100%;height:auto}
+
+
+/* SURVIVAL RULES / targeted UI polish v20
+   Preserve the existing landing, artwork, gameplay, fonts and button hierarchy. */
+.landing-shell .tabs{grid-template-columns:repeat(2,minmax(0,1fr))}
+.landing-shell .protocol li+li::before{content:none!important;display:none!important}
+#rules.survival-rules{
+ display:none;
+ box-sizing:border-box;
+ width:min(730px,calc(100vw - 24px));
+ max-width:730px;
+ max-height:90dvh;
+ padding:0;
+ margin:auto;
+ overflow-y:auto;
+ overscroll-behavior:contain;
+ border:2px solid #9ab96b;
+ border-radius:0;
+ background:#0b1b10;
+ color:#e6edda;
+ box-shadow:0 24px 65px #000b,inset 0 0 0 3px #193321;
+}
+#rules.survival-rules[open]{display:block}
+#rules.survival-rules::backdrop{background:#020905d9}
+#rules .survival-rules-inner{
+ padding:clamp(16px,3vw,28px);
+}
+#rules .rules-masthead{
+ display:flex;
+ align-items:center;
+ justify-content:space-between;
+ gap:12px;
+ padding:0 0 13px;
+ margin:0 0 18px;
+ border-bottom:1px solid #637f4a;
+}
+#rules .rules-masthead .eyebrow{
+ color:#c8e59d;
+ font:600 11px/1.5 var(--bunker-mono,monospace);
+ letter-spacing:.06em;
+}
+#rules .rules-masthead button.close{
+ position:static;
+ display:inline-flex;
+ justify-content:center;
+ align-items:center;
+ margin:0;
+ width:44px;height:44px;min-width:44px;min-height:44px;
+ padding:0;
+ border:1px solid #779955;
+ background:#142d1c;
+ color:#e5f1d2;
+ font-size:18px;
+ border-radius:0;
+}
+#rules .rules-heading h2{
+ font:400 clamp(21px,3.5vw,30px)/1.4 BunkerDisplay,monospace;
+ color:#e8f5cb;
+ margin:0 0 13px;
+ text-shadow:none;
+}
+#rules .rules-heading p{
+ margin:0 0 20px;
+ font:400 15px/1.75 var(--bunker-reading,'Onest',sans-serif);
+ color:#cedcc9;
+}
+#rules .rules-steps-label{
+ margin:0 0 10px;
+ font:600 10px/1.5 var(--bunker-mono,monospace);
+ color:#c6e196;
+ letter-spacing:.08em;
+}
+#rules ol.rules-steps{
+ display:grid;
+ grid-template-columns:1fr;
+ gap:10px;
+ padding:0;
+ margin:0 0 22px;
+ list-style:none;
+ counter-reset:rule;
+}
+#rules ol.rules-steps li{
+ position:relative;
+ min-width:0;
+ margin:0;
+ padding:14px 15px 14px 63px;
+ border:1px solid #5d804b;
+ border-left:3px solid #b9dd81;
+ background:linear-gradient(125deg,#152c1b,#0d2114);
+ font:400 14px/1.72 var(--bunker-reading,'Onest',sans-serif);
+ color:#d7e4cf;
+ overflow-wrap:anywhere;
+ counter-increment:rule;
+}
+#rules ol.rules-steps li::before{
+ content:counter(rule,decimal-leading-zero);
+ position:absolute;left:13px;top:13px;
+ padding:4px 0;
+ font:400 16px/1.4 BunkerDisplay,monospace;
+ color:#d0eb99;
+}
+#rules .rules-details{
+ border-top:1px solid #637f4a;
+ padding-top:16px;
+}
+#rules .rules-details h3{
+ margin:0 0 14px;
+ color:#e0f0c9;
+ font:700 17px/1.5 var(--bunker-reading,'Onest',sans-serif);
+}
+#rules .rules-details p{
+ margin:0 0 14px;
+ font:400 14px/1.73 var(--bunker-reading,'Onest',sans-serif);
+ color:#c8d7c1;
+}
+#rules .rules-end{
+ display:flex;
+ justify-content:space-between;
+ align-items:center;
+ gap:14px;
+ padding-top:16px;
+ margin-top:6px;
+ border-top:1px solid #4f7144;
+}
+#rules .rules-end span{
+ font:600 10px/1.5 var(--bunker-mono,monospace);
+ color:#a7bf92;
+}
+#rules .rules-end button{
+ min-height:44px;
+ padding:10px 18px;
+ border-radius:0;
+ font:600 13px/1.35 var(--bunker-reading,'Onest',sans-serif);
+}
+#rules.survival-rules button:focus-visible{
+ outline:2px solid #e1f8aa;outline-offset:3px;
+}
+@media(max-width:540px){
+ #rules.survival-rules{width:calc(100vw - 16px);max-height:94dvh}
+ #rules .survival-rules-inner{padding:14px}
+ #rules .rules-heading h2{font-size:21px}
+ #rules .rules-heading p{font-size:15px}
+ #rules ol.rules-steps li{padding:12px 11px 12px 53px;font-size:14px}
+ #rules ol.rules-steps li::before{font-size:13px;left:10px}
+ #rules .rules-end{flex-direction:column;align-items:stretch}
+ #rules .rules-end button{width:100%;min-height:48px}
+}
