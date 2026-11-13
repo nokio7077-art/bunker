@@ -2049,3 +2049,85 @@ body,button,input,select,textarea,.landing-shell,.game,#rules,#special-dialog{
  .landing-shell .hero .lead{font-size:14px;max-width:310px;line-height:1.43}
  .landing-shell .hero .stats{margin-top:15px}
 }
+
+/* Footer info now lives below the main splash, leaving the bunker artwork unobstructed. */
+.landing-shell .landing-footer.apocalypse-footer{
+ display:flex;
+ flex-direction:column;
+ align-items:center;
+ justify-content:center;
+ gap:15px;
+ padding:18px clamp(12px,3vw,32px);
+ width:100%;
+ box-sizing:border-box;
+}
+.landing-shell .footer-stats{width:min(100%,590px);min-width:0}
+.landing-shell .footer-stats .stats{
+ width:100%;
+ max-width:none;
+ margin:0;
+ padding:12px 4px;
+ box-sizing:border-box;
+}
+.landing-shell .footer-stats .stats strong{font-size:clamp(19px,3.4vw,30px)}
+.landing-shell .footer-stats .stats>div{min-width:0;padding:0 8px}
+.landing-shell .footer-stats .stats>div>span{font-size:clamp(10px,1.4vw,13px)}
+.landing-shell .footer-symbols{
+ width:min(100%,390px);
+ display:grid;
+ grid-template-columns:repeat(4,minmax(0,1fr));
+ align-items:center;
+ justify-items:center;
+ gap:8px;
+}
+.landing-shell .footer-symbols .apocalypse-symbol{
+ display:grid;
+ place-items:center;
+ width:100%;
+ max-width:60px;
+ min-width:0;
+ margin:0;
+ box-sizing:border-box;
+}
+@media(max-width:860px){
+ /* Cropping from the left keeps both the reinforced door and goat skull in frame.
+    Old 60% object-position cut off both on narrow screens. */
+ .landing-shell .landing:before{
+   background-size:auto 480px;
+   background-position:5% top;
+ }
+ .landing-shell .landing-video{
+   top:0;
+   bottom:auto;
+   width:100%;
+   height:480px;
+   object-fit:cover;
+   object-position:5% top;
+ }
+ .landing-shell .hero{min-height:405px}
+ .landing-shell .landing-footer.apocalypse-footer{
+   display:flex;
+   flex-direction:column;
+   gap:12px;
+   padding:16px 12px;
+ }
+ .landing-shell .footer-stats{width:100%}
+ .landing-shell .footer-symbols{width:min(100%,330px)}
+}
+@media(max-width:480px){
+ .landing-shell .landing:before{
+   background-size:auto 460px;
+   background-position:4% top;
+ }
+ .landing-shell .landing-video{
+   height:460px;
+   object-position:4% top;
+ }
+ .landing-shell .hero{min-height:390px}
+ .landing-shell .footer-stats .stats{padding:11px 2px}
+ .landing-shell .footer-stats .stats>div{padding:0 4px}
+ .landing-shell .footer-stats .stats strong{font-size:clamp(19px,6.5vw,26px)}
+ .landing-shell .footer-stats .stats>div>span{font-size:10px}
+ .landing-shell .footer-symbols{gap:3px}
+ .landing-shell .footer-symbols .apocalypse-symbol{height:36px;font-size:27px}
+}
