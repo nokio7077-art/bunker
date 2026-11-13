@@ -1831,3 +1831,6 @@ body,button,input,select,textarea,.landing-shell,.game,#rules,#special-dialog{
   max-width:44px;max-height:44px;
  }
 }
+
+/* Display original-resolution lossless PNG portraits faithfully without nearest-neighbour scaling. */
+.game canvas.dossier-file-avatar{image-rendering:auto}
