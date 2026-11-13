@@ -1710,3 +1710,56 @@ body,button,input,select,textarea,.landing-shell,.game,#rules,#special-dialog{
  #rules .rules-end{flex-direction:column;align-items:stretch}
  #rules .rules-end button{width:100%;min-height:48px}
 }
+
+
+/* Small targeted fixes: header rules action and clean portrait framing / v22. */
+.site-header .header-right button.rules-button{
+ display:inline-flex;
+ align-items:center;
+ justify-content:center;
+ min-height:46px;
+ padding:10px 16px;
+ margin-left:12px;
+ border:1px solid #b8d575;
+ border-radius:0;
+ background:#25412b;
+ color:#f0f6df;
+ font:700 14px/1.35 var(--bunker-ui,'Onest',sans-serif);
+ letter-spacing:0;
+ text-shadow:none!important;
+ box-shadow:none;
+ white-space:nowrap;
+ cursor:pointer;
+}
+.site-header .header-right button.rules-button:hover:not(:disabled){
+ background:#355536;
+ color:#f7fae8;
+ border-color:#d4e99c;
+ box-shadow:none;
+}
+.site-header .header-right button.rules-button:active:not(:disabled){
+ background:#1b3521;
+ transform:translateY(1px);
+}
+.site-header .header-right button.rules-button:focus-visible{
+ outline:2px solid #def59d;
+ outline-offset:3px;
+}
+.game canvas.dossier-file-avatar{
+ display:block;
+ border:2px solid #b7d97c;
+ border-radius:0;
+ box-shadow:none;
+ background:#091c10;
+ image-rendering:pixelated;
+ object-fit:contain;
+ overflow:hidden;
+}
+@media(max-width:600px){
+ .site-header .header-right button.rules-button{
+  min-height:44px;
+  margin-left:0;
+  padding:9px 11px;
+  font-size:12px;
+ }
+}
