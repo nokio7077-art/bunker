@@ -1940,3 +1940,12 @@ body,button,input,select,textarea,.landing-shell,.game,#rules,#special-dialog{
 .landing-shell .apocalypse-footer .apocalypse-symbol{display:inline-flex;align-items:center;justify-content:center;max-width:none;width:clamp(42px,7vw,65px);height:48px;color:#d1ec75;font:700 clamp(27px,4vw,40px)/1 'Segoe UI Symbol','DejaVu Sans',sans-serif;text-shadow:0 0 11px rgba(181,232,88,.25);filter:drop-shadow(0 0 4px rgba(164,223,70,.12))}
 @media(max-width:480px){.landing-shell .landing-footer.apocalypse-footer{flex-direction:row;gap:clamp(8px,3vw,20px);min-height:60px;padding:9px 8px}.landing-shell .apocalypse-footer .apocalypse-symbol{width:40px;height:40px;font-size:29px}}
 
+
+/* One prominent contextual gameplay action in the phone's fixed bottom bar. */
+@media(max-width:760px){
+ .mobile-playbar-actions{grid-template-columns:minmax(0,1fr)}
+ .mobile-playbar-actions button{width:100%;min-height:52px;font-weight:700;background:#29462d;color:#f1f6df;border:2px solid #bbd979}
+ .mobile-playbar-actions button:last-child{background:#29462d;color:#f1f6df;border-color:#bbd979}
+ .mobile-playbar-actions button:disabled{opacity:.47;cursor:not-allowed}
+ .mobile-playbar:not(:has(.mobile-playbar-actions)){padding-bottom:calc(14px + env(safe-area-inset-bottom))}
+}
