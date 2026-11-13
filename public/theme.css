@@ -1995,8 +1995,13 @@ body,button,input,select,textarea,.landing-shell,.game,#rules,#special-dialog{
 @media(max-width:760px){
  .game .banner > button[data-action="start"],
  .game .banner > button[data-action="next"],
- .game .banner > button[data-action="bot_step"],
- .game .test-panel button[data-action="start_test"]{
+ .game .banner > button[data-action="bot_step"]{
   display:none!important;
+ }
+ /* Bot test is a pregame choice, not a bottom-bar action. */
+ .game .test-panel button[data-action="start_test"]{
+  display:inline-flex!important;
+  align-items:center;
+  justify-content:center;
  }
 }
