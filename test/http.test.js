@@ -104,7 +104,9 @@ test('HTTP sessions, private cards, registered artwork, caching and durable rest
    const response=await fetch(base+'/images/ui/dossier-'+category+'.svg');
    assert.equal(response.status,200,category);
    assert.equal(response.headers.get('content-type'),'image/svg+xml');
-   assert.match(await response.text(),/<svg/);
+   const icon=await response.text();
+   assert.match(icon,/<svg/);
+   assert.match(icon,/viewBox="0 0 112 112"/,'uses exact user-supplied SVG canvas');
   }
   for(const asset of ['dossier-avatar.svg','dossier-icons.svg']){
    const response=await fetch(base+'/images/ui/'+asset);
@@ -115,14 +117,14 @@ test('HTTP sessions, private cards, registered artwork, caching and durable rest
    assert.ok(content.length>500);
   }
   for(const gender of ['female','male']){
-   const response=await fetch(base+'/images/ui/avatars-'+gender+'-96.webp');
+   const response=await fetch(base+'/images/ui/avatars-'+gender+'-92.webp');
    assert.equal(response.status,200);
    assert.equal(response.headers.get('content-type'),'image/webp');
    const bytes=Buffer.from(await response.arrayBuffer());
    assert.equal(bytes.toString('ascii',0,4),'RIFF');
    assert.equal(bytes.toString('ascii',8,12),'WEBP');
    assert.ok(bytes.length>300000,'HD portrait atlas must retain image detail');
-   const cached=await fetch(base+'/images/ui/avatars-'+gender+'-96.webp',{headers:{'If-None-Match':response.headers.get('etag')}});
+   const cached=await fetch(base+'/images/ui/avatars-'+gender+'-92.webp',{headers:{'If-None-Match':response.headers.get('etag')}});
    assert.equal(cached.status,304);
   }
   const page=await fetch(base,{headers:{Connection:'close'}});assert.equal(page.status,200);assert.ok(page.headers.get('content-security-policy').includes("default-src 'self'"));assert.ok((await page.text()).includes('lang="ru"'));
