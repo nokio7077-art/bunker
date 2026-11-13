@@ -66,9 +66,9 @@ let motionPaused=reducedMotion.matches||Boolean(navigator.connection?.saveData);
 function syncLandingMotion(){
  const video=document.querySelector('.landing-video');if(!video)return;
  video.muted=true;video.loop=true;
- video.onended=()=>{if(!motionPaused&&!document.hidden){video.currentTime=0;video.play().catch(updateMotionButton);}};
+ video.onended=()=>{if(!motionPaused&&!document.hidden){video.currentTime=0;video.play().catch(()=>{});}};
  video.onplaying=()=>{video.classList.add('is-playing');};
- video.onpause=updateMotionButton;
+ video.onpause=()=>{};
  video.onerror=()=>{video.classList.remove('is-playing');motionPaused=true;};
  if(motionPaused||document.hidden){video.pause();return;}
  if(!video.getAttribute('src'))video.src='/videos/bunker-entrance.mp4';
