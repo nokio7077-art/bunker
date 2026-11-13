@@ -5,7 +5,7 @@ const coats=[["#46603B","#243825"],["#5A653E","#303A27"],["#76613E","#443627"],[
 const box=(x,y,w,h,c)=>'<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" fill="'+c+'"/>';
 const path=(d,c)=>'<path d="'+d+'" fill="'+c+'"/>';
 function hash(value){let h=2166136261;for(const c of String(value)){h=Math.imul(h^c.codePointAt(0),16777619);}return h>>>0;}
-export function avatarIdentity(biology,id,game=1){return {gender:String(biology).startsWith("Женщина")?"female":"male",index:hash(String(id)+":"+game)%250};}
+export function avatarIdentity(biology,id,game=1){return {gender:String(biology).startsWith("Женщина")?"female":"male",index:hash(String(id)+":"+game)%(String(biology).startsWith("Женщина")?298:290)};}
 export function avatarSvg(gender,index){
  const female=gender==="female",n=((Math.trunc(index)%250)+250)%250;
  const tone=Math.floor(n/50),outfit=Math.floor(n/10)%5,hairStyle=n%10;

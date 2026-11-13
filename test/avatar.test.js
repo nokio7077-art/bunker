@@ -17,7 +17,8 @@ test('gender and index are stable for the same fictional character',()=>{
  const male=avatarIdentity('Мужчина · 28 лет','my-unique-id',3);
  assert.equal(female.gender,'female');
  assert.equal(male.gender,'male');
- assert.equal(female.index,male.index);
+ assert.ok(female.index>=0&&female.index<298);
+ assert.ok(male.index>=0&&male.index<290);
  assert.deepEqual(avatarIdentity('Женщина · 28 лет','my-unique-id',3),female);
  const uri=avatarDataUri('Женщина · 28 лет','my-unique-id',3);
  assert.ok(uri.startsWith('data:image/svg+xml;charset=UTF-8,'));
@@ -33,4 +34,17 @@ test('real avatar atlases each contain 250 WebP thumbnails in a 10 by 25 grid',a
   assert.equal(b.toString('ascii',8,12),'WEBP');
   assert.ok(b.length>30000&&b.length<100000);
  }
+});
+
+
+test('avatar selection covers the full real galleries',()=>{
+ const females=new Set(),males=new Set();
+ for(let i=0;i<2500;i++){
+  females.add(avatarIdentity('Женщина · 28 лет','person-'+i,1).index);
+  males.add(avatarIdentity('Мужчина · 28 лет','person-'+i,1).index);
+ }
+ assert.equal(females.size,298);
+ assert.equal(males.size,290);
+ assert.ok(Math.max(...females)<298);
+ assert.ok(Math.max(...males)<290);
 });
