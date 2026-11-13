@@ -48,3 +48,16 @@ test('avatar selection covers the full real galleries',()=>{
  assert.ok(Math.max(...females)<298);
  assert.ok(Math.max(...males)<290);
 });
+
+
+test('portrait age bands are stable and visibly different for both sexes',()=>{
+ for(const sex of ['Мужчина','Женщина']){
+  const young=avatarIdentity(sex+' · 19 лет','tester',1);
+  const adult=avatarIdentity(sex+' · 42 года','tester',1);
+  const senior=avatarIdentity(sex+' · 81 год','tester',1);
+  assert.equal(young.gender,adult.gender);
+  assert.equal(adult.gender,senior.gender);
+  assert.ok(new Set([young.index,adult.index,senior.index]).size===3);
+  assert.deepEqual(avatarIdentity(sex+' · 81 год','tester',1),senior);
+ }
+});
