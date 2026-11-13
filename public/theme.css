@@ -1856,3 +1856,13 @@ body,button,input,select,textarea,.landing-shell,.game,#rules,#special-dialog{
 /* Full-size source pixels in a 144px canvas; smooth reduction for CSS-sized portraits. */
 .game canvas.dossier-file-avatar,
 .game canvas.player-portrait{image-rendering:auto}
+
+/* New transparent pixel-art bunker centerpiece in the landing header.
+   The original vector remains as a fallback until the WebP asset is uploaded. */
+.landing-shell .header-emblem{position:absolute;left:50%;bottom:3px;transform:translateX(-50%);width:clamp(180px,18vw,245px);height:auto;aspect-ratio:3/1;line-height:0;pointer-events:none;z-index:0;overflow:visible}
+.landing-shell .header-emblem .bunker-badge{position:absolute;bottom:5px;left:18%;width:64%;height:auto;opacity:.75}
+.landing-shell .header-emblem-art{position:absolute;inset:0;display:block;width:100%;height:100%;object-fit:contain;image-rendering:auto;filter:drop-shadow(0 0 7px rgba(174,229,70,.18))}
+.landing-shell .header-emblem-art[hidden]{display:none}
+.landing-shell header>.brand,.landing-shell header>.header-right{position:relative;z-index:1}
+@media(max-width:1170px){.landing-shell .header-emblem{width:170px;opacity:.78}}
+@media(max-width:980px){.landing-shell .header-emblem{display:none}}
