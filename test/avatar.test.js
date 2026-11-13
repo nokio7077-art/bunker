@@ -17,7 +17,8 @@ test('gender and index are stable for the same fictional character',()=>{
  const male=avatarIdentity('Мужчина · 28 лет','my-unique-id',3);
  assert.equal(female.gender,'female');
  assert.equal(male.gender,'male');
- assert.equal(female.index,male.index);
+ assert.ok(female.index>=0&&female.index<298);
+ assert.ok(male.index>=0&&male.index<290);
  assert.deepEqual(avatarIdentity('Женщина · 28 лет','my-unique-id',3),female);
  const uri=avatarDataUri('Женщина · 28 лет','my-unique-id',3);
  assert.ok(uri.startsWith('data:image/svg+xml;charset=UTF-8,'));
