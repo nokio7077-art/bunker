@@ -1989,3 +1989,14 @@ body,button,input,select,textarea,.landing-shell,.game,#rules,#special-dialog{
  .landing-shell .landing-footer.apocalypse-footer{padding-inline:6px}
  .landing-shell .apocalypse-footer .apocalypse-symbol{font-size:25px;height:38px}
 }
+
+/* Gameplay primary actions live in the sticky mobile playbar only.
+   Keep their original placements on desktop. */
+@media(max-width:760px){
+ .game .banner > button[data-action="start"],
+ .game .banner > button[data-action="next"],
+ .game .banner > button[data-action="bot_step"],
+ .game .test-panel button[data-action="start_test"]{
+  display:none!important;
+ }
+}
