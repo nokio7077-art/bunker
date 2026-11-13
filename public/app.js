@@ -17,9 +17,9 @@ function avatarSheet(gender){
 }
 function paintAvatar(canvas){
  const sheet=avatarSheet(canvas.dataset.gender);
- if(!sheet||!sheet.complete||sheet.naturalWidth!==920||sheet.naturalHeight!==2300)return;
+ if(!sheet||!sheet.complete||sheet.naturalWidth!==920||sheet.naturalHeight!==(canvas.dataset.gender==='female'?2760:2668))return;
  const index=Number(canvas.dataset.index);
- if(!Number.isInteger(index)||index<0||index>=250)return;
+ if(!Number.isInteger(index)||index<0||index>=(canvas.dataset.gender==='female'?298:290))return;
  const context=canvas.getContext('2d');
  if(!context)return;
  context.imageSmoothingEnabled=false;
