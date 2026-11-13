@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 92" shape-rendering="crispEdges" role="img" aria-label="Пиксельный шлюз бункера">
+<path d="M0 73H62v-7h19V53h18V40h14V28h18V18h40v10h18v12h14v13h18v13h19v7h60" fill="none" stroke="#69883F" stroke-width="4"/>
+<path d="M62 77V65h17V52h18V38h18V25h15V15h40v10h15v13h18v14h18v13h17v12z" fill="#193319" stroke="#BDD975" stroke-width="3"/>
+<path d="M101 76V43l19-20h60l19 20v33z" fill="#38582B" stroke="#D0EA88" stroke-width="4"/>
+<path d="M115 76V46l14-14h42l14 14v30" fill="#172E16" stroke="#8EB75D" stroke-width="4"/>
+<path d="M128 76V50l10-10h25l10 10v26" fill="#091B10" stroke="#D7F493" stroke-width="3"/>
+<path d="M135 76V52h31v24M140 43h21v5h-21z" fill="#182A1B" stroke="#D7F493" stroke-width="3"/>
+<path d="M140 45h21v4h-21z" fill="#EBFFAC"/><path d="M78 64h17M205 64h17M117 28h66M122 24h56" fill="none" stroke="#8BB05B" stroke-width="3"/>
+<path d="M0 83h126m48 0h126" stroke="#C1E187" stroke-width="3"/><path d="M134 82h32v4h-32z" fill="#D0EE92"/>
+</svg>
