@@ -2303,3 +2303,38 @@ body,button,input,select,textarea,.landing-shell,.game,#rules,#special-dialog{
 }
 .game .special-results h3{color:#e9f5bd}
 .game .special-results li{border-left:3px solid #b5d779;padding-left:12px}
+
+/* Keep the footer in document flow below the full landing splash.
+   Give it an opaque, isolated layer so moving landscape/video cannot bleed behind it. */
+.landing-shell{
+ display:flex;
+ flex-direction:column;
+}
+.landing-shell>.site-header{flex:0 0 auto}
+.landing-shell>.landing{
+ flex:1 0 auto;
+ width:100%;
+ box-sizing:border-box;
+}
+.landing-shell>.landing-footer.apocalypse-footer{
+ position:relative;
+ z-index:3;
+ flex:0 0 auto;
+ width:100%;
+ margin-top:auto;
+ background:#0b170a;
+ isolation:isolate;
+ border-top:3px ridge #718934;
+ box-shadow:0 -9px 22px rgba(0,0,0,.38);
+}
+.landing-shell .footer-layout{
+ position:relative;
+ z-index:1;
+}
+@media(max-width:860px){
+ .landing-shell>.landing{flex:1 0 auto}
+ .landing-shell>.landing-footer.apocalypse-footer{
+  margin-top:auto;
+  background:#0b170a;
+ }
+}
