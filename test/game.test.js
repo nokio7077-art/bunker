@@ -204,7 +204,9 @@ test('all shelter areas and descriptions stay within the agreed 30–350 m² ran
  }
  assert.ok(new Set(active.map(b=>b.area_sqm)).size>=15,'Shelter sizes should be varied');
  for(let i=0;i<disasters.length;i++){
-  const picked=chooseWorld(3,n=>0);
+  let call=0;
+  const picked=chooseWorld(3,n=>call++===0?i:0);
+  assert.equal(picked.disaster.id,disasters[i].id);
   assert.ok(picked.bunker.area_sqm<=350&&picked.bunker.area_sqm>=30);
  }
 });
