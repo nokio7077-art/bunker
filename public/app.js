@@ -111,7 +111,7 @@ function landing(){return `<div class="landing-shell">${header()}<main class="la
  ${localStorage.getItem('bunker-session')?'<button class="secondary full resume-button" data-action="resume">Вернуться в сохранённую комнату <span aria-hidden="true">→</span></button>':''}
  <div class="entry-note"><span aria-hidden="true">${uiIcon('person')}</span><p>Регистрация не требуется.<br>Просто создайте комнату и пригласите друзей.</p></div>
  <ol class="protocol"><li><b>01 /</b><span>ПОЛУЧИТЕ<br>РОЛЬ</span></li><li><b>02 /</b><span>УБЕДИТЕ<br>ГРУППУ</span></li><li><b>03 /</b><span>ОСТАНЬТЕСЬ<br>ВНУТРИ</span></li></ol>
- </section></main><footer class="landing-footer apocalypse-footer" aria-label="Символы апокалипсиса"><span class="apocalypse-symbol" role="img" aria-label="Радиационная опасность">☢</span><span class="apocalypse-symbol" role="img" aria-label="Биологическая опасность">☣</span><span class="apocalypse-symbol" role="img" aria-label="Предупреждение об опасности">⚠</span><span class="apocalypse-symbol" role="img" aria-label="Опасность">⛔</span></footer></div>${rules}`;}
+ </section></main><footer class="landing-footer apocalypse-footer" aria-label="Символы апокалипсиса"><span class="apocalypse-symbol" role="img" aria-label="Радиационная опасность">☢︎</span><span class="apocalypse-symbol" role="img" aria-label="Биологическая опасность">☣︎</span><span class="apocalypse-symbol" role="img" aria-label="Предупреждение об опасности">⚠︎</span><span class="apocalypse-symbol" role="img" aria-label="Опасность">⛔︎</span></footer></div>${rules}`;}
 function disasterIntroKey(){return `bunker-intro:${state.code}:${state.me}${(state.gameNumber||1)>1?':'+state.gameNumber:''}`;}
 function introArtwork(){
  const image=disasterImageFor(state.disaster);
