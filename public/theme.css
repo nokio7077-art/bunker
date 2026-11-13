@@ -1722,3 +1722,44 @@ body,button,input,select,textarea,.landing-shell,.game,#rules,#special-dialog{
   transition:none;
  }
 }
+
+/* Standalone fullscreen-stage and fixed mobile bar are outside .game DOM. */
+#disaster-intro button:not(.card),
+.mobile-playbar-actions button{
+ box-sizing:border-box;appearance:none;
+ display:inline-flex;justify-content:center;align-items:center;gap:8px;
+ min-height:46px;max-width:100%;padding:11px 15px;
+ border:2px solid var(--bunker-control-border);border-radius:0;
+ background:var(--bunker-control-bg);color:var(--bunker-control-text);
+ box-shadow:inset 0 0 0 2px #0c1d10;
+ font:700 14px/1.35 var(--bunker-ui,'Onest',sans-serif);
+ text-shadow:none!important;
+ white-space:normal;overflow-wrap:anywhere;cursor:pointer;
+}
+#disaster-intro button.primary,
+.mobile-playbar-actions button:last-child{
+ background:var(--bunker-control-primary);
+ color:#f4f8e8;border-color:#c8e59a;
+}
+#disaster-intro button:hover:not(:disabled),
+.mobile-playbar-actions button:hover:not(:disabled){
+ background:var(--bunker-control-hover);border-color:#e0f5ae;color:#fff;
+}
+#disaster-intro button.primary:hover:not(:disabled),
+.mobile-playbar-actions button:last-child:hover:not(:disabled){
+ background:var(--bunker-control-primary-hover);
+}
+#disaster-intro button:focus-visible,
+.mobile-playbar-actions button:focus-visible{
+ outline:3px solid #ebf7bd;outline-offset:3px;
+}
+#disaster-intro button:disabled,.mobile-playbar-actions button:disabled{
+ opacity:.5;cursor:not-allowed;
+}
+#disaster-intro button:active:not(:disabled),
+.mobile-playbar-actions button:active:not(:disabled){transform:translateY(1px)}
+@media(max-width:600px){
+ #disaster-intro button:not(.card),.mobile-playbar-actions button{
+  min-height:48px;padding:10px 12px;
+ }
+}
