@@ -64,6 +64,7 @@ for(const gender of ['female','male'])for(let part=1;part<=6;part++){
  const name=`avatars-${gender}-144-part-${String(part).padStart(2,'0')}.webp`;
  binaryAssets.set(`/images/ui/${name}`,{path:pathJoin(root,'public','images','ui',name),type:'image/webp',immutable:true});
 }
+binaryAssets.set('/images/ui/bunker-header.webp',{path:pathJoin(root,'public','images','ui','bunker-header.webp'),type:'image/webp',immutable:true});
 for(const asset of ['dossier-avatar.svg','dossier-icons.svg'])binaryAssets.set(`/images/ui/${asset}`,{path:pathJoin(root,'public','images','ui',asset),type:'image/svg+xml'});
 for(const category of ['profession','health','luggage','phobia','hobby','biology','personality','interesting','special']){const asset=`dossier-${category}.svg`;binaryAssets.set(`/images/ui/${asset}`,{path:pathJoin(root,'public','images','ui',asset),type:'image/svg+xml'});}
 for(const image of Object.values(disasterImages))binaryAssets.set(image.webp,{path:pathJoin(root,'public',image.webp),type:'image/webp',immutable:true});
