@@ -16,7 +16,7 @@ const adultPortraits=Object.fromEntries(Object.keys(portraitCount).map(gender=>{
 export function avatarIdentity(biology,id,game=1){
  const value=String(biology??'');
  const gender=value.startsWith('Женщина')?'female':'male';
- const age=Number(value.match(/\b(\d{1,3})\s*(?:лет|года|год)\b/u)?.[1]);
+ const age=Number(value.match(/\b(\d{1,3})\s*(?:лет|года|год)(?=\s|·|$)/u)?.[1]);
  const pool=age>=60?seniorPortraits[gender]:age>=30?adultPortraits[gender]:age>=15?youngPortraits[gender]:adultPortraits[gender];
  return {gender,index:pool[hash(String(id)+':'+game)%pool.length]};
 }
