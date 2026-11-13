@@ -1876,80 +1876,64 @@ body,button,input,select,textarea,.landing-shell,.game,#rules,#special-dialog{
 .game .winners-count{margin-top:8px;font-size:13px;color:#d5eea9}
 @media(max-width:600px){.ending-winners{padding:12px 14px;margin:8px auto 12px}}
 
-/* Strong analog VHS playback on final ending only; controls remain interactive. */
-.ending-screen.ending-loss{isolation:isolate}
-.ending-screen.ending-loss::before,.ending-screen.ending-loss::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:5}
-.ending-screen.ending-loss::before{
+/* Old television / CRT loss screen: noise and scanlines stay inside the picture,
+   not across buttons or the victory summary. Winners have no effect. */
+.ending-screen .ending-frame{text-align:center}
+.ending-crt-display{position:relative;display:inline-block;vertical-align:top;max-width:100%;overflow:hidden;isolation:isolate;line-height:0}
+.ending-crt-display .ending-image{position:relative;display:block;margin-inline:auto;max-width:100%}
+.ending-screen.ending-loss .ending-crt-display::before,
+.ending-screen.ending-loss .ending-crt-display::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:2}
+.ending-screen.ending-loss .ending-crt-display::before{
  background:
-   repeating-linear-gradient(0deg,rgba(1,10,3,.24) 0 2px,rgba(161,249,155,.065) 3px,transparent 5px),
-   repeating-linear-gradient(0deg,transparent 0 61px,rgba(0,0,0,.18) 62px 65px,transparent 67px 119px);
- mix-blend-mode:screen;
- opacity:.72;
- animation:bunker-vhs-flicker 2.6s steps(1,end) infinite,bunker-vhs-scan 1.8s linear infinite;
+  repeating-linear-gradient(to bottom,rgba(0,0,0,.23) 0px,rgba(0,0,0,.23) 1px,rgba(224,255,218,.035) 2px,transparent 3px),
+  repeating-linear-gradient(90deg,rgba(215,245,210,.025) 0px,transparent 2px,rgba(0,0,0,.025) 4px);
+ opacity:.74;
+ animation:crt-scan-drift 2.4s linear infinite,crt-flicker 4.3s steps(1,end) infinite;
 }
-.ending-screen.ending-loss::after{
- /* 12+ simultaneous tracking bands on even the smallest phone screens.
-    Two staggered repeating patterns give each streak a different width and spacing. */
- inset:0;
+.ending-screen.ending-loss .ending-crt-display::after{
  background:
-  repeating-linear-gradient(to bottom,
-   transparent 0 13px,
-   rgba(223,255,221,.26) 14px 16px,
-   rgba(118,249,154,.38) 17px 19px,
-   rgba(0,0,0,.48) 20px 25px,
-   rgba(218,251,210,.12) 26px 28px,
-   transparent 29px 43px),
-  repeating-linear-gradient(to bottom,
-   transparent 0 38px,
-   rgba(239,255,238,.30) 40px 42px,
-   rgba(6,36,14,.46) 43px 48px,
-   transparent 50px 73px);
- background-position:0 0,0 29px;
- opacity:.92;
+  linear-gradient(to bottom,transparent 0%,rgba(205,255,201,.10) 45%,rgba(224,255,217,.23) 50%,rgba(10,28,12,.15) 55%,transparent 100%),
+  repeating-radial-gradient(circle at 27% 44%,rgba(208,252,205,.095) 0 .6px,transparent .85px 2.5px);
+ background-size:100% 140%,97px 81px;
  mix-blend-mode:screen;
- animation:bunker-vhs-multitrack 1.7s steps(16,end) infinite,bunker-vhs-flicker 3.3s steps(1,end) infinite;
+ opacity:.46;
+ animation:crt-roll 5.5s linear infinite,crt-noise 0.35s steps(3,end) infinite;
 }
-.ending-screen.ending-loss .ending-frame{position:relative;overflow:hidden}
-.ending-screen.ending-loss .ending-image{
- animation:bunker-vhs-image-jitter 3.7s steps(1,end) infinite,bunker-vhs-chroma 5.3s steps(1,end) infinite;
- will-change:transform,filter;
+.ending-screen.ending-loss .ending-crt-display .ending-image{
+ animation:crt-sync-jitter 6s steps(1,end) infinite,crt-signal 5.7s steps(1,end) infinite;
 }
-@keyframes bunker-vhs-flicker{
- 0%,12%,19%,30%,55%,70%,100%{opacity:.7}
- 13%,31%,71%{opacity:.42}
- 14%,32%,72%{opacity:.96}
- 15%,33%,73%{opacity:.58}
+@keyframes crt-scan-drift{to{background-position:0 12px,4px 0}}
+@keyframes crt-roll{0%{background-position:0 -140%,0 0}100%{background-position:0 140%,0 0}}
+@keyframes crt-noise{
+ 0%{opacity:.32;background-size:100% 140%,97px 81px}
+ 33%{opacity:.5;background-size:100% 140%,101px 83px}
+ 66%{opacity:.38;background-size:100% 140%,89px 93px}
+ 100%{opacity:.46;background-size:100% 140%,97px 81px}
 }
-@keyframes bunker-vhs-scan{0%{background-position:0 0,0 0}100%{background-position:0 18px,0 120px}}
-@keyframes bunker-vhs-multitrack{
- 0%{background-position:0 -70px,0 28px;transform:translateX(0)}
- 18%{background-position:0 -33px,0 67px;transform:translateX(3px)}
- 35%{background-position:0 0,0 98px;transform:translateX(-4px)}
- 52%{background-position:0 39px,0 122px;transform:translateX(1px)}
- 72%{background-position:0 81px,0 158px;transform:translateX(-2px)}
- 100%{background-position:0 144px,0 247px;transform:translateX(0)}
+@keyframes crt-flicker{0%,84%,89%,100%{opacity:.74}85%,87%{opacity:.49}86%,88%{opacity:.87}}
+@keyframes crt-sync-jitter{
+ 0%,42%,45%,84%,87%,100%{transform:translateX(0)}
+ 43%,85%{transform:translateX(1.5px)}
+ 44%,86%{transform:translateX(-1px)}
 }
-@keyframes bunker-vhs-image-jitter{
- 0%,11%,15%,37%,42%,63%,70%,91%,100%{transform:translate(0,0) skewX(0deg)}
- 12%{transform:translate(4px,-1px) skewX(-.3deg)}
- 13%{transform:translate(-3px,1px) skewX(.2deg)}
- 38%{transform:translate(-5px,0) skewX(.35deg)}
- 39%{transform:translate(2px,1px)}
- 64%{transform:translate(3px,-2px)}
- 65%{transform:translate(-2px,0)}
- 92%{transform:translate(5px,1px)}
- 93%{transform:translate(-3px,0)}
+@keyframes crt-signal{
+ 0%,42%,46%,85%,89%,100%{filter:contrast(1.04) saturate(.88)}
+ 43%,86%{filter:contrast(1.15) brightness(1.08) saturate(.72)}
+ 44%,87%{filter:contrast(.93) brightness(.96)}
 }
-@keyframes bunker-vhs-chroma{
- 0%,26%,29%,66%,69%,100%{filter:none}
- 27%,67%{filter:drop-shadow(3px 0 rgba(241,88,116,.48)) drop-shadow(-3px 0 rgba(82,237,218,.45)) contrast(1.13)}
- 28%,68%{filter:contrast(1.2) brightness(1.13)}
+/* Smaller, subtler signal on phones — the scanlines should not look like prison bars. */
+@media(max-width:600px){
+ .ending-screen.ending-loss .ending-crt-display::before{opacity:.48;background:repeating-linear-gradient(to bottom,rgba(0,0,0,.16) 0 1px,transparent 1px 3px)}
+ .ending-screen.ending-loss .ending-crt-display::after{opacity:.32;animation-duration:8s,.45s}
+ .ending-screen.ending-loss .ending-crt-display .ending-image{animation-duration:7s,6.5s}
 }
 @media(prefers-reduced-motion:reduce){
- .ending-screen.ending-loss::before,.ending-screen.ending-loss::after,.ending-screen.ending-loss .ending-image{animation:none!important}
- .ending-screen.ending-loss::after{display:none}
- .ending-screen.ending-loss::before{opacity:.16}
- .ending-screen.ending-loss .ending-image{filter:none!important;transform:none!important}
+ .ending-screen.ending-loss .ending-crt-display::before,
+ .ending-screen.ending-loss .ending-crt-display::after,
+ .ending-screen.ending-loss .ending-crt-display .ending-image{animation:none!important}
+ .ending-screen.ending-loss .ending-crt-display::after{display:none}
+ .ending-screen.ending-loss .ending-crt-display::before{opacity:.2}
+ .ending-screen.ending-loss .ending-crt-display .ending-image{filter:none!important;transform:none!important}
 }
 /* The footer no longer contains text: simple high contrast apocalypse symbols. */
 .landing-shell .landing-footer.apocalypse-footer{display:flex;flex-direction:row;flex-wrap:nowrap;align-items:center;justify-content:center;gap:clamp(12px,5vw,60px);min-height:74px;padding:12px 18px}
