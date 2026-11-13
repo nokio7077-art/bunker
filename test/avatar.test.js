@@ -39,12 +39,25 @@ test('real avatar atlases each contain 250 WebP thumbnails in a 10 by 25 grid',a
 
 test('avatar selection covers the full real galleries',()=>{
  const females=new Set(),males=new Set();
- for(let i=0;i<2500;i++){
-  females.add(avatarIdentity('Женщина · 28 лет','person-'+i,1).index);
-  males.add(avatarIdentity('Мужчина · 28 лет','person-'+i,1).index);
+ for(let i=0;i<2500;i++)for(const age of [21,42,81]){
+  females.add(avatarIdentity('Женщина · '+age+' лет','person-'+i,1).index);
+  males.add(avatarIdentity('Мужчина · '+age+' лет','person-'+i,1).index);
  }
  assert.equal(females.size,298);
  assert.equal(males.size,290);
  assert.ok(Math.max(...females)<298);
  assert.ok(Math.max(...males)<290);
+});
+
+
+test('portrait age bands are stable and visibly different for both sexes',()=>{
+ for(const sex of ['Мужчина','Женщина']){
+  const young=avatarIdentity(sex+' · 19 лет','tester',1);
+  const adult=avatarIdentity(sex+' · 42 года','tester',1);
+  const senior=avatarIdentity(sex+' · 81 год','tester',1);
+  assert.equal(young.gender,adult.gender);
+  assert.equal(adult.gender,senior.gender);
+  assert.ok(new Set([young.index,adult.index,senior.index]).size===3);
+  assert.deepEqual(avatarIdentity(sex+' · 81 год','tester',1),senior);
+ }
 });
