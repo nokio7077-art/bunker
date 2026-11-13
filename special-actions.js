@@ -24,6 +24,7 @@ export function applySpecial(room, player, value = {}) {
  if (['discard','swap','reveal'].includes(card.effect)) {
   target = room.players.find(p => p.id === value.targetId);
   check(target, 'Выберите участника комнаты.');
+  if(card.revealedOnly)check(target.revealed.includes(key), 'Это условие действует только на открытые карточки.');
  }
  if (card.effect === 'discard') {
   check(target.cards[key], 'Эта карточка уже сброшена или отсутствует.');
@@ -42,10 +43,9 @@ export function applySpecial(room, player, value = {}) {
   check(target.cards[key] !== player.cards[key], 'Такой обмен ничего не изменит.');
   changes = [[player, target.cards[key]], [target, player.cards[key]]];
  } else if (card.effect === 'shuffle') {
-  // A closed card is still a valid card. Shuffle all nonempty cards, but never publish
-  // hidden values and never assign a biologically or disaster-incompatible card.
-  const participants = room.players.filter(p => p.cards[key]);
-  check(participants.length >= 2, 'Нужны хотя бы две несброшенные карточки этой категории.');
+  // Card wording controls eligibility. Explicit "open only" specials must never touch hidden slots.
+  const participants = room.players.filter(p => p.cards[key] && (!card.revealedOnly || p.revealed.includes(key)));
+  check(participants.length >= 2, card.revealedOnly ? 'Нужны хотя бы две открытые несброшенные карточки этой категории.' : 'Нужны хотя бы две несброшенные карточки этой категории.');
   const original = participants.map(p => p.cards[key]);
   let shuffled = null;
   for (let attempt=0;attempt<80;attempt++) {
