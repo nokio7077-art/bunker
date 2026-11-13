@@ -1877,9 +1877,9 @@ body,button,input,select,textarea,.landing-shell,.game,#rules,#special-dialog{
 @media(max-width:600px){.ending-winners{padding:12px 14px;margin:8px auto 12px}}
 
 /* Strong analog VHS playback on final ending only; controls remain interactive. */
-.ending-screen{isolation:isolate}
-.ending-screen::before,.ending-screen::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:5}
-.ending-screen::before{
+.ending-screen.ending-loss{isolation:isolate}
+.ending-screen.ending-loss::before,.ending-screen.ending-loss::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:5}
+.ending-screen.ending-loss::before{
  background:
    repeating-linear-gradient(0deg,rgba(1,10,3,.24) 0 2px,rgba(161,249,155,.065) 3px,transparent 5px),
    repeating-linear-gradient(0deg,transparent 0 61px,rgba(0,0,0,.18) 62px 65px,transparent 67px 119px);
@@ -1887,14 +1887,14 @@ body,button,input,select,textarea,.landing-shell,.game,#rules,#special-dialog{
  opacity:.72;
  animation:bunker-vhs-flicker 2.6s steps(1,end) infinite,bunker-vhs-scan 1.8s linear infinite;
 }
-.ending-screen::after{
+.ending-screen.ending-loss::after{
  inset:-35% 0;
  background:linear-gradient(to bottom,transparent 0%,transparent 39%,rgba(140,255,154,.06) 43%,rgba(214,255,208,.25) 46%,rgba(13,57,23,.35) 49%,rgba(2,9,5,.11) 53%,transparent 57%);
  opacity:.95;
  animation:bunker-vhs-tracking 3.6s linear infinite,bunker-vhs-flicker 4.1s steps(1,end) infinite;
 }
-.ending-screen .ending-frame{position:relative;overflow:hidden}
-.ending-screen .ending-image{
+.ending-screen.ending-loss .ending-frame{position:relative;overflow:hidden}
+.ending-screen.ending-loss .ending-image{
  animation:bunker-vhs-image-jitter 3.7s steps(1,end) infinite,bunker-vhs-chroma 5.3s steps(1,end) infinite;
  will-change:transform,filter;
 }
@@ -1923,10 +1923,10 @@ body,button,input,select,textarea,.landing-shell,.game,#rules,#special-dialog{
  28%,68%{filter:contrast(1.2) brightness(1.13)}
 }
 @media(prefers-reduced-motion:reduce){
- .ending-screen::before,.ending-screen::after,.ending-screen .ending-image{animation:none!important}
- .ending-screen::after{display:none}
- .ending-screen::before{opacity:.16}
- .ending-screen .ending-image{filter:none!important;transform:none!important}
+ .ending-screen.ending-loss::before,.ending-screen.ending-loss::after,.ending-screen.ending-loss .ending-image{animation:none!important}
+ .ending-screen.ending-loss::after{display:none}
+ .ending-screen.ending-loss::before{opacity:.16}
+ .ending-screen.ending-loss .ending-image{filter:none!important;transform:none!important}
 }
 /* The footer no longer contains text: simple high contrast apocalypse symbols. */
 .landing-shell .landing-footer.apocalypse-footer{display:flex;flex-direction:row;flex-wrap:nowrap;align-items:center;justify-content:center;gap:clamp(12px,5vw,60px);min-height:74px;padding:12px 18px}
