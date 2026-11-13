@@ -1563,3 +1563,162 @@ body,button,input,select,textarea,.landing-shell,.game,#rules,#special-dialog{
 
 /* Higher-resolution source portrait with deliberate pixel boundaries, no extra overlays. */
 .game canvas.dossier-file-avatar{aspect-ratio:1/1;image-rendering:pixelated;max-width:100%;height:auto}
+
+
+/* BUNKER / unified interactive controls v18
+   One modular pixel-control language: square corners, legible Onest, no glow
+   or black labels on lime backgrounds. Functional card surfaces stay intact. */
+:root{
+ --bunker-control-bg:#19331f;
+ --bunker-control-hover:#294a2d;
+ --bunker-control-pressed:#122817;
+ --bunker-control-border:#91b36c;
+ --bunker-control-text:#eef4e3;
+ --bunker-control-primary:#315439;
+ --bunker-control-primary-hover:#416848;
+ --bunker-control-danger:#4a3027;
+ --bunker-control-danger-hover:#664136;
+ --bunker-control-danger-border:#bf9574;
+}
+:is(.landing-shell,.game,.ending-screen,.disaster-intro,#rules,#special-dialog) button:not(.card):not(.room-code){
+ box-sizing:border-box;
+ appearance:none;
+ display:inline-flex;
+ align-items:center;
+ justify-content:center;
+ gap:9px;
+ min-height:46px;
+ max-width:100%;
+ padding:11px 17px;
+ border:2px solid var(--bunker-control-border);
+ border-radius:0;
+ background:var(--bunker-control-bg);
+ color:var(--bunker-control-text);
+ font:700 14px/1.35 var(--bunker-ui,'Onest',sans-serif);
+ letter-spacing:.01em;
+ text-align:center;
+ text-transform:none;
+ text-shadow:none!important;
+ box-shadow:inset 0 0 0 2px #0c1d10;
+ cursor:pointer;
+ overflow-wrap:anywhere;
+ white-space:normal;
+ transition:background-color .14s ease,border-color .14s ease,color .14s ease;
+}
+:is(.landing-shell,.game,.ending-screen,.disaster-intro,#rules,#special-dialog) button:not(.card):not(.room-code):hover:not(:disabled){
+ background:var(--bunker-control-hover);
+ border-color:#d2eba1;
+ color:#f7faea;
+ box-shadow:inset 0 0 0 2px #122817;
+}
+:is(.landing-shell,.game,.ending-screen,.disaster-intro,#rules,#special-dialog) button:not(.card):not(.room-code):active:not(:disabled){
+ background:var(--bunker-control-pressed);
+ border-color:#d8efad;
+ transform:translateY(1px);
+}
+:is(.landing-shell,.game,.ending-screen,.disaster-intro,#rules,#special-dialog) button:not(.card):not(.room-code):focus-visible{
+ outline:3px solid #ebf7bd;
+ outline-offset:3px;
+}
+:is(.landing-shell,.game,.ending-screen,.disaster-intro,#rules,#special-dialog) button:not(.card):not(.room-code):disabled{
+ opacity:.5;
+ cursor:not-allowed;
+ transform:none;
+ box-shadow:inset 0 0 0 2px #142118;
+}
+:is(.landing-shell,.game,.ending-screen,.disaster-intro,#rules,#special-dialog) button.primary:not(.card){
+ background:var(--bunker-control-primary);
+ border-color:#b8d887;
+ color:#f4f8e8;
+}
+:is(.landing-shell,.game,.ending-screen,.disaster-intro,#rules,#special-dialog) button.primary:not(.card):hover:not(:disabled){
+ background:var(--bunker-control-primary-hover);
+ border-color:#e0f5ae;
+ color:#fffef0;
+}
+:is(.landing-shell,.game,.ending-screen,.disaster-intro,#rules,#special-dialog) button.secondary:not(.card){
+ background:var(--bunker-control-bg);
+ border-color:var(--bunker-control-border);
+ color:var(--bunker-control-text);
+}
+:is(.landing-shell,.game,.ending-screen,.disaster-intro,#rules,#special-dialog) button.secondary:not(.card):hover:not(:disabled){
+ background:var(--bunker-control-hover);
+ border-color:#d2eba1;
+}
+.game.phase-vote button.vote-btn:not(.card){
+ background:var(--bunker-control-danger);
+ border-color:var(--bunker-control-danger-border);
+ color:#f7e9de;
+}
+.game.phase-vote button.vote-btn:not(.card):hover:not(:disabled){
+ background:var(--bunker-control-danger-hover);
+ border-color:#e5b68d;
+ color:#fff3eb;
+}
+:is(.landing-shell,.game,.ending-screen,.disaster-intro,#rules,#special-dialog) button.full:not(.card){
+ width:100%;
+}
+.landing-shell .tabs{
+ display:grid;
+ grid-template-columns:repeat(3,minmax(0,1fr));
+ gap:6px;
+}
+.landing-shell .tabs button:not(.card){
+ min-width:0;
+ min-height:48px;
+ padding:8px 7px;
+ font-size:clamp(11px,1.1vw,14px);
+}
+.landing-shell .tabs button.active:not(.card),
+.landing-shell .tabs button[aria-pressed="true"]:not(.card){
+ background:#38563b;
+ color:#f4f7e9;
+ border-color:#d3ec9c;
+ box-shadow:inset 0 -3px #badb85;
+}
+.landing-shell .tabs button.active:not(.card):hover:not(:disabled){
+ background:#436746;
+}
+.game .room-code{
+ border-radius:0;
+ border:2px solid var(--bunker-control-border);
+ box-shadow:inset 0 0 0 2px #0c1d10;
+}
+.game .room-code:hover{border-color:#d2eba1;background:#213a24}
+:is(.landing-shell,.game,.ending-screen,.disaster-intro,#rules,#special-dialog) button.close:not(.card){
+ min-width:44px;
+ width:44px;
+ min-height:44px;
+ padding:8px;
+ flex-shrink:0;
+ font-size:20px;
+}
+.game .mobile-playbar-actions button:not(.card){
+ width:100%;
+ min-height:46px;
+}
+.game .mobile-playbar-actions button:last-child:not(.card){
+ background:var(--bunker-control-primary);
+ border-color:#c8e59a;
+ color:#f4f8e8;
+}
+.game .mobile-playbar-actions button:last-child:not(.card):hover:not(:disabled){
+ background:var(--bunker-control-primary-hover);
+}
+.game .host-tools button:not(.card),.game .recovery-panel button:not(.card){min-height:46px}
+@media(max-width:600px){
+ :is(.landing-shell,.game,.ending-screen,.disaster-intro,#rules,#special-dialog) button:not(.card):not(.room-code){
+  min-height:48px;
+  padding:11px 12px;
+  font-size:14px;
+ }
+ .landing-shell .tabs button:not(.card){min-height:48px;padding:8px 4px;font-size:12px}
+ .game.phase-vote button.vote-btn:not(.card){min-height:48px}
+ .game .mobile-playbar-actions button:not(.card){min-height:46px;padding:10px 7px}
+ .game .host-tools button:not(.card){width:100%}
+}
+@media(prefers-reduced-motion:reduce){
+ :is(.landing-shell,.game,.ending-screen,.disaster-intro,#rules,#special-dialog) button:not(.card):not(.room-code){
+  transition:none;
+ }
+}
