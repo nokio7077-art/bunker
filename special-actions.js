@@ -65,7 +65,7 @@ export function applySpecial(room, player, value = {}) {
   playerName: recipient.name,
   before: recipient.revealed.includes(key) ? recipient.cards[key] ?? 'Карточка сброшена' : 'Закрытая карточка',
   after: name === null ? 'Карточка сброшена' : (recipient.revealed.includes(key) || card.effect === 'reveal') ? name : 'Новая закрытая карточка',
-  unchanged: recipient.cards[key] === name
+  unchanged: recipient.revealed.includes(key) && recipient.cards[key] === name
  }));
  for (const [recipient, name] of changes) {
   recipient.cards[key] = name;
