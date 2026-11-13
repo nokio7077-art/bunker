@@ -2131,3 +2131,114 @@ body,button,input,select,textarea,.landing-shell,.game,#rules,#special-dialog{
  .landing-shell .footer-symbols{gap:3px}
  .landing-shell .footer-symbols .apocalypse-symbol{height:36px;font-size:27px}
 }
+
+/* Entry mode: quiet two-way segmented selector, no bright slab or mismatched edges. */
+.landing-shell .tabs{
+ display:grid;
+ grid-template-columns:repeat(2,minmax(0,1fr));
+ gap:8px;
+ margin:0 0 20px;
+ padding:5px;
+ background:#081408;
+ border:1px solid #536b38;
+ border-radius:9px;
+ box-shadow:inset 0 1px 4px #0009;
+}
+.landing-shell .tabs button{
+ appearance:none;
+ display:flex;
+ align-items:center;
+ justify-content:center;
+ width:100%;
+ min-width:0;
+ min-height:51px;
+ margin:0;
+ padding:11px 12px;
+ border:1px solid transparent;
+ border-radius:6px;
+ background:transparent;
+ color:#c1cdaa;
+ font:700 clamp(14px,1.2vw,17px)/1.2 var(--bunker-ui,'Onest',sans-serif);
+ letter-spacing:0;
+ box-shadow:none;
+ transition:background-color .16s ease,border-color .16s ease,color .16s ease;
+}
+.landing-shell .tabs button.active{
+ color:#eff8d5;
+ background:linear-gradient(180deg,#2c4928,#203821);
+ border-color:#9fce62;
+ box-shadow:inset 0 1px 0 #507941,0 1px 7px #020b07;
+ font-weight:800;
+}
+.landing-shell .tabs button:hover:not(.active){background:#142713;color:#f2f7e2}
+.landing-shell .tabs button:focus-visible{outline:2px solid #e6fa97;outline-offset:2px}
+
+/* Desktop footer: two hazard symbols / statistics / two hazard symbols. */
+.landing-shell .landing-footer.apocalypse-footer{
+ display:block;
+ padding:22px clamp(14px,2vw,32px);
+ min-height:0;
+}
+.landing-shell .footer-layout{
+ display:grid;
+ grid-template-columns:minmax(90px,1fr) minmax(0,640px) minmax(90px,1fr);
+ align-items:center;
+ gap:clamp(8px,1.8vw,26px);
+ width:100%;
+ max-width:1280px;
+ margin-inline:auto;
+}
+.landing-shell .footer-layout .footer-stats{width:100%;min-width:0;max-width:none}
+.landing-shell .footer-layout .stats{max-width:none;width:100%;margin:0}
+.landing-shell .footer-layout .footer-symbols{
+ display:flex;
+ align-items:center;
+ justify-content:space-evenly;
+ gap:clamp(3px,1vw,16px);
+ width:100%;
+ min-width:0;
+}
+.landing-shell .footer-layout .apocalypse-symbol{
+ display:flex;
+ align-items:center;
+ justify-content:center;
+ width:clamp(32px,3.6vw,58px);
+ height:58px;
+ flex:0 0 auto;
+ font-size:clamp(27px,3vw,40px);
+}
+@media(max-width:860px){
+ .landing-shell .footer-layout{
+  grid-template-columns:minmax(0,1fr);
+  gap:12px;
+  max-width:590px;
+ }
+ .landing-shell .footer-layout .footer-stats{grid-row:1;grid-column:1}
+ .landing-shell .footer-layout .footer-symbols-left{
+  grid-row:2;grid-column:1;
+  justify-content:flex-start;
+  padding-left:clamp(8px,6vw,45px);
+ }
+ .landing-shell .footer-layout .footer-symbols-right{
+  grid-row:2;grid-column:1;
+  justify-content:flex-end;
+  padding-right:clamp(8px,6vw,45px);
+ }
+ .landing-shell .footer-layout .footer-symbols{
+  width:100%;
+  box-sizing:border-box;
+  gap:clamp(6px,4vw,24px);
+ }
+ .landing-shell .footer-layout .apocalypse-symbol{
+  width:clamp(32px,9vw,44px);
+  height:42px;
+  font-size:clamp(25px,7vw,34px);
+ }
+}
+@media(max-width:390px){
+ .landing-shell .footer-layout .footer-symbols-left{padding-left:1px}
+ .landing-shell .footer-layout .footer-symbols-right{padding-right:1px}
+ .landing-shell .footer-layout .footer-symbols{gap:3px}
+ .landing-shell .footer-layout .apocalypse-symbol{width:32px}
+ .landing-shell .tabs button{min-height:48px;font-size:15px}
+}
