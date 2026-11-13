@@ -2,7 +2,7 @@ import { disasterImageFor } from './card-images.js';
 import { avatarIdentity } from './avatar-generator.js';
 const app=document.querySelector('#app');
 // Load only the gender atlas that the current character needs.
-// Portraits are cropped from original 128px images, at 96px resolution.
+// Portraits are cropped once from the original 128px PNGs to 92px tiles.
 const avatarSheets={};
 function avatarSheet(gender){
  if(!['female','male'].includes(gender))return null;
@@ -10,23 +10,22 @@ function avatarSheet(gender){
   const img=new Image();
   img.addEventListener('load',paintAvatars);
   img.addEventListener('error',()=>console.warn('Не удалось загрузить галерею портретов.'));
-  img.src='/images/ui/avatars-'+gender+'-96.webp';
+  img.src='/images/ui/avatars-'+gender+'-92.webp';
   avatarSheets[gender]=img;
  }
  return avatarSheets[gender];
 }
 function paintAvatar(canvas){
  const sheet=avatarSheet(canvas.dataset.gender);
- if(!sheet||!sheet.complete||sheet.naturalWidth!==960||sheet.naturalHeight!==2400)return;
+ if(!sheet||!sheet.complete||sheet.naturalWidth!==920||sheet.naturalHeight!==2300)return;
  const index=Number(canvas.dataset.index);
  if(!Number.isInteger(index)||index<0||index>=250)return;
  const context=canvas.getContext('2d');
  if(!context)return;
  context.imageSmoothingEnabled=false;
- context.clearRect(0,0,96,96);
- // Remove baked-in borders at each atlas tile's edges; CSS draws the only visible frame.
- const trim=9, sourceSize=96-trim*2;
- context.drawImage(sheet,(index%10)*96+trim,Math.floor(index/10)*96+trim,sourceSize,sourceSize,0,0,96,96);
+ context.clearRect(0,0,92,92);
+ // Tile already cropped cleanly from the 128px original: never crop or upscale again.
+ context.drawImage(sheet,(index%10)*92,Math.floor(index/10)*92,92,92,0,0,92,92);
 }
 function paintAvatars(){document.querySelectorAll('canvas.dossier-file-avatar').forEach(paintAvatar);}
 
@@ -125,7 +124,7 @@ function specialDialog(){
  return `<dialog id="special-dialog"><button class="close text-btn" data-action="special-close">Закрыть ✕</button><span class="eyebrow">ОДИН РАЗ ЗА ПАРТИЮ</span><h2>${escape(d.name)}</h2><p>${escape(d.description)}</p><p class="muted">Применяется в свой ход дополнительно к обычному раскрытию. Само особое условие станет открытым.</p><div class="special-controls">${needsTarget?`<label for="special-target">Участник</label><select id="special-target"><option value="">Выберите участника</option>${state.players.filter(p=>d.effect!=='swap'||p.id!==state.me).map(p=>`<option value="${p.id}" ${d.targetId===p.id?'selected':''}>${escape(p.name)}${p.id===state.me?' (вы)':''}${!p.alive?' · изгнан':''}</option>`).join('')}</select>`:''}${d.effect==='redraw'?'<p>Игра случайно выдаст другую подходящую карточку. Узнаете результат после применения; выбрать или отменить выпавшую карту нельзя.</p>':''}${d.effect==='shuffle'?'<p>Пустые и закрытые карточки останутся на месте. Случайная перетасовка может оставить часть карт у прежних владельцев.</p>':''}<button class="primary full" data-action="use_special">Применить один раз →</button></div></dialog>`;
 }
 // Inline icons avoid incomplete external SVG <use> rendering on mobile browsers.
-function dossierIcon(category){const key=/^(profession|health|luggage|phobia|hobby|biology|personality|interesting|special)$/.test(category)?category:'interesting';return `<img class="dossier-category-icon" src="/images/ui/dossier-${key}.svg" alt="" aria-hidden="true" width="48" height="48" loading="lazy" decoding="async">`;}
+function dossierIcon(category){const key=/^(profession|health|luggage|phobia|hobby|biology|personality|interesting|special)$/.test(category)?category:'interesting';return `<img class="dossier-category-icon" src="/images/ui/dossier-${key}.svg?v=archive-v23" alt="" aria-hidden="true" width="56" height="56" loading="lazy" decoding="async">`;}
 function handCard(me, mine, k, label){
  const open=me.revealed.includes(k), empty=me.cards[k]===null;
  const can=mine&&!state.opened&&!open&&!empty&&(state.round!==1||k==='profession');
@@ -155,7 +154,7 @@ function dossier(me,current,mine){
  const own=`<section class="dossier-file" data-dossier-key="${escape(state.code)}:${escape(me.id)}:${state.gameNumber||1}" data-progress-count="${opened}" aria-label="Досье выжившего">
  
  <div class="dossier-file-heading"><span class="dossier-file-stripes" aria-hidden="true">///</span><h3>ДОСЬЕ ВЫЖИВШЕГО</h3><span class="dossier-file-stripes" aria-hidden="true">///</span></div>
- <div class="dossier-file-profile"><canvas class="dossier-file-avatar" data-gender="${avatarIdentity(me.cards.biology,me.id,state.gameNumber||1).gender}" data-index="${avatarIdentity(me.cards.biology,me.id,state.gameNumber||1).index}" role="img" aria-label="Пиксельный портрет персонажа из коллекции" width="96" height="96"></canvas><div class="dossier-file-identity"><strong>${escape(me.name)}</strong><small>УЧАСТНИК УБЕЖИЩА · ${escape(state.code)}</small><div class="dossier-file-progress"><span>ПРОФИЛЬ: ${percent}% РАСКРЫТО</span><strong>${opened} ИЗ ${total}</strong></div><div class="dossier-progress" role="progressbar" aria-label="Раскрыто характеристик" aria-valuemin="0" aria-valuemax="${total}" aria-valuenow="${opened}">${slots}</div></div></div>
+ <div class="dossier-file-profile"><canvas class="dossier-file-avatar" data-gender="${avatarIdentity(me.cards.biology,me.id,state.gameNumber||1).gender}" data-index="${avatarIdentity(me.cards.biology,me.id,state.gameNumber||1).index}" role="img" aria-label="Пиксельный портрет персонажа из коллекции" width="92" height="92"></canvas><div class="dossier-file-identity"><strong>${escape(me.name)}</strong><small>УЧАСТНИК УБЕЖИЩА · ${escape(state.code)}</small><div class="dossier-file-progress"><span>ПРОФИЛЬ: ${percent}% РАСКРЫТО</span><strong>${opened} ИЗ ${total}</strong></div><div class="dossier-progress" role="progressbar" aria-label="Раскрыто характеристик" aria-valuemin="0" aria-valuemax="${total}" aria-valuenow="${opened}">${slots}</div></div></div>
  <div class="dossier-file-list">${keys.map(([k,label])=>handCard(me,mine,k,label)).join('')}</div>
  <p class="dossier-file-footnote">Закрытые карточки видны только вам. Открытые становятся доступны группе.</p>
  </section>`;
