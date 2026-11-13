@@ -39,9 +39,9 @@ test('real avatar atlases each contain 250 WebP thumbnails in a 10 by 25 grid',a
 
 test('avatar selection covers the full real galleries',()=>{
  const females=new Set(),males=new Set();
- for(let i=0;i<2500;i++){
-  females.add(avatarIdentity('Женщина · 28 лет','person-'+i,1).index);
-  males.add(avatarIdentity('Мужчина · 28 лет','person-'+i,1).index);
+ for(let i=0;i<2500;i++)for(const age of [21,42,81]){
+  females.add(avatarIdentity('Женщина · '+age+' лет','person-'+i,1).index);
+  males.add(avatarIdentity('Мужчина · '+age+' лет','person-'+i,1).index);
  }
  assert.equal(females.size,298);
  assert.equal(males.size,290);
