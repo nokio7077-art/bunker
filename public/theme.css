@@ -1949,3 +1949,43 @@ body,button,input,select,textarea,.landing-shell,.game,#rules,#special-dialog{
  .mobile-playbar-actions button:disabled{opacity:.47;cursor:not-allowed}
  .mobile-playbar:not(:has(.mobile-playbar-actions)){padding-bottom:calc(14px + env(safe-area-inset-bottom))}
 }
+
+/* Mobile apocalypse footer: equally spaced fixed cells, no emoji-driven flex shifts. */
+@media(max-width:760px){
+ .landing-shell .landing-footer.apocalypse-footer{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  justify-items:center;
+  align-items:center;
+  width:100%;
+  min-width:0;
+  max-width:100%;
+  box-sizing:border-box;
+  gap:0;
+  padding:12px clamp(8px,3vw,20px);
+  min-height:68px;
+  flex-direction:unset;
+ }
+ .landing-shell .apocalypse-footer .apocalypse-symbol{
+  display:grid;
+  place-items:center;
+  box-sizing:border-box;
+  width:100%;
+  max-width:64px;
+  min-width:0;
+  height:44px;
+  margin:0;
+  padding:0;
+  font-family:'DejaVu Sans','Segoe UI Symbol','Noto Sans Symbols 2',sans-serif;
+  font-size:clamp(24px,7vw,34px);
+  font-weight:400;
+  font-variant-emoji:text;
+  line-height:1;
+  text-align:center;
+  white-space:nowrap;
+ }
+}
+@media(max-width:350px){
+ .landing-shell .landing-footer.apocalypse-footer{padding-inline:6px}
+ .landing-shell .apocalypse-footer .apocalypse-symbol{font-size:25px;height:38px}
+}
