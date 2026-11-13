@@ -89,20 +89,46 @@ test('swaps preserve the visibility of slots and can transfer an empty slot',()=
  assert.equal(view(other.room,other.host).players[1].cards.hobby,null);
 });
 
-test('shuffle includes open and closed cards, preserves hidden values and empty slots',()=>{
+test('open-only shuffle affects just opened nonempty cards, including expelled players',()=>{
  for(let trial=0;trial<20;trial++){
   const {room,host,guest}=setup('Перетасовка открытого багажа');
   const original=room.players.map(p=>p.cards.luggage);
-  room.players[0].revealed.push('luggage');
-  room.players[1].revealed.push('luggage');
-  room.players[1].alive=false;
+  unchanged(room,()=>act(room,host,'use_special'));
+  host.revealed.push('luggage');
+  unchanged(room,()=>act(room,host,'use_special'));
+  guest.revealed.push('luggage');
+  guest.alive=false;
+  room.players[2].revealed.push('luggage');
+  room.players[3].revealed.push('luggage');
   room.players[3].cards.luggage=null;
-  const before=room.players.filter(p=>p.cards.luggage).map(p=>p.cards.luggage).sort();
+  const openedBefore=[host,guest,room.players[2]].map(p=>p.cards.luggage).sort();
   act(room,host,'use_special');
-  assert.deepEqual(room.players.filter(p=>p.cards.luggage).map(p=>p.cards.luggage).sort(),before);
+  assert.deepEqual([host,guest,room.players[2]].map(p=>p.cards.luggage).sort(),openedBefore);
   assert.equal(room.players[3].cards.luggage,null);
+  assert.equal(room.players[4].cards.luggage,original[4]);
+  assert.equal(room.players[4].revealed.includes('luggage'),false);
   assert.equal(view(room,host).players[4].cards.luggage,undefined);
-  assert.equal(room.specialEvents.at(-1).results.length,room.players.length-1);
+  assert.equal(room.specialEvents.at(-1).results.length,3);
+ }
+});
+
+test('unrestricted discard and swap can select unrevealed cards',()=>{
+ const discarded=setup('Сброс здоровья');
+ assert.equal(discarded.guest.revealed.includes('health'),false);
+ act(discarded.room,discarded.host,'use_special',{targetId:discarded.guest.id});
+ assert.equal(discarded.guest.cards.health,null);
+ const swapped=setup('Обмен багажом');
+ const before=[swapped.host.cards.luggage,swapped.guest.cards.luggage];
+ act(swapped.room,swapped.host,'use_special',{targetId:swapped.guest.id});
+ assert.equal(swapped.host.cards.luggage,before[1]);
+ assert.equal(swapped.guest.cards.luggage,before[0]);
+ assert.equal(swapped.guest.revealed.includes('luggage'),false);
+});
+
+test('special card descriptions and their revealed-only restrictions agree',()=>{
+ for(const card of specialCards){
+  const openOnly=/(?:только открытые|только вскрытые)/i.test(card.description);
+  assert.equal(Boolean(card.revealedOnly),openOnly,card.name);
  }
 });
 
@@ -162,8 +188,8 @@ test('public event snapshots never disclose hidden values, including closed-to-c
 test('shuffle results list all open recipients and report unchanged outcomes honestly',()=>{
  const {room,host,guest}=setup('Перетасовка открытого багажа');host.revealed.push('luggage');guest.revealed.push('luggage');
  const before=new Map([host,guest].map(p=>[p.id,p.cards.luggage]));act(room,host,'use_special');
- const results=room.specialEvents.at(-1).results;assert.equal(results.length,room.players.length);
- for(const result of results){const p=room.players.find(p=>p.id===result.playerId);if(p.revealed.includes('luggage')){assert.equal(result.before,before.get(p.id));assert.equal(result.after,p.cards.luggage);assert.equal(result.unchanged,result.before===result.after);}else{assert.equal(result.before,'Закрытая карточка');assert.equal(result.after,'Новая закрытая карточка');assert.equal(result.unchanged,false);}}
+ const results=room.specialEvents.at(-1).results;assert.equal(results.length,2);
+ for(const result of results){const p=room.players.find(p=>p.id===result.playerId);assert.equal(result.before,before.get(p.id));assert.equal(result.after,p.cards.luggage);assert.equal(result.unchanged,result.before===result.after);}
 });
 
 

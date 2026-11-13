@@ -3,7 +3,7 @@ const discard = (id, name, category, label) => ({ id, name, effect: 'discard', c
 const redraw = (id, name, category, label) => ({ id, name, effect: 'redraw', category, description: `Замените свою карточку «${label}» случайной другой из колоды. Результат выбирает игра. Открытая карточка останется открытой.` });
 const swap = (id, name, category, label) => ({ id, name, effect: 'swap', category, description: `Обменяйтесь карточками «${label}» с выбранным участником. Открытость слотов сохраняется; можно обменять и пустой слот.` });
 const reveal = (id, name, category, label) => ({ id, name, effect: 'reveal', category, description: `Раскройте любую закрытую карточку «${label}» выбранного участника — даже если это не его ход.` });
-const shuffle = (id, name, category, label) => ({ id, name, effect: 'shuffle', category, description: `Случайно распределите заново все несброшенные карточки «${label}». Закрытые карточки тоже участвуют, но остаются закрытыми. Нужны минимум две карты.` });
+const shuffle = (id, name, category, label) => ({ id, name, effect: 'shuffle', category, revealedOnly: true, description: `Случайно распределите заново только открытые несброшенные карточки «${label}». Закрытые карточки не участвуют. Нужны минимум две открытые карты.` });
 export const specialCards = [
  discard(1, 'Сброс здоровья', 'health', 'Здоровье'),
  discard(2, 'Сброс фобии', 'phobia', 'Фобия'),
