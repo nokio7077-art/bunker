@@ -2,7 +2,8 @@
 const discard = (id, name, category, label) => ({ id, name, effect: 'discard', category, description: `Сбросьте карточку «${label}» у любого участника, включая себя. Она останется пустой до замены или обмена.` });
 const redraw = (id, name, category, label) => ({ id, name, effect: 'redraw', category, description: `Замените свою карточку «${label}» случайной другой из колоды. Результат выбирает игра. Открытая карточка останется открытой.` });
 const swap = (id, name, category, label) => ({ id, name, effect: 'swap', category, description: `Обменяйтесь карточками «${label}» с выбранным участником. Открытость слотов сохраняется; можно обменять и пустой слот.` });
-const shuffle = (id, name, category, label) => ({ id, name, effect: 'shuffle', category, description: `Случайно распределите заново все открытые несброшенные карточки «${label}». Закрытые карточки не участвуют. Нужны минимум две открытые карты.` });
+const reveal = (id, name, category, label) => ({ id, name, effect: 'reveal', category, description: `Раскройте любую закрытую карточку «${label}» выбранного участника — даже если это не его ход.` });
+const shuffle = (id, name, category, label) => ({ id, name, effect: 'shuffle', category, description: `Случайно распределите заново все несброшенные карточки «${label}». Закрытые карточки тоже участвуют, но остаются закрытыми. Нужны минимум две карты.` });
 export const specialCards = [
  discard(1, 'Сброс здоровья', 'health', 'Здоровье'),
  discard(2, 'Сброс фобии', 'phobia', 'Фобия'),
@@ -20,5 +21,7 @@ export const specialCards = [
  swap(14, 'Обмен профессиями', 'profession', 'Профессия'),
  shuffle(15, 'Перетасовка открытого багажа', 'luggage', 'Багаж'),
  shuffle(16, 'Перетасовка открытых хобби', 'hobby', 'Хобби'),
+ reveal(17, 'Раскрыть чужое здоровье', 'health', 'Здоровье'),
+ reveal(18, 'Раскрыть чужой характер', 'personality', 'Характер'),
 ];
 export const specialCard = name => specialCards.find(card => card.name === name);

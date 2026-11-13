@@ -21,13 +21,16 @@ export function applySpecial(room, player, value = {}) {
  check(value && typeof value === 'object' && !Array.isArray(value), 'Некорректные параметры особого условия.');
  const key = card.category;
  let changes = [], target;
- if (card.effect === 'discard' || card.effect === 'swap') {
+ if (['discard','swap','reveal'].includes(card.effect)) {
   target = room.players.find(p => p.id === value.targetId);
   check(target, 'Выберите участника комнаты.');
  }
  if (card.effect === 'discard') {
   check(target.cards[key], 'Эта карточка уже сброшена или отсутствует.');
   changes = [[target, null]];
+ } else if (card.effect === 'reveal') {
+  check(target.cards[key] && !target.revealed.includes(key), 'Выберите участника с закрытой несброшенной карточкой этой категории.');
+  changes = [[target, target.cards[key]]];
  } else if (card.effect === 'redraw') {
   check(!Object.hasOwn(value, 'card'), 'Новая карточка определяется случайно. Обновите страницу и примените условие снова.');
   const candidates = decks[key].filter(name => name !== player.cards[key] && eligibleCard(key, name, player.cards.biology, room.disaster));
@@ -39,11 +42,19 @@ export function applySpecial(room, player, value = {}) {
   check(target.cards[key] !== player.cards[key], 'Такой обмен ничего не изменит.');
   changes = [[player, target.cards[key]], [target, player.cards[key]]];
  } else if (card.effect === 'shuffle') {
-  const participants = room.players.filter(p => p.revealed.includes(key) && p.cards[key]);
-  check(participants.length >= 2, 'Нужны хотя бы две открытые несброшенные карточки этой категории.');
-  const names = participants.map(p => p.cards[key]);
-  for (let i = names.length - 1; i > 0; i--) { const j = randomInt(i + 1); [names[i], names[j]] = [names[j], names[i]]; }
-  changes = participants.map((p, i) => [p, names[i]]);
+  // A closed card is still a valid card. Shuffle all nonempty cards, but never publish
+  // hidden values and never assign a biologically or disaster-incompatible card.
+  const participants = room.players.filter(p => p.cards[key]);
+  check(participants.length >= 2, 'Нужны хотя бы две несброшенные карточки этой категории.');
+  const original = participants.map(p => p.cards[key]);
+  let shuffled = null;
+  for (let attempt=0;attempt<80;attempt++) {
+   const names = [...original];
+   for (let i=names.length-1;i>0;i--){const j=randomInt(i+1);[names[i],names[j]]=[names[j],names[i]];}
+   if(names.every((name,i)=>eligibleCard(key,name,participants[i].cards.biology,room.disaster))){shuffled=names;break;}
+  }
+  check(shuffled, 'Не удалось безопасно перетасовать карточки. Попробуйте снова.');
+  changes = participants.map((p,i)=>[p,shuffled[i]]);
  }
  // Validate the entire operation before changing any hand or consuming the special.
  for (const [recipient, name] of changes) {
@@ -53,13 +64,13 @@ export function applySpecial(room, player, value = {}) {
   playerId: recipient.id,
   playerName: recipient.name,
   before: recipient.revealed.includes(key) ? recipient.cards[key] ?? 'Карточка сброшена' : 'Закрытая карточка',
-  after: name === null ? 'Карточка сброшена' : recipient.revealed.includes(key) ? name : 'Новая закрытая карточка',
+  after: name === null ? 'Карточка сброшена' : (recipient.revealed.includes(key) || card.effect === 'reveal') ? name : 'Новая закрытая карточка',
   unchanged: recipient.revealed.includes(key) && recipient.cards[key] === name
  }));
  for (const [recipient, name] of changes) {
   recipient.cards[key] = name;
-  // A discard is public, but its previous hidden value is never disclosed.
-  if (name === null && !recipient.revealed.includes(key)) recipient.revealed.push(key);
+  // A discard and an explicit reveal are public; other hidden values stay private.
+  if ((name === null || card.effect === 'reveal') && !recipient.revealed.includes(key)) recipient.revealed.push(key);
  }
  player.specialUsed = true;
  if (!player.revealed.includes('special')) player.revealed.push('special');
