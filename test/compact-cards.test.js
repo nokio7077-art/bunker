@@ -28,7 +28,7 @@ test('own card shows category and value, but hides description behind an explici
  assert.match(html,/<details class="card-detail"/);
  assert.match(html,/<summary>Подробнее<\/summary>/);
  assert.match(html,/Большое описание профессии/);
- assert.match(html,/<\\/button><details class="card-detail"/);
+ assert.ok(html.includes('</button><details class="card-detail"'));
 });
 test('special card retains its action button and separate description disclosure',()=>{
  const html=context.handCard(player,true,'special','Особое условие');
