@@ -38,7 +38,7 @@ export function startLocalMdns(address=getLocalIpv4(), logger=console) {
   }
   if(!found)return;
   const qname=Buffer.from([6,98,117,110,107,101,114,5,108,111,99,97,108,0]);
-  const ans=Buffer.alloc(16);
+  const ans=Buffer.alloc(14);
   ans.writeUInt16BE(1,0);ans.writeUInt16BE(0x8001,2);
   ans.writeUInt32BE(120,4);ans.writeUInt16BE(4,8);
   address.split('.').forEach((n,i)=>{ans[10+i]=Number(n)});
