@@ -74,7 +74,9 @@ test('bunker text is escaped and full long fields move below the illustration',(
  assert.ok(card.includes('&lt;img'));
  assert.ok(!card.includes('<img src=x'));
  state.bunker.name=saved;
- for(const part of ['bunker-card-description','bunker-card-equipment','bunker-card-threats'])assert.match(css,new RegExp('\\.'+part+'\\{[^}]*overflow-y:auto'));
+ for(const part of ['bunker-card-description','bunker-card-equipment','bunker-card-threats'])assert.ok(css.includes('.bunker-intro .'+part+'{')&&css.includes('overflow:hidden'));
+ assert.match(card,/<details class="bunker-intro-details">/);
+ assert.match(card,/<summary>Все сведения о бункере/);
  assert.ok(app.indexOf('if(shouldShowDisaster())')<app.indexOf('if(shouldShowBunker())'));
  assert.match(app,/if\(action==='bunker-open'\)/);
 });
