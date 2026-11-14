@@ -1,4 +1,4 @@
-import { randomInt } from 'node:crypto';
+import { randomInt, randomBytes } from 'node:crypto';
 import { decks, categories } from './cards.js';
 import { eligibleCard } from './card-catalog.js';
 import { specialCard } from './special-cards.js';
@@ -60,6 +60,7 @@ export function applySpecial(room, player, value = {}) {
  for (const [recipient, name] of changes) {
   check(name === null || eligibleCard(key, name, recipient.cards.biology, room.disaster), 'Обмен несовместим с персонажем или катастрофой.');
  }
+ const privateResults=changes.map(([recipient,name])=>({playerId:recipient.id,before:recipient.cards[key]??null,after:name}));
  const results = changes.map(([recipient, name]) => ({
   playerId: recipient.id,
   playerName: recipient.name,
@@ -74,7 +75,11 @@ export function applySpecial(room, player, value = {}) {
  }
  player.specialUsed = true;
  if (!player.revealed.includes('special')) player.revealed.push('special');
- const event = { actor: player.name, name: card.name, category: categories[key], round: room.round, results };
+ const eventId=randomBytes(10).toString('hex');
+ const event = { id:eventId, actor: player.name, actorId:player.id, effect:card.effect, categoryKey:key, name: card.name, category: categories[key], round: room.round, results };
+ // Keep secret before/after snapshots separate from public events; only the affected
+ // player receives their own details through the server's per-player view.
+ room.privateSpecialHistory=[...(room.privateSpecialHistory||[]),{id:eventId,results:privateResults}].slice(-16);
  // Persist only public snapshots, so hidden cards never leak through events or the log.
  room.specialEvents = [...(room.specialEvents || []), event].slice(-16);
  room.log.push(`${player.name} применяет «${card.name}». ${categories[key]}: ${results.map(r => `${r.playerName} — ${r.before} → ${r.after}${r.unchanged ? ' (без изменений)' : ''}`).join('; ')}.`);
