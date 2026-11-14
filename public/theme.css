@@ -2409,3 +2409,16 @@ body,button,input,select,textarea,.landing-shell,.game,#rules,#special-dialog{
  .game.phase-tie_discussion .banner h2{font-size:clamp(19px,5vw,24px)}
  .game.phase-tie_discussion .banner p{font-size:14px}
 }
+
+/* Same full-screen bulletin design as the special condition notification. */
+#tie-notice.tie-notice{border-color:#e8cd80;box-shadow:0 0 0 5px #5c472a,0 20px 80px #000b,0 0 42px #e8cd8026}
+#tie-notice .special-notice-heading{color:#f3d891}
+#tie-notice .special-notice-signal{border-color:#e8cd80}
+#tie-notice h2{color:#fff0be}
+#tie-notice .tie-notice-candidates{display:grid;gap:8px;list-style:none;margin:15px 0 18px;padding:0}
+#tie-notice .tie-notice-candidates li{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px 16px;border:1px solid #897342;border-left:4px solid #edca72;background:#2d2617;padding:12px 15px;list-style:none}
+#tie-notice .tie-notice-candidates strong{font-size:16px;color:#fff1cb;overflow-wrap:anywhere}
+#tie-notice .tie-notice-candidates span{font-size:13px;color:#f3d891}
+#tie-notice p strong{color:#fff0be}
+#tie-notice .special-notice-ok{background:#e8d18c;color:#1d2415;border-color:#ffe8a2}
+@media(max-width:600px){#tie-notice .tie-notice-candidates li{padding:10px 12px}}
