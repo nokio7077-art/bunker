@@ -126,7 +126,8 @@ test('a solo host can complete a full test game, even after expulsion',()=>{
    act(r,host,'bot_votes');
    assert.equal(view(r,host).pendingBotVotes,0);
    assert.throws(()=>act(r,host,'bot_votes'));
-   act(r,host,'vote',r.players.find(p=>p.alive).id);
+   const candidates=r.revoteCandidates||r.players.filter(p=>p.alive).map(p=>p.id);
+   act(r,host,'vote',candidates.find(id=>id!==host.id));
   }
  }
  assert.equal(r.players.filter(p=>p.alive).length,2);
