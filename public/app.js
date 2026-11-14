@@ -176,7 +176,7 @@ function specialNoticeKey(event){
  return `bunker-special-notice:${state.code}:${state.me}:${state.gameNumber||1}:${event.id}`;
 }
 function pendingSpecialNotice(){
- if(!state||!['turn','vote'].includes(state.phase))return null;
+ if(!state||!['turn','tie_discussion','vote'].includes(state.phase))return null;
  const event=state.specialEvents?.at(-1);
  if(!event?.id)return null;
  try{return localStorage.getItem(specialNoticeKey(event))==='seen'?null:event;}catch{return event;}
