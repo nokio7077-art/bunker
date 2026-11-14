@@ -123,11 +123,11 @@ export function act(room, p, action, value) {
   check(room.testMode && room.host === p.id && room.phase === 'turn', 'Управление ботами доступно ведущему в тестовой партии.');
   const bot = room.players.find(x => x.id === room.turn);
   check(bot?.bot && bot.alive, 'Сейчас ход живого участника, а не бота.');
-  if (!bot.specialUsed) botSpecialMove(room,bot);
   if (!room.opened) {
    const remaining = Object.keys(bot.cards).filter(k => bot.cards[k] && !bot.revealed.includes(k));
    if (remaining.length) act(room, bot, 'reveal', room.round === 1 ? 'profession' : pick(remaining));
   }
+  if (!bot.specialUsed) botSpecialMove(room,bot);
   act(room, bot, 'next');
  } else if (action === 'start_revote') {
   check(room.phase === 'tie_discussion' && room.host === p.id, 'Начать переголосование может ведущий после ничьей.');
