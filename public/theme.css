@@ -2388,3 +2388,28 @@ body,button,input,select,textarea,.landing-shell,.game,#rules,#special-dialog{
  #special-notice[open]{animation:special-notice-enter .19s ease-out}
  @keyframes special-notice-enter{from{opacity:.4;transform:translateY(13px) scale(.985)}to{opacity:1;transform:translateY(0) scale(1)}}
 }
+
+/* Match pacing control — readable on both phone and desktop. */
+.game .game-modes{margin:12px 0 18px;padding:15px 18px;background:#0a1a10;border:1px solid #55763e}
+.game .game-modes h3{font-size:15px;line-height:1.3;color:#d4ef9a;margin:0 0 10px}
+.game .game-mode-choices{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
+.game .game-mode-choices button{display:flex;flex-direction:column;gap:5px;align-items:center;justify-content:center;min-width:0;min-height:60px;padding:8px;background:#112519;border:1px solid #47643d;color:#dce4ca;font-size:14px;font-weight:700}
+.game .game-mode-choices button small{font-size:11px;font-weight:400;opacity:.8}
+.game .game-mode-choices button.is-selected{background:#28482b;color:#f0ffd5;border-color:#c8ef87;box-shadow:inset 0 0 0 1px #719a57}
+.game .game-mode-choices button:disabled{opacity:.75;cursor:default}
+.game.phase-tiebreak .banner{border-color:#d2a759;background:linear-gradient(120deg,#201b10,#121f13)}
+.game.phase-tiebreak .banner h2{color:#ffdb93}
+.game.phase-tiebreak .vote-btn{border-color:#e3b76c}
+.game.phase-tiebreak .player:has(.vote-btn){border-color:#c89c56}
+.ending-summary{width:min(100% - 32px,680px);margin:0 auto 16px;padding:18px 22px;background:#0c1d0d;border:1px solid #719a57;color:#e6f0d0;text-align:left}
+.ending-summary h2{margin:0 0 8px;font-size:19px;color:#d2ef88}
+.ending-summary p{margin:6px 0;line-height:1.4;font-size:14px}
+.ending-summary ol{margin:13px 0;padding-left:22px;display:grid;gap:7px}
+.ending-summary li{font-size:13px;line-height:1.4}
+@media(max-width:600px){
+ .game .game-modes{padding:12px}
+ .game .game-mode-choices{gap:5px}
+ .game .game-mode-choices button{min-height:56px;font-size:12px;padding:6px 3px}
+ .game .game-mode-choices button small{font-size:10px}
+ .ending-summary{padding:12px 15px;margin-bottom:12px}
+}

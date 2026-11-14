@@ -7,30 +7,47 @@ import { randomInt, randomBytes } from 'node:crypto';
 import { player, createRoom, join, act, view, advanceRoom } from './game.js';
 import { specialOptions } from './special-actions.js';
 import { disasterImages, landscapeImage } from './public/card-images.js';
-import { disasters as canonicalDisasters } from './world.js';
 
 const root = fileURLToPath(new URL('.', import.meta.url));
 const dataDir = process.env.DATA_DIR || pathJoin(root,'.data');
 mkdirSync(dataDir,{recursive:true,mode:0o700});
 const file=pathJoin(dataDir,'rooms.json');
 const rooms=new Map(existsSync(file) ? JSON.parse(readFileSync(file,'utf8')) : []);
+let postgres=null,writeQueue=Promise.resolve();
+async function initPersistentRooms(){
+ if(!process.env.DATABASE_URL)return;
+ const {Pool}=await import('pg');
+ postgres=new Pool({connectionString:process.env.DATABASE_URL,max:3,
+  ...(process.env.DATABASE_SSL==='require'?{ssl:{rejectUnauthorized:true}}:{})});
+ await postgres.query('CREATE TABLE IF NOT EXISTS bunker_room_state (key TEXT PRIMARY KEY, snapshot JSONB NOT NULL, updated_at TIMESTAMPTZ NOT NULL DEFAULT now())');
+ const stored=await postgres.query("SELECT snapshot FROM bunker_room_state WHERE key='rooms'");
+ if(stored.rows.length){
+  rooms.clear();
+  for(const [code,room] of stored.rows[0].snapshot)rooms.set(code,room);
+ }else if(rooms.size){
+  await postgres.query("INSERT INTO bunker_room_state(key,snapshot) VALUES('rooms',$1::jsonb)",[JSON.stringify([...rooms])]);
+ }
+ console.log('Bunker rooms: PostgreSQL persistent storage active.');
+}
 // Existing rooms predate the explicit idle clock; preserve their last real event.
 for(const room of rooms.values())if(!room.lastActivityAt)room.lastActivityAt=room.updated||Date.now();
 // On deployment, clamp previously issued five-minute turns to the new 3:16 maximum.
 for(const room of rooms.values())if(room.phase==='turn'&&room.turnDeadline){room.turnDeadline=Math.min(room.turnDeadline,Date.now()+196000);}
-// Existing live rooms may still hold a historical isolation duration.
-for(const room of rooms.values()){
- if(!room.disaster||Array.isArray(room.disaster))continue;
- const canonical=canonicalDisasters.find(d=>d.id===room.disaster.id);
- if(!canonical)continue;
- room.disaster={...room.disaster,description:canonical.description,isolation_days:90};
- if(room.bunker&&!Array.isArray(room.bunker)&&Array.isArray(room.bunker.scenario_notes)){
-  room.bunker.scenario_notes=room.bunker.scenario_notes.map(note=>
-   /^Запасы покрывают первые \d+ суток обязательной изоляции\.$/.test(note)
-    ? 'Запасы покрывают первые 90 суток обязательной изоляции.' : note);
+// A PostgreSQL instance with DATABASE_URL is durable across Render redeploys.
+// Without it local file storage is safe only on a persistent disk, not on free ephemeral hosts.
+const save=()=>{
+ if(!postgres){
+  writeFileSync(file+'.tmp',JSON.stringify([...rooms]),{mode:0o600});
+  renameSync(file+'.tmp',file);
+  return Promise.resolve();
  }
-}
-const save=()=>{writeFileSync(file+'.tmp',JSON.stringify([...rooms]),{mode:0o600});renameSync(file+'.tmp',file);};
+ const data=JSON.stringify([...rooms]);
+ const operation=writeQueue.then(()=>postgres.query(
+  "INSERT INTO bunker_room_state(key,snapshot,updated_at) VALUES('rooms',$1::jsonb,now()) ON CONFLICT(key) DO UPDATE SET snapshot=EXCLUDED.snapshot, updated_at=now()",
+  [data]));
+ writeQueue=operation.catch(error=>{console.error('Persistent storage write failed:',error);});
+ return operation;
+};
 // Idle room expiration depends on actual player activity, not automatic timer actions.
 const IDLE_LOBBY_MS=24*60*60*1000,IDLE_FINISHED_MS=24*60*60*1000,IDLE_GAME_MS=72*60*60*1000;
 function cleanupRooms(now=Date.now()){
@@ -41,14 +58,15 @@ function cleanupRooms(now=Date.now()){
  }
  return changed;
 }
+await initPersistentRooms();
 let maintenanceTicks=0;
-const maintenance=setInterval(()=>{
+const maintenance=setInterval(async()=>{
  try{
   const now=Date.now();
   let changed=false;
   for(const room of rooms.values())if(advanceRoom(room,now))changed=true;
   if(++maintenanceTicks%60===0 && cleanupRooms(now))changed=true;
-  if(changed)save();
+  if(changed)await save();
  }catch(e){console.error('Bunker maintenance:',e);}
 },1000);
 maintenance.unref();
@@ -111,24 +129,24 @@ export const server=http.createServer(async(req,res)=>{
    const ip=getLocalIpv4();
    return send(200,{localOrigin:ip?`http://${ip}:${server.address().port}`:null,mdnsOrigin:process.env.BUNKER_MDNS==='1'?'http://bunker.local:'+server.address().port:null});
   }
-  if(req.method==='GET' && url.pathname==='/health') return send(200,{ok:true,uiVersion:'20261113-timer-v7'});
+  if(req.method==='GET' && url.pathname==='/health') return send(200,{ok:true,persistence:postgres?'postgres':'local',uiVersion:'20261113-timer-v7'});
   if(!url.pathname.startsWith('/api/')) return send(404,{error:'Не найдено.'});
   if(req.method==='POST') {
    rate(req);
    if(req.headers.origin && new URL(req.headers.origin).host!==req.headers.host) return send(403,{error:'Недопустимый источник запроса.'});
   }
   if(req.method==='POST' && url.pathname==='/api/rooms') {
-   if(cleanupRooms())save();
+   if(cleanupRooms())await save();
    if(rooms.size>=500)return send(503,{error:'Временно достигнут лимит комнат. Попробуйте позже.'});
    const b=await body(req), p=player(b.name); let code;
    do {code=String(randomInt(100000,1000000));} while(rooms.has(code));
-   const room=createRoom(code,p);room.lastActivityAt=Date.now();rooms.set(code,room);save();return send(201,{code,token:p.token,recoveryCode:p.recoveryCode});
+   const room=createRoom(code,p);room.lastActivityAt=Date.now();rooms.set(code,room);await save();return send(201,{code,token:p.token,recoveryCode:p.recoveryCode});
   }
   const match=url.pathname.match(/^\/api\/rooms\/(\d{6})(?:\/(join|action|special|recover))?$/);
   if(!match) return send(404,{error:'Не найдено.'});
   const room=rooms.get(match[1]);if(!room) return send(404,{error:'Комната не найдена. Проверьте код.'});
   if(req.method==='POST' && match[2]==='join') {
-   const b=await body(req),p=player(b.name);join(room,p);room.lastActivityAt=Date.now();save();
+   const b=await body(req),p=player(b.name);join(room,p);room.lastActivityAt=Date.now();await save();
    return send(201,{code:room.code,token:p.token,recoveryCode:p.recoveryCode});
   }
   if(req.method==='POST' && match[2]==='recover'){
@@ -136,7 +154,7 @@ export const server=http.createServer(async(req,res)=>{
    const name=String(b.name??'').trim().toLowerCase(),recoveryCode=String(b.recoveryCode??'').trim().toLowerCase();
    const found=room.players.find(p=>!p.bot&&p.name.toLowerCase()===name&&p.recoveryCode===recoveryCode);
    if(!found || !/^[0-9a-f]{24}$/.test(recoveryCode))return send(403,{error:'Неверное имя или резервный код восстановления.'});
-   found.token=randomBytes(18).toString('hex');found.lastSeen=Date.now();room.lastActivityAt=Date.now();save();
+   found.token=randomBytes(18).toString('hex');found.lastSeen=Date.now();room.lastActivityAt=Date.now();await save();
    return send(200,{code:room.code,token:found.token,recoveryCode:found.recoveryCode});
   }
   const token=req.headers.authorization?.replace(/^Bearer /,''); const me=room.players.find(p=>p.token===token);
@@ -147,12 +165,12 @@ export const server=http.createServer(async(req,res)=>{
   if(!me.recoveryCode){me.recoveryCode=randomBytes(12).toString('hex');changed=true;}
   if(!me.lastSeen || now-me.lastSeen>=15000){me.lastSeen=now;changed=true;}
   if(advanceRoom(room,now))changed=true;
-  if(changed)save();
+  if(changed)await save();
   if(req.method==='GET' && !match[2]) return send(200,view(room,me));
   if(req.method==='GET' && match[2]==='special') return send(200,specialOptions(room,me));
   if(req.method==='POST' && match[2]==='action') {
    const b=await body(req);act(room,me,b.action,b.value);
-   me.lastSeen=Date.now();room.lastActivityAt=Date.now();save();
+   me.lastSeen=Date.now();room.lastActivityAt=Date.now();await save();
    return send(200,view(room,me));
   }
   return send(405,{error:'Метод не поддерживается.'});

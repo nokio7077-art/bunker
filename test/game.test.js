@@ -47,12 +47,35 @@ test('limits, duplicate names, invalid actions and votes',()=>{
  assert.equal(view(r,r.players[1]).voteCount,1);
  assert.throws(()=>act(r,r.players[2],'vote',r.players[2].id),/Нельзя голосовать за себя/);assert.equal(view(r,r.players[1]).votes,undefined);
 });
-test('tied vote expels exactly one tied candidate across 100 trials',()=>{
- for(let trial=0;trial<100;trial++){
- const r=setup(8);act(r,r.players[0],'start');for(const p of r.players){act(r,p,'reveal','profession');act(r,p,'next');}
- r.players.forEach((p,i)=>act(r,p,'vote',r.players[i<2?1-i:i%2].id));
- assert.equal(r.lastVote.tie,true);assert.ok(r.players.slice(0,2).some(p=>p.id===r.lastVote.eliminated));assert.equal(r.players.filter(p=>!p.alive).length,1);assert.equal(r.round,2);
- }
+test('tied vote enters discussion, only tied candidates can be selected and runoff resolves it',()=>{
+ const r=setup(8);act(r,r.players[0],'start');
+ for(const p of r.players){act(r,p,'reveal','profession');act(r,p,'next');}
+ // Force four votes for each of two candidates; voters cannot vote for themselves.
+ const [a,b]=r.players;
+ for(const p of r.players)act(r,p,'vote',p.id===a.id?b.id:p.id===b.id?a.id:(r.players.indexOf(p)%2?a.id:b.id));
+ assert.equal(r.phase,'tiebreak');
+ assert.deepEqual(new Set(r.tiedCandidates),new Set([a.id,b.id]));
+ assert.equal(r.players.filter(p=>!p.alive).length,0);
+ assert.throws(()=>act(r,r.players[2],'vote',r.players[3].id),/только за участников/);
+ assert.throws(()=>act(r,a,'vote',a.id),/только за участников/);
+ const eventCount=r.voteHistory.length;
+ assert.equal(eventCount,1);
+ assert.equal(view(r,a).voteHistory.length,0,'Ballot history remains secret during game');
+ for(const p of r.players)act(r,p,'vote',p.id===a.id?b.id:a.id);
+ assert.equal(r.phase,'turn');assert.equal(a.alive,false);
+ assert.equal(r.voteHistory.length,2);
+ assert.equal(r.lastVote.tie,true);
+});
+
+test('surviving non-current players can use specials in tiebreak but cannot use them outside discussion',()=>{
+ const r=setup(8);act(r,r.players[0],'start');
+ for(const p of r.players){act(r,p,'reveal','profession');act(r,p,'next');}
+ const host=r.players[0],other=r.players[1];other.cards.special='Сброс здоровья';
+ assert.throws(()=>act(r,other,'use_special',{targetId:host.id}));
+ for(const p of r.players)act(r,p,'vote',p.id===host.id?other.id:p.id===other.id?host.id:(r.players.indexOf(p)%2?host.id:other.id));
+ assert.equal(r.phase,'tiebreak');
+ act(r,other,'use_special',{targetId:host.id});
+ assert.equal(host.cards.health,null);
 });
 
 test('a solo host can complete a full test game, even after expulsion',()=>{
@@ -106,7 +129,7 @@ test('test bots vote automatically only after every human, including an expelled
 });
 test('one human vote completes a solo test ballot with no bot action',()=>{
  const r=setup(1),host=r.players[0];act(r,host,'start_test');r.phase='vote';r.votes={};
- act(r,host,'vote',r.players[1].id);assert.equal(r.phase,'turn');assert.equal(r.players.filter(p=>p.alive).length,4);
+ act(r,host,'vote',r.players[1].id);if(r.phase==='tiebreak')act(r,host,'vote',r.tiedCandidates.find(id=>id!==host.id));assert.equal(r.phase,'turn');assert.equal(r.players.filter(p=>p.alive).length,4);
  assert.equal(Object.values(r.lastVote.scores).reduce((a,b)=>a+b,0),5);
 });
 
@@ -160,12 +183,15 @@ test('vote deadline counts missing ballots as abstentions and always eliminates 
  assert.equal(r.players.filter(x=>!x.alive).length,1);
  assert.equal(r.phase,'turn');
 });
-test('zero-vote timeout uses a draw rather than locking the game',()=>{
+test('zero-vote timeout triggers a restricted runoff before any expulsion',()=>{
  const r=setup(8);act(r,r.players[0],'start');
  for(const p of r.players){act(r,p,'reveal','profession');act(r,p,'next');}
  assert.equal(advanceRoom(r,r.voteDeadline+1),true);
- assert.equal(r.lastVote.abstained,8);
- assert.equal(Object.keys(r.lastVote.scores).length,0);
+ assert.equal(r.phase,'tiebreak');
+ assert.equal(r.voteHistory.at(-1).abstained,8);
+ assert.equal(Object.keys(r.voteHistory.at(-1).scores).length,0);
+ assert.equal(r.players.filter(x=>!x.alive).length,0);
+ assert.equal(advanceRoom(r,r.voteDeadline+1),true);
  assert.equal(r.players.filter(x=>!x.alive).length,1);
 });
 test('host may transfer leadership, and inactive host is replaced by active human',()=>{
@@ -221,4 +247,23 @@ test('player view exposes connection status without private heartbeat timestamps
  assert.equal('lastSeen' in seen.players[1],false);
  guest.lastSeen=Date.now();
  assert.equal(view(r,host).players.find(p=>p.id===guest.id).connected,true);
+});
+
+test('configurable pacing is host-only and persists across rematches',()=>{
+ const r=setup(5),host=r.players[0],guest=r.players[1];
+ assert.throws(()=>act(r,guest,'set_mode','fast'));
+ assert.throws(()=>act(r,host,'set_mode','fake'));
+ act(r,host,'set_mode','fast');
+ assert.equal(r.mode,'fast');act(r,host,'start');
+ assert.equal(r.firstVote,2);
+ assert.ok(r.turnDeadline-Date.now()<=60_000 && r.turnDeadline-Date.now()>55_000);
+ assert.throws(()=>act(r,host,'set_mode','long'));
+ r.phase='finished';act(r,host,'next_game');assert.equal(r.mode,'fast');
+});
+test('final vote history includes public results only after match concludes',()=>{
+ const r=setup(5);act(r,r.players[0],'start');
+ r.phase='finished';r.voteHistory=[{round:1,ballots:{[r.players[0].id]:r.players[1].id},scores:{[r.players[1].id]:1},eliminated:r.players[1].id}];
+ const out=view(r,r.players[0]);
+ assert.equal(out.voteHistory.length,1);
+ assert.equal(out.voteHistory[0].ballots[r.players[0].id],r.players[1].id);
 });
