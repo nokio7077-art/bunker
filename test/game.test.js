@@ -210,3 +210,15 @@ test('all shelter areas and descriptions stay within the agreed 30–350 m² ran
   assert.ok(picked.bunker.area_sqm<=350&&picked.bunker.area_sqm>=30);
  }
 });
+
+test('player view exposes connection status without private heartbeat timestamps',()=>{
+ const r=setup(2),host=r.players[0],guest=r.players[1];
+ guest.lastSeen=Date.now()-60000;
+ const seen=view(r,host);
+ assert.equal(seen.players.find(p=>p.id===host.id).connected,true);
+ assert.equal(seen.players.find(p=>p.id===guest.id).connected,false);
+ assert.equal('lastSeen' in seen.players[0],false);
+ assert.equal('lastSeen' in seen.players[1],false);
+ guest.lastSeen=Date.now();
+ assert.equal(view(r,host).players.find(p=>p.id===guest.id).connected,true);
+});
