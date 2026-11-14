@@ -2422,3 +2422,38 @@ body,button,input,select,textarea,.landing-shell,.game,#rules,#special-dialog{
 #tie-notice p strong{color:#fff0be}
 #tie-notice .special-notice-ok{background:#e8d18c;color:#1d2415;border-color:#ffe8a2}
 @media(max-width:600px){#tie-notice .tie-notice-candidates li{padding:10px 12px}}
+
+/* Restoring a saved room must never expose the old/public landing artwork. */
+.session-recovery{
+ min-height:100svh;
+ display:flex;
+ flex-direction:column;
+ justify-content:center;
+ align-items:center;
+ text-align:center;
+ gap:16px;
+ padding:32px 20px;
+ box-sizing:border-box;
+ background:radial-gradient(circle at center,#162919 0,#09170d 58%,#050e07 100%);
+ color:#edf3d2;
+ font-family:var(--bunker-ui,'Onest',sans-serif);
+}
+.session-recovery-emblem{
+ width:68px;height:68px;
+ display:grid;place-items:center;
+ color:#d7f38e;background:#1c3420;
+ border:2px solid #8ea95a;font-size:38px;
+}
+.session-recovery h1{
+ margin:0;
+ font-family:var(--bunker-display,'Russo One',sans-serif);
+ font-size:clamp(29px,6vw,46px);
+ letter-spacing:.08em;
+}
+.session-recovery p{margin:0;color:#b9caa9;font-size:15px}
+.session-recovery-spinner{
+ width:32px;height:32px;border:3px solid #586b41;border-top-color:#d6ef8a;
+ border-radius:50%;animation:session-recovery-spin 1s linear infinite;
+}
+@keyframes session-recovery-spin{to{transform:rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){.session-recovery-spinner{animation:none}}
