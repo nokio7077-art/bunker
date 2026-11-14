@@ -30,6 +30,43 @@ export function join(room, p) {
  check(!room.players.some(x => x.name.toLowerCase() === p.name.toLowerCase()), 'Это имя уже занято.');
  room.players.push(p);
 }
+// Prepare the entire starting state off-room. No mutation is committed until every
+// character has a valid, complete hand and a compatible disaster/bunker exists.
+function prepareStart(players) {
+ const capacity=Math.floor(players.length/2);
+ const {disaster,bunker}=chooseWorld(capacity);
+ const pools=Object.fromEntries(Object.entries(decks).map(([key,values])=>[key,[...values]]));
+ const hands=players.map(()=>{
+  const cards={biology:createBiologyCard()};
+  for(const [key,pool] of Object.entries(pools)){
+   let eligible=pool.filter(name=>eligibleCard(key,name,cards.biology,disaster));
+   if(key==='health'){
+    const wantHealthy=randomInt(4)===0;
+    const preferred=eligible.filter(name=>healthyCard(name)===wantHealthy);
+    if(preferred.length)eligible=preferred;
+   }
+   if(!eligible.length)throw new Error(`Недостаточно подходящих карточек: ${key}`);
+   const name=pick(eligible);
+   cards[key]=name;
+   pool.splice(pool.indexOf(name),1);
+  }
+  check(Object.keys(cards).length===Object.keys(decks).length+1,'Раздача карточек неполная.');
+  return cards;
+ });
+ return {capacity,firstVote:firstVoteRound(players.length),disaster,bunker,hands};
+}
+function commitStart(room,players,prepared,testMode=false){
+ // All potentially failing catalog lookups and eligibility checks happened above.
+ room.players=players;
+ for(let i=0;i<players.length;i++)players[i].cards=prepared.hands[i];
+ room.capacity=prepared.capacity;room.firstVote=prepared.firstVote;
+ room.disaster=prepared.disaster;room.bunker=prepared.bunker;
+ if(testMode)room.testMode=true;
+ room.phase='turn';room.round=1;room.turn=players[0].id;
+ room.opened=false;room.turnDeadline=Date.now()+TURN_TIMEOUT_MS;
+ delete room.voteDeadline;
+ room.log.push('Шлюз закрыт. Начинается знакомство.');
+}
 export function act(room, p, action, value) {
  if (action === 'next_game') {
   check(room.phase === 'finished' && room.host === p.id, 'Следующую партию готовит ведущий после завершения игры.');
@@ -49,14 +86,16 @@ export function act(room, p, action, value) {
  } else if (action === 'start_test') {
   check(room.host === p.id && room.phase === 'lobby', 'Тестовую игру запускает ведущий до начала партии.');
   check(room.players.length < 5, 'В комнате уже достаточно участников для обычной игры.');
-  let number = 1;
-  while (room.players.length < 5) {
-   const name = `Бот ${number++}`;
-   if (room.players.some(x => x.name.toLowerCase() === name.toLowerCase())) continue;
-   const bot = player(name); bot.bot = true; join(room, bot);
+  // Bots are staged locally: failed dealing leaves the lobby and its humans intact.
+  const participants=[...room.players];
+  let number=1;
+  while(participants.length<5){
+   const name=`Бот ${number++}`;
+   if(participants.some(x=>x.name.toLowerCase()===name.toLowerCase()))continue;
+   const bot=player(name);bot.bot=true;participants.push(bot);
   }
-  room.testMode = true;
-  act(room, p, 'start');
+  const prepared=prepareStart(participants);
+  commitStart(room,participants,prepared,true);
   room.log.push('Тестовая партия: ведущий запускает ходы ботов, их голоса поступают автоматически после голосов всех людей.');
  } else if (action === 'bot_step') {
   check(room.testMode && room.host === p.id && room.phase === 'turn', 'Управление ботами доступно ведущему в тестовой партии.');
@@ -78,29 +117,9 @@ export function act(room, p, action, value) {
   for (const bot of bots) act(room, bot, 'vote', pick(candidates.filter(id=>id!==bot.id)));
  } else if (action === 'start') {
   check(room.host === p.id && room.phase === 'lobby', 'Только ведущий может начать игру.');
-  check(room.players.length >= 5, 'Для игры нужно от 5 до 16 участников.');
-  room.capacity = Math.floor(room.players.length / 2);
-  room.firstVote = firstVoteRound(room.players.length);
-  Object.assign(room, chooseWorld(room.capacity));
-  const pools = Object.fromEntries(Object.entries(decks).map(([k,v])=>[k,[...v]]));
-  for (const person of room.players) {
-   person.cards.biology = createBiologyCard();
-   for (const [k, pool] of Object.entries(pools)) {
-    let eligible = pool.filter(name => eligibleCard(k,name,person.cards.biology,room.disaster));
-    if (k === 'health') {
-     // Keep a meaningful chance of a healthy character instead of forcing everyone to be ill.
-     const wantHealthy = randomInt(4) === 0;
-     const preferred = eligible.filter(name => healthyCard(name) === wantHealthy);
-     if (preferred.length) eligible = preferred;
-    }
-    if (!eligible.length) throw new Error(`Недостаточно подходящих карточек: ${k}`);
-    const name = pick(eligible);
-    person.cards[k] = name;
-    pool.splice(pool.indexOf(name),1);
-   }
-  }
-  room.phase = 'turn'; room.round = 1; room.turn = room.players[0].id; room.opened = false; room.turnDeadline = Date.now() + TURN_TIMEOUT_MS; delete room.voteDeadline;
-  room.log.push('Шлюз закрыт. Начинается знакомство.');
+  check(room.players.length >= 5 && room.players.length <= 16, 'Для игры нужно от 5 до 16 участников.');
+  const prepared=prepareStart(room.players);
+  commitStart(room,room.players,prepared);
  } else if (action === 'use_special') {
   applySpecial(room, p, value);
  } else if (action === 'reveal') {

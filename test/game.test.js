@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { player, createRoom, join, act, view, categories, firstVoteRound, advanceRoom, TURN_TIMEOUT_MS, VOTE_TIMEOUT_MS, TIE_DISCUSSION_MS, HOST_INACTIVE_MS } from '../game.js';
+import { decks } from '../cards.js';
 function setup(n){const host=player('Игрок 1'),r=createRoom('123456',host);for(let i=2;i<=n;i++)join(r,player('Игрок '+i));return r;}
 test('first voting rounds and capacities for 5–16 players',()=>{
  for(let n=5;n<=16;n++){
@@ -276,4 +277,48 @@ test('player view exposes connection status without private heartbeat timestamps
  assert.equal('lastSeen' in seen.players[1],false);
  guest.lastSeen=Date.now();
  assert.equal(view(r,host).players.find(p=>p.id===guest.id).connected,true);
+});
+
+test('normal start is atomic: a failed card catalog leaves the entire room unchanged',()=>{
+ const r=setup(8),host=r.players[0],before=structuredClone(r);
+ const original=decks.profession;
+ try{
+  // The failure occurs after disaster selection and after all biology values are
+  // generated, at the profession draw for the first player.
+  decks.profession=[];
+  assert.throws(()=>act(r,host,'start'),/Недостаточно подходящих карточек: profession/);
+  assert.deepEqual(r,before);
+  assert.ok(r.players.every(p=>Object.keys(p.cards).length===0));
+ }finally{decks.profession=original;}
+ act(r,host,'start');
+ assert.equal(r.phase,'turn');
+ assert.equal(r.players.every(p=>Object.keys(p.cards).length===9),true);
+});
+
+test('test game bot creation and dealing are one atomic start',()=>{
+ const r=setup(2),host=r.players[0],before=structuredClone(r);
+ const original=decks.profession;
+ try{
+  decks.profession=[];
+  assert.throws(()=>act(r,host,'start_test'),/Недостаточно подходящих карточек: profession/);
+  assert.deepEqual(r,before);
+  assert.equal(r.players.length,2);
+  assert.equal(r.testMode,undefined);
+ }finally{decks.profession=original;}
+ act(r,host,'start_test');
+ assert.equal(r.players.length,5);
+ assert.equal(r.players.filter(p=>p.bot).length,3);
+ assert.ok(r.players.every(p=>Object.keys(p.cards).length===9));
+ assert.equal(r.phase,'turn');
+});
+
+test('atomic deals are complete and unique for all 5–16 player counts',()=>{
+ for(let n=5;n<=16;n++){
+  const r=setup(n);
+  act(r,r.players[0],'start');
+  assert.equal(r.players.length,n);
+  assert.ok(r.players.every(p=>Object.keys(p.cards).length===9));
+  for(const key of Object.keys(decks))assert.equal(new Set(r.players.map(p=>p.cards[key])).size,n,key);
+  assert.ok(r.bunker && r.disaster && r.capacity===Math.floor(n/2));
+ }
 });
