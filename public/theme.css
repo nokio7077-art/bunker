@@ -2516,3 +2516,11 @@ body,button,input,select,textarea,.landing-shell,.game,#rules,#special-dialog{
  .game .public-dossier:not([open]){margin-bottom:0}
 }
 @media(min-width:761px){.mobile-last-reveal{display:none}}
+
+/* The spotlight is mobile-first; desktop already has the full public dossier. */
+@media(min-width:761px){.game .turn-spotlight{display:none}}
+@media(max-width:760px){
+ body:has(.game){padding-bottom:calc(164px + env(safe-area-inset-bottom))}
+ .mobile-playbar{max-width:100vw;box-sizing:border-box}
+ .mobile-last-reveal{max-height:34px;overflow:hidden}
+}
