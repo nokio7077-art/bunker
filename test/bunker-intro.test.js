@@ -67,7 +67,7 @@ test('bunker introduction appears only after disaster, only once per player and 
  state.phase='turn';state.gameNumber=2;
 });
 
-test('bunker text is escaped and long field lists scroll inside the illustrated card',()=>{
+test('bunker text is escaped and full long fields move below the illustration',()=>{
  const saved=state.bunker.name;
  state.bunker.name='<img src=x onerror=alert(1)>';
  const card=context.bunkerIntro();
@@ -77,4 +77,26 @@ test('bunker text is escaped and long field lists scroll inside the illustrated 
  for(const part of ['bunker-card-description','bunker-card-equipment','bunker-card-threats'])assert.match(css,new RegExp('\\.'+part+'\\{[^}]*overflow-y:auto'));
  assert.ok(app.indexOf('if(shouldShowDisaster())')<app.indexOf('if(shouldShowBunker())'));
  assert.match(app,/if\(action==='bunker-open'\)/);
+});
+
+test('the illustrated bunker overview does not contain unbounded resource paragraphs or lists',()=>{
+ const card=context.bunkerIntro();
+ const picture=card.slice(card.indexOf('<article class="bunker-card-panel"'),card.indexOf('</article>'));
+ const extra=card.slice(card.indexOf('<details class="bunker-intro-details">'));
+ assert.ok(!picture.includes(state.bunker.resources.food));
+ assert.ok(extra.includes(escape(state.bunker.resources.food)));
+ assert.equal((picture.match(/<li>/g)||[]).length,4,'at most two visible equipment items and two threats');
+ assert.ok(extra.includes(escape(state.bunker.equipment.at(-1))));
+ assert.ok(extra.includes(escape(state.bunker.threats.at(-1))));
+ assert.match(css,/\.bunker-intro \.bunker-card-description p\{[^}]*-webkit-line-clamp:4/);
+ assert.match(css,/\.bunker-intro \.bunker-card-equipment li[^}]*text-overflow:ellipsis/);
+ assert.match(css,/\.bunker-intro \.bunker-card-heading strong\{[^}]*-webkit-line-clamp:2/);
+});
+test('bunker continue action visually matches the catastrophe continue button',()=>{
+ const card=context.bunkerIntro();
+ assert.match(card,/class="bunker-intro disaster-intro--art"/);
+ assert.match(card,/class="intro-footer bunker-intro-footer"/);
+ assert.match(card,/class="primary intro-next" data-action="bunker-continue"/);
+ assert.match(card,/Го!лучше так чем в подвале умирать/);
+ assert.match(css,/\.bunker-intro \.bunker-intro-footer \.intro-next\{[^}]*border:2px solid #b5e527/);
 });
