@@ -51,7 +51,8 @@ let state, busy=false, last='', mode='create', toastTimer, specialDraft=null;
 let refreshInFlight=false, actionEpoch=0;
 let inviteOpen=false, inviteOrigin=null, inviteMdnsOrigin=null;
 const inviteCode=new URLSearchParams(location.search).get('join');
-if(/^\d{6}$/.test(inviteCode||''))mode='join';
+const prefillCode=/^\d{6}$/.test(inviteCode||'')?inviteCode:'';
+if(prefillCode)mode='join';
 let serverClockOffsetMs=0;
 const fmtTime=deadline=>{const seconds=Math.max(0,Math.ceil((deadline-Date.now()-serverClockOffsetMs)/1000));return `${Math.floor(seconds/60)}:${String(seconds%60).padStart(2,'0')}`;};
 function updateTimers(){document.querySelectorAll('[data-deadline]').forEach(node=>{const deadline=Number(node.dataset.deadline);node.textContent=fmtTime(deadline);node.classList.toggle('timer-expired',deadline<=Date.now()+serverClockOffsetMs);});}
@@ -120,7 +121,7 @@ function landing(){return `<div class="landing-shell">${header()}<main class="la
  </section><section class="entry-panel" aria-labelledby="entry-title">
  <div class="eyebrow entry-kicker">${uiIcon('radiation')} ДОПУСК В УБЕЖИЩЕ</div><h2 id="entry-title">Вы среди выживших?</h2><p>Соберите друзей. Остальное решит игра.</p>
  <div class="tabs" aria-label="Способ входа"><button class="${mode==='create'?'active':''}" data-mode="create" aria-pressed="${mode==='create'}">Создать</button><button class="${mode==='join'?'active':''}" data-mode="join" aria-pressed="${mode==='join'}">Войти</button></div>
- <form id="entry"><label for="name">Ваше имя</label><input id="name" name="name" placeholder="Введите имя…" minlength="2" maxlength="24" required autocomplete="nickname">${mode!=='create'?'<label for="code">Код комнаты</label><input id="code" name="code" placeholder="000000" pattern="[0-9]{6}" maxlength="6" inputmode="numeric" value="${/^\d{6}$/.test(inviteCode||'')?inviteCode:''}" required>':''}<button class="primary full" type="submit">${mode==='create'?'Создать убежище':'Войти в убежище'} <span aria-hidden="true">→</span></button></form>
+ <form id="entry"><label for="name">Ваше имя</label><input id="name" name="name" placeholder="Введите имя…" minlength="2" maxlength="24" required autocomplete="nickname">${mode!=='create'?'<label for="code">Код комнаты</label><input id="code" name="code" placeholder="000000" pattern="[0-9]{6}" maxlength="6" inputmode="numeric" value="${prefillCode}" required>':''}<button class="primary full" type="submit">${mode==='create'?'Создать убежище':'Войти в убежище'} <span aria-hidden="true">→</span></button></form>
  ${localStorage.getItem('bunker-session')?'<button class="secondary full resume-button" data-action="resume">Вернуться в сохранённую комнату <span aria-hidden="true">→</span></button>':''}
  <div class="entry-note"><span aria-hidden="true">${uiIcon('person')}</span><p>Регистрация не требуется.<br>Просто создайте комнату и пригласите друзей.</p></div>
  <ol class="protocol"><li><b>01 /</b><span>ПОЛУЧИТЕ<br>РОЛЬ</span></li><li><b>02 /</b><span>УБЕДИТЕ<br>ГРУППУ</span></li><li><b>03 /</b><span>ОСТАНЬТЕСЬ<br>ВНУТРИ</span></li></ol>
