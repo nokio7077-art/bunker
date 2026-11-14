@@ -14,7 +14,7 @@
 .landing-shell .header-right>.signal{width:7px;height:12px;border-radius:0;box-shadow:-5px 3px 0 -1px #8dab33,5px -3px 0 -1px #d4ef5a}
 .landing-shell .header-right .text-btn{border:1px solid #b3ca65;min-height:44px;margin-left:18px;padding:10px 20px;font-size:15px;color:#f0f2cd;background:linear-gradient(#1b2b0d,#0b1408);white-space:nowrap}
 .landing-shell .landing{position:relative;isolation:isolate;max-width:none;min-height:calc(100svh - 180px);padding:36px clamp(24px,3.5vw,58px) 48px;grid-template-columns:minmax(0,1.35fr) minmax(350px,.85fr);gap:clamp(30px,4vw,70px);align-items:start;margin:0}
-.landing-shell .landing:before{content:'';position:absolute;inset:0;z-index:-3;background:#071108 url('/images/ui/bunker-landscape.5b43dbd11d46.webp') left bottom / 82% auto no-repeat}
+.landing-shell .landing:before{content:'';position:absolute;inset:0;z-index:-3;background:#071108 url('/images/ui/bunker-landscape.f51d851ee36a.webp') left bottom / 82% auto no-repeat}
 .landing-shell .landing:after{content:'';position:absolute;inset:0;z-index:-1;background:linear-gradient(90deg,#06100655,transparent 65%,#06100644),linear-gradient(#07110855,transparent 35%)}
 .landing-shell .hero{min-width:0;padding-top:14px;padding-bottom:140px}
 .landing-shell .hero-chip{display:inline-flex;gap:9px;max-width:100%;padding:9px 12px;border:1px solid #c2db56;background:#091506d9;color:#e7f582;font-size:12px;letter-spacing:.7px;line-height:1.5;text-align:center;box-shadow:inset 0 0 0 3px #22340a}
@@ -206,7 +206,7 @@ dialog{max-height:calc(100dvh - 24px);overflow-y:auto;overscroll-behavior:contai
 .game-header .header-right .text-btn{border:1px solid #354d2d;background:#152313;margin:0;padding:10px 17px;border-radius:5px;font:13px Arial,sans-serif;letter-spacing:0}
 .game-header .header-right .text-btn:hover{border-color:#a5c46e;color:#deefb7}
 .game-header .header-right [data-action="exit"]{background:transparent;border-color:transparent;color:#9eac96}
-.game .room-heading{position:relative;isolation:isolate;overflow:hidden;min-height:188px;padding:28px 30px;margin-bottom:24px;gap:24px;border:1px solid #52663c;border-radius:10px;background:linear-gradient(90deg,#111f10 20%,#111f10ed 55%,#111f1055),url('/images/ui/bunker-landscape.5b43dbd11d46.webp') right 54% / cover}
+.game .room-heading{position:relative;isolation:isolate;overflow:hidden;min-height:188px;padding:28px 30px;margin-bottom:24px;gap:24px;border:1px solid #52663c;border-radius:10px;background:linear-gradient(90deg,#111f10 20%,#111f10ed 55%,#111f1055),url('/images/ui/bunker-landscape.f51d851ee36a.webp') right 54% / cover}
 .game .room-heading:after{content:'';position:absolute;bottom:0;left:30px;width:60px;height:3px;background:#cce583}
 .game .room-heading .eyebrow{font:10px monospace;letter-spacing:2px;color:#bbce91}
 .game .room-heading h1{font-family:BunkerDisplay,monospace;font-weight:400;font-size:clamp(23px,2.5vw,34px);letter-spacing:-1px;line-height:1.25;margin:13px 0 10px;color:#f1efd7}
@@ -1340,7 +1340,7 @@ body,button,input,select,textarea,.landing-shell,.game,#rules,#special-dialog{
 
 /* REFERENCE DOSSIER v12 — independent pixel portrait, icon sprite, segmented meter. */
 .game .dossier-file{max-width:860px;margin:auto;padding:clamp(10px,2vw,20px);background:#081b0d;border:3px solid #a6cf6a;box-shadow:inset 0 0 0 3px #203e20}
-.game .dossier-file-art{height:clamp(105px,17vw,166px);margin:-3px -3px 0;border-bottom:3px solid #a6d36e;background:linear-gradient(#04140822,#0a230c33),url('/images/ui/bunker-landscape.5b43dbd11d46.webp') center 62%/cover no-repeat;image-rendering:pixelated}
+.game .dossier-file-art{height:clamp(105px,17vw,166px);margin:-3px -3px 0;border-bottom:3px solid #a6d36e;background:linear-gradient(#04140822,#0a230c33),url('/images/ui/bunker-landscape.f51d851ee36a.webp') center 62%/cover no-repeat;image-rendering:pixelated}
 .game .dossier-file-heading{position:relative;z-index:1;width:max-content;max-width:100%;margin:-18px auto 21px;padding:8px clamp(9px,2vw,18px);background:#071808;border:3px solid #b9e178;box-shadow:0 0 0 3px #09180d}
 .game .dossier-file-heading h3{font:400 clamp(13px,2vw,24px)/1.5 BunkerDisplay,monospace;color:#f1f6db}
 .game .dossier-file-stripes{color:#c9e88e;font-size:clamp(11px,2vw,20px)}
@@ -2472,4 +2472,20 @@ body,button,input,select,textarea,.landing-shell,.game,#rules,#special-dialog{
 .landing-shell .landing-video.is-ready{opacity:1}
 @media(prefers-reduced-motion:reduce){
  .landing-shell .landing-video{transition:none}
+}
+
+/* Same frame as the entrance video: immediate matching artwork while MP4 decodes.
+   This is intentionally NOT the old pixel landscape. */
+.landing-shell .landing::before{
+ background-image:url('/images/ui/bunker-entrance-poster.webp');
+ background-color:#071108;
+ background-size:100% auto;
+ background-position:center top;
+ background-repeat:no-repeat;
+}
+@media(max-width:860px){
+ .landing-shell .landing::before{background-size:auto 480px;background-position:5% top}
+}
+@media(max-width:480px){
+ .landing-shell .landing::before{background-size:auto 460px;background-position:4% top}
 }
