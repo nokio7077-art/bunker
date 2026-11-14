@@ -13,6 +13,7 @@ export const firstVoteRound = n => Math.max(1, 9 - n);
 // Server-authoritative deadlines: absence must not block an entire session.
 export const TURN_TIMEOUT_MS = 3 * 60 * 1000 + 16 * 1000;
 export const VOTE_TIMEOUT_MS = 2 * 60 * 1000;
+export const TIE_DISCUSSION_MS = 90 * 1000;
 export const HOST_INACTIVE_MS = 3 * 60 * 1000;
 const human = p => !p.bot;
 export function player(name) {
@@ -66,11 +67,14 @@ export function act(room, p, action, value) {
    if (remaining.length) act(room, bot, 'reveal', room.round === 1 ? 'profession' : pick(remaining));
   }
   act(room, bot, 'next');
+ } else if (action === 'start_revote') {
+  check(room.phase === 'tie_discussion' && room.host === p.id, 'Начать переголосование может ведущий после ничьей.');
+  beginRevote(room);
  } else if (action === 'bot_votes') {
   check(room.testMode && room.host === p.id && room.phase === 'vote', 'Голоса ботов запускает ведущий во время голосования.');
   const bots = room.players.filter(x => x.bot && !Object.hasOwn(room.votes, x.id));
   check(bots.length > 0, 'Все боты уже проголосовали.');
-  const candidates = room.players.filter(x => x.alive).map(x => x.id);
+  const candidates = voteCandidates(room);
   for (const bot of bots) act(room, bot, 'vote', pick(candidates.filter(id=>id!==bot.id)));
  } else if (action === 'start') {
   check(room.host === p.id && room.phase === 'lobby', 'Только ведущий может начать игру.');
@@ -111,11 +115,12 @@ export function act(room, p, action, value) {
   nextTurn(room);
  } else if (action === 'vote') {
   check(room.phase === 'vote', 'Голосование ещё не началось.');
+  const eligible=voteCandidates(room);
   check(!Object.hasOwn(room.votes,p.id), 'Ваш голос уже принят.');
-  check(room.players.some(x=>x.id===value && x.alive && x.id!==p.id), 'Нельзя голосовать за себя. Выберите другого игрока в бункере.');
+  check(eligible.includes(value) && p.id!==value, room.revoteCandidates ? 'В переголосовании доступны только участники с равным числом голосов. За себя голосовать нельзя.' : 'Нельзя голосовать за себя. Выберите другого игрока в бункере.');
   room.votes[p.id] = value;
   if (room.testMode && room.players.filter(x => !x.bot).every(x => Object.hasOwn(room.votes,x.id))) {
-   const candidates = room.players.filter(x => x.alive).map(x => x.id);
+   const candidates = voteCandidates(room);
    for (const bot of room.players.filter(x => x.bot && !Object.hasOwn(room.votes,x.id))) room.votes[bot.id] = pick(candidates.filter(id=>id!==bot.id));
   }
   if (Object.keys(room.votes).length === room.players.length) finishVote(room);
@@ -133,13 +138,34 @@ function nextTurn(room,now=Date.now()){
  else if(room.round>=room.firstVote){room.phase='vote';room.votes={};delete room.turnDeadline;room.voteDeadline=now+VOTE_TIMEOUT_MS;room.log.push(`Круг ${room.round}: начинается голосование.`);}
  else newRound(room,now);
 }
+function voteCandidates(room){
+ const eligible=room.players.filter(p=>p.alive).map(p=>p.id);
+ return room.revoteCandidates ? eligible.filter(id=>room.revoteCandidates.includes(id)) : eligible;
+}
+function beginRevote(room,now=Date.now()){
+ check(room.phase==='tie_discussion' && Array.isArray(room.revoteCandidates) && room.revoteCandidates.length>=2,'Нет кандидатов для переголосования.');
+ room.phase='vote';room.votes={};room.voteDeadline=now+VOTE_TIMEOUT_MS;
+ delete room.discussionDeadline;
+ room.log.push('Переголосование: можно голосовать только за '+room.players.filter(p=>room.revoteCandidates.includes(p.id)).map(p=>p.name).join(', ')+'.');
+}
 function finishVote(room,now=Date.now()){
  const scores={};for(const target of Object.values(room.votes))scores[target]=(scores[target]||0)+1;
  const max=Math.max(0,...Object.values(scores));
- const candidates=max===0?room.players.filter(x=>x.alive).map(x=>x.id):Object.keys(scores).filter(k=>scores[k]===max);
+ const candidates=max===0?voteCandidates(room):Object.keys(scores).filter(k=>scores[k]===max);
+ const abstained=room.players.length-Object.keys(room.votes).length;
+ // First tie is resolved by discussion followed by a fresh, restricted ballot.
+ if(candidates.length>1&&!room.revoteCandidates&&max>0){
+  room.phase='tie_discussion';room.revoteCandidates=candidates;room.votes={};
+  delete room.voteDeadline;room.discussionDeadline=now+TIE_DISCUSSION_MS;
+  room.lastVote={scores,tie:true,abstained,discussion:true,candidates};
+  room.log.push('Ничья: '+room.players.filter(p=>candidates.includes(p.id)).map(p=>p.name).join(', ')+'. Обсудите выбор и переголосуйте только между ними.');
+  return;
+ }
+ // If a restricted second ballot also ties (or nobody votes), draw among those candidates.
  const loserId=pick(candidates);const loser=room.players.find(x=>x.id===loserId);loser.alive=false;
- room.lastVote={scores,eliminated:loser.id,tie:candidates.length>1,abstained:room.players.length-Object.keys(room.votes).length};
- room.log.push(`${loser.name} покидает бункер (${max} голосов)${candidates.length>1?'. При равенстве или отсутствии голосов решает случайный жребий':''}.`);
+ room.lastVote={scores,eliminated:loser.id,tie:candidates.length>1,revote:Boolean(room.revoteCandidates),abstained};
+ room.log.push(`${loser.name} покидает бункер (${max} голосов)${candidates.length>1?'. После повторной ничьей решение принято жребием':''}.`);
+ delete room.revoteCandidates;delete room.discussionDeadline;
  if(room.players.filter(x=>x.alive).length<=room.capacity){room.phase='finished';room.turn=null;delete room.turnDeadline;delete room.voteDeadline;room.log.push('Состав убежища определён.');}
  else newRound(room,now);
 }
@@ -159,6 +185,9 @@ export function advanceRoom(room,now=Date.now()){
    room.log.push(`Время хода ${p?.name||'участника'} истекло. Слово передано автоматически.`);
    nextTurn(room,now);changed=true;
   }
+ }else if(room.phase==='tie_discussion'){
+  if(!room.discussionDeadline){room.discussionDeadline=now+TIE_DISCUSSION_MS;changed=true;}
+  else if(now>=room.discussionDeadline){beginRevote(room,now);changed=true;}
  }else if(room.phase==='vote'){
   if(!room.voteDeadline){room.voteDeadline=now+VOTE_TIMEOUT_MS;changed=true;}
   else if(now>=room.voteDeadline){
