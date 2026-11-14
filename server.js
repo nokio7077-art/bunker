@@ -1,4 +1,5 @@
 import http from 'node:http';
+import { getLocalIpv4, startLocalMdns } from './local-network.js';
 import { readFileSync, mkdirSync, writeFileSync, renameSync, existsSync, statSync, createReadStream } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { join as pathJoin } from 'node:path';
@@ -54,7 +55,7 @@ maintenance.unref();
 const limits=new Map();
 function rate(req) { const key=req.socket.remoteAddress; const now=Date.now(); let x=limits.get(key); if(!x || now-x.time>60000) { x={time:now,count:0}; limits.set(key,x); } if(++x.count>120) throw new Error('Слишком много запросов. Подождите минуту.'); }
 async function body(req) { let text=''; for await (const chunk of req) {text+=chunk; if(text.length>4096) throw new Error('Слишком большой запрос.');} return JSON.parse(text || '{}'); }
-const assets={'/':['index.html','text/html; charset=utf-8'],'/app.js':['app.js','text/javascript; charset=utf-8'],'/card-images.js':['card-images.js','text/javascript; charset=utf-8'],'/avatar-generator.js':['avatar-generator.js','text/javascript; charset=utf-8'],'/avatar-atlases.js':['avatar-atlases.js','text/javascript; charset=utf-8'],'/style.css':['style.css','text/css; charset=utf-8'],'/theme.css':['theme.css','text/css; charset=utf-8'],'/game-pixel.css':['game-pixel.css','text/css; charset=utf-8'],'/favicon.svg':['favicon.svg','image/svg+xml']};
+const assets={'/vendor/qrcode.js':['vendor/qrcode.js','text/javascript; charset=utf-8'],'/':['index.html','text/html; charset=utf-8'],'/app.js':['app.js','text/javascript; charset=utf-8'],'/card-images.js':['card-images.js','text/javascript; charset=utf-8'],'/avatar-generator.js':['avatar-generator.js','text/javascript; charset=utf-8'],'/avatar-atlases.js':['avatar-atlases.js','text/javascript; charset=utf-8'],'/style.css':['style.css','text/css; charset=utf-8'],'/theme.css':['theme.css','text/css; charset=utf-8'],'/game-pixel.css':['game-pixel.css','text/css; charset=utf-8'],'/favicon.svg':['favicon.svg','image/svg+xml']};
 // Only registered media and fonts are public; never serve arbitrary repository files.
 const binaryAssets=new Map(Object.values(disasterImages).map(image=>[image.src,{path:pathJoin(root,'public',image.src),type:'image/png'}]));
 for(const gender of ['female','male']){const name=`avatars-${gender}-96.webp`;binaryAssets.set(`/images/ui/${name}`,{path:pathJoin(root,'public','images','ui',name),type:'image/webp',immutable:true});}
@@ -106,6 +107,10 @@ export const server=http.createServer(async(req,res)=>{
    const stream=createReadStream(path);res.on('close',()=>stream.destroy());stream.on('error',()=>res.destroy()).pipe(res);return;
   }
   if(req.method==='GET' && assets[url.pathname]) {const [f,t]=assets[url.pathname];res.writeHead(200,{'Content-Type':t});return res.end(readFileSync(pathJoin(root,'public',f)));}
+  if(req.method==='GET' && url.pathname==='/api/local-link') {
+   const ip=getLocalIpv4();
+   return send(200,{localOrigin:ip?`http://${ip}:${server.address().port}`:null,mdnsOrigin:process.env.BUNKER_MDNS==='1'?'http://bunker.local:'+server.address().port:null});
+  }
   if(req.method==='GET' && url.pathname==='/health') return send(200,{ok:true,uiVersion:'20261113-timer-v7'});
   if(!url.pathname.startsWith('/api/')) return send(404,{error:'Не найдено.'});
   if(req.method==='POST') {
@@ -153,4 +158,7 @@ export const server=http.createServer(async(req,res)=>{
   return send(405,{error:'Метод не поддерживается.'});
  } catch(e) {send(400,{error:e instanceof SyntaxError ? 'Некорректный запрос.' : e.message});}
 });
-server.listen(Number(process.env.PORT || 3000),process.env.HOST || '0.0.0.0',()=>console.log(`Bunker listening on port ${server.address().port}`));
+server.listen(Number(process.env.PORT || 3000),process.env.HOST || '0.0.0.0',()=>{
+ console.log(`Bunker listening on port ${server.address().port}`);
+ if(process.env.BUNKER_MDNS==='1')startLocalMdns();
+});

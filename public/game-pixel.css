@@ -131,3 +131,22 @@ body:has(.game) .signal {background:#aecb67;box-shadow:none}
  .game .world-facts{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
 @media(prefers-reduced-motion:reduce){.game .card{transition:none}}
+
+/* Human player connection status: based on server heartbeat, not network reachability. */
+.game .player-top .player-presence{display:inline-flex;align-items:center;gap:6px;margin-top:5px;font:600 10px/1.3 var(--bunker-mono,monospace);letter-spacing:.04em;color:#b5c4a9}
+.game .player-top .player-presence-dot{display:inline-block;flex:0 0 7px;width:7px;height:7px;border-radius:50%;background:currentColor}
+.game .player-top .presence-online{color:#a9df79}
+.game .player-top .presence-offline{color:#e5ac82}
+.game .player-top .presence-bot{color:#94a29a}
+
+/* Offline-first room invitation. */
+.game .invite-toggle{margin:0 0 18px;max-width:100%;min-height:44px}
+.game .local-invite{background:#192719;border:1px solid #56723d;padding:18px;margin:0 0 22px;overflow:hidden}
+.game .local-invite h3{margin:0 0 8px;color:#d5efaf}
+.game .local-invite p{font-size:13px;line-height:1.5;color:#c0cdb6}
+.game .local-invite-content{display:flex;flex-wrap:wrap;gap:20px;align-items:flex-start}
+.game .local-invite-qr{background:#fff;padding:10px;max-width:220px;width:100%;border-radius:4px}
+.game .local-invite-qr svg{display:block;width:100%;height:auto}
+.game .local-invite-address{display:flex;flex-direction:column;gap:10px;flex:1 1 220px;min-width:0}
+.game .local-invite-address code{overflow-wrap:anywhere;font-size:13px;color:#d5efaf}
+.game .local-invite-address small{font-size:11px;line-height:1.5;color:#b6c3ab}
