@@ -246,3 +246,30 @@ test('publicly revealed card and the player private event remain consistent',()=
  assert.equal(secret.before,prior);
  assert.equal(secret.after,prior);
 });
+
+test('during tie discussion all surviving players can use their own unused special, without opening ordinary turns',()=>{
+ const {room,host,guest}=setup('Сброс здоровья');
+ guest.cards.special='Сброс характера';
+ room.phase='tie_discussion';
+ room.revoteCandidates=room.players.slice(0,2).map(p=>p.id);
+ room.discussionDeadline=Date.now()+90000;
+ assert.equal(specialOptions(room,guest).name,'Сброс характера');
+ assert.equal(specialOptions(room,host).name,'Сброс здоровья');
+ assert.throws(()=>act(room,guest,'reveal','profession'),/Сейчас ход другого игрока/);
+ assert.throws(()=>act(room,guest,'vote',host.id),/Голосование ещё не началось/);
+ const previous=host.cards.personality;
+ act(room,guest,'use_special',{targetId:host.id});
+ assert.equal(host.cards.personality,null);
+ assert.equal(room.phase,'tie_discussion');
+ assert.equal(room.opened,false);
+ assert.equal(room.revoteCandidates.length,2);
+ assert.equal(room.specialEvents.at(-1).actor,guest.name);
+ assert.ok(previous);
+ unchanged(room,()=>act(room,guest,'use_special',{targetId:host.id}));
+ // Players expelled earlier may still vote, but cannot use specials in discussion.
+ const out=room.players[2];out.alive=false;
+ unchanged(room,()=>act(room,out,'use_special',{targetId:host.id}));
+ // The host may use their own remaining special in the same discussion.
+ act(room,host,'use_special',{targetId:guest.id});
+ assert.equal(room.specialEvents.length,2);
+});
