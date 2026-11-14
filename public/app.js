@@ -78,6 +78,13 @@ function prepareDisasterArtwork(disaster){
  preload.src=key;
 }
 const seenDisasters=new Set();
+let bunkerAtlasPreload=null;
+function prepareBunkerArtwork(bunker){
+ if(!bunker||bunkerAtlasPreload)return;
+ bunkerAtlasPreload=new Image();
+ bunkerAtlasPreload.decoding='async';
+ bunkerAtlasPreload.src='/images/bunkers/bunker-cards-atlas.webp';
+}
 const seenBunkers=new Set();
 let replayBunkerKey=null;
 const textDisasters=new Set(), failedDisasterImages=new Set();
@@ -373,7 +380,7 @@ async function refresh(){
   // A request started before a local action must never overwrite its newer result.
   if(busy||requestedEpoch!==actionEpoch||session!==requestedSession)return;
   const serial=JSON.stringify(data);
-  if(serial!==last||restoringSession){state=data;prepareDisasterArtwork(state?.disaster);last=serial;restoringSession=false;render();}
+  if(serial!==last||restoringSession){state=data;prepareDisasterArtwork(state?.disaster);prepareBunkerArtwork(state?.bunker);last=serial;restoringSession=false;render();}
  }catch(e){if(session===requestedSession&&!busy)toast(e.message);}
  finally{refreshInFlight=false;if(restoringSession){restoringSession=false;render();}}
 }
@@ -422,7 +429,7 @@ app.addEventListener('click',async e=>{const btn=e.target.closest('button');if(!
  if(action==='tie-notice-close'){dismissTieNotice();render();return;}if(action==='notice-close'){dismissSpecialNotice();render();return;} if(action==='special-close'){specialDraft=null;render();return;}
  if(action==='special-open'){if(busy)return;busy=true;try{specialDraft={...await api(`/api/rooms/${session.code}/special`),targetId:''};render();}catch(e){toast(e.message);}finally{busy=false;}return;}
  if((!action&&!btn.dataset.card&&!btn.dataset.vote)||busy)return;busy=true;actionEpoch++;btn.disabled=true;
- try{state=await api(`/api/rooms/${session.code}/action`,{action:btn.dataset.vote?'vote':btn.dataset.card?'reveal':action,value:action==='use_special'?{targetId:specialDraft?.targetId}:action==='transfer_host'?document.querySelector('#host-target')?.value:btn.dataset.vote||btn.dataset.card});prepareDisasterArtwork(state?.disaster);last=JSON.stringify(state);if(action==='use_special'){specialDraft=null;}if(action==='next_game'){replayEnding=false;replayDisasterKey=null;renderedTurn=null;}render();}catch(e){toast(e.message);btn.disabled=false;}finally{busy=false;}
+ try{state=await api(`/api/rooms/${session.code}/action`,{action:btn.dataset.vote?'vote':btn.dataset.card?'reveal':action,value:action==='use_special'?{targetId:specialDraft?.targetId}:action==='transfer_host'?document.querySelector('#host-target')?.value:btn.dataset.vote||btn.dataset.card});prepareDisasterArtwork(state?.disaster);prepareBunkerArtwork(state?.bunker);last=JSON.stringify(state);if(action==='use_special'){specialDraft=null;}if(action==='next_game'){replayEnding=false;replayDisasterKey=null;renderedTurn=null;}render();}catch(e){toast(e.message);btn.disabled=false;}finally{busy=false;}
 });
 app.addEventListener('cancel',e=>{if(e.target.id==='special-dialog')specialDraft=null;if(e.target.id==='special-notice')dismissSpecialNotice();if(e.target.id==='tie-notice')dismissTieNotice();},true);
 app.addEventListener('change',e=>{
