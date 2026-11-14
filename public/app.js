@@ -79,6 +79,7 @@ function prepareDisasterArtwork(disaster){
 }
 const seenDisasters=new Set();
 const seenBunkers=new Set();
+let replayBunkerKey=null;
 const textDisasters=new Set(), failedDisasterImages=new Set();
 let replayDisasterKey=null;
 let renderedTurn=null;
@@ -146,7 +147,7 @@ function landing(){return `<div class="landing-shell">${header()}<main class="la
 function bunkerIntroKey(){return `bunker-shelter-intro:${state.code}:${state.me}:${state.gameNumber||1}`;}
 function shouldShowBunker(){
  if(!state?.bunker||!state?.disaster||['lobby','finished'].includes(state.phase)||shouldShowDisaster())return false;
- const key=bunkerIntroKey();if(seenBunkers.has(key))return false;
+ const key=bunkerIntroKey();if(replayBunkerKey===key)return true;if(seenBunkers.has(key))return false;
  try{return localStorage.getItem(key)!=='seen';}catch{return true;}
 }
 // The variant is deterministic for a bunker: everyone in a room sees the
@@ -231,7 +232,7 @@ function worldPanels(){
  const d=state.disaster,b=state.bunker;
  // Existing rooms retain the compact array format they were dealt with.
  if(Array.isArray(d)||Array.isArray(b))return `<div class="world"><article><span class="eyebrow orange">☢ КАТАСТРОФА</span><h3>${escape(d[0])}</h3><p>${escape(d[1])}</p></article><article><span class="eyebrow">⌂ ВАШ БУНКЕР · ${state.capacity} МЕСТ</span><h3>${escape(b[0])}</h3><p>${escape(b[1])}</p></article></div>`;
- return `<div class="world"><article><span class="eyebrow orange">☢ КАТАСТРОФА</span><h3>${escape(d.name)}</h3>${disasterImageFor(d)?'<button class="secondary world-card-open" data-action="disaster-open">Открыть карточку катастрофы</button>':''}<p>${escape(d.description)}</p><dl class="world-facts"><div><dt>Горизонт восстановления</dt><dd>${d.duration_months} мес.</dd></div><div><dt>Начальная изоляция</dt><dd>${d.isolation_days ? d.isolation_days+' суток' : 'Не требуется'}</dd></div><div><dt>Потери</dt><dd>${escape(d.death_toll??'Нет данных')}</dd></div></dl><p class="world-hint">Дальнейшие вылазки и пополнение запасов — часть вашей истории. Успех зависит от решений группы.</p></article><article><span class="eyebrow">⌂ ВАШ БУНКЕР · ${state.capacity} МЕСТ</span><h3>${escape(b.name)}</h3><p>${escape(b.description)}</p><details class="world-details"><summary>Запасы и оснащение</summary><dl class="world-resources">${Object.entries(b.resources).map(([key,value])=>`<dt>${({food:'Еда',water:'Вода',energy:'Энергия'})[key]||escape(key)}</dt><dd>${escape(value)}</dd>`).join('')}</dl><h4>Оснащение</h4><ul>${b.equipment.map(x=>`<li>${escape(x)}</li>`).join('')}</ul></details><p class="world-hint">${(b.scenario_notes||[]).map(escape).join(' ')}</p></article></div>`;
+ return `<div class="world"><article><span class="eyebrow orange">☢ КАТАСТРОФА</span><h3>${escape(d.name)}</h3>${disasterImageFor(d)?'<button class="secondary world-card-open" data-action="disaster-open">Открыть карточку катастрофы</button>':''}<p>${escape(d.description)}</p><dl class="world-facts"><div><dt>Горизонт восстановления</dt><dd>${d.duration_months} мес.</dd></div><div><dt>Начальная изоляция</dt><dd>${d.isolation_days ? d.isolation_days+' суток' : 'Не требуется'}</dd></div><div><dt>Потери</dt><dd>${escape(d.death_toll??'Нет данных')}</dd></div></dl><p class="world-hint">Дальнейшие вылазки и пополнение запасов — часть вашей истории. Успех зависит от решений группы.</p></article><article><span class="eyebrow">⌂ ВАШ БУНКЕР · ${state.capacity} МЕСТ</span><h3>${escape(b.name)}</h3><button class="secondary world-card-open" type="button" data-action="bunker-open">Открыть карточку бункера</button><p>${escape(b.description)}</p><details class="world-details"><summary>Запасы и оснащение</summary><dl class="world-resources">${Object.entries(b.resources).map(([key,value])=>`<dt>${({food:'Еда',water:'Вода',energy:'Энергия'})[key]||escape(key)}</dt><dd>${escape(value)}</dd>`).join('')}</dl><h4>Оснащение</h4><ul>${b.equipment.map(x=>`<li>${escape(x)}</li>`).join('')}</ul></details><p class="world-hint">${(b.scenario_notes||[]).map(escape).join(' ')}</p></article></div>`;
 }
 
 // A synchronized announcement is visible to everyone. Secret card values are
@@ -408,13 +409,14 @@ app.addEventListener('click',async e=>{const btn=e.target.closest('button');if(!
  if(action==='ending-replay'){replayEnding=true;render();return;}
 
 
- if(action==='bunker-continue'){const key=bunkerIntroKey();seenBunkers.add(key);try{localStorage.setItem(key,'seen');}catch{}render();window.scrollTo(0,0);return;}
+ if(action==='bunker-continue'){replayBunkerKey=null;const key=bunkerIntroKey();seenBunkers.add(key);try{localStorage.setItem(key,'seen');}catch{}render();window.scrollTo(0,0);return;}
  if(action==='intro-continue'){replayDisasterKey=null;const key=disasterIntroKey();seenDisasters.add(key);try{localStorage.setItem(key,'seen');}catch{}render();window.scrollTo(0,0);const heading=document.querySelector('.room-heading h1');if(heading){heading.tabIndex=-1;heading.focus({preventScroll:true});}return;}
  if(action==='intro-text'){textDisasters.add(disasterIntroKey());render();return;}
  if(action==='intro-image'){textDisasters.delete(disasterIntroKey());const image=disasterImageFor(state.disaster);if(image)failedDisasterImages.delete(image.src);render();return;}
+ if(action==='bunker-open'){replayBunkerKey=bunkerIntroKey();render();window.scrollTo(0,0);return;}
  if(action==='disaster-open'){replayDisasterKey=disasterIntroKey();textDisasters.delete(disasterIntroKey());render();return;}
  if(action==='rules'){document.querySelector('#rules').showModal();return;}if(action==='close'){document.querySelector('#rules').close();return;}
- if(action==='exit'){restoringSession=false;replayEnding=false;replayDisasterKey=null;specialDraft=null;session=null;state=null;last='';render();return;}
+ if(action==='exit'){restoringSession=false;replayEnding=false;replayDisasterKey=null;replayBunkerKey=null;specialDraft=null;session=null;state=null;last='';render();return;}
  if(action==='resume'){try{session=JSON.parse(localStorage.getItem('bunker-session'));restoringSession=Boolean(session?.code&&session?.token);last='';render();await refresh();}catch{toast('Не удалось восстановить сессию.');}return;}
  if(action==='copy'){try{await navigator.clipboard.writeText(state.code);toast('Код комнаты скопирован');}catch{toast('Код комнаты: '+state.code);}return;}
  if(action==='tie-notice-close'){dismissTieNotice();render();return;}if(action==='notice-close'){dismissSpecialNotice();render();return;} if(action==='special-close'){specialDraft=null;render();return;}
