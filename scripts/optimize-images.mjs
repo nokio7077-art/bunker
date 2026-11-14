@@ -6,7 +6,7 @@ import { disasterImages } from '../public/card-images.js';
 function compress(src, preview=false){
  const path='public'+src, temp=path+(preview?'.preview':'.tmp')+'.webp';
  const result=spawnSync('ffmpeg',['-y','-hide_banner','-loglevel','error','-i',path,'-vf',preview?'scale=360:-2:flags=lanczos':'scale=840:-2:flags=lanczos','-c:v','libwebp','-quality',preview?'57':'78','-compression_level','6',temp]);
- if(result.status!==0)throw new Error(result.stderr.toString());
+ if(result.status!==0)throw new Error(result.error?.message||result.stderr?.toString()||'ffmpeg failed');
  const hash=createHash('sha256').update(readFileSync(temp)).digest('hex').slice(0,12);
  const dest=src.replace('.png',preview?`.preview.${hash}.webp`:`.${hash}.webp`);renameSync(temp,'public'+dest);return dest;
 }
@@ -16,7 +16,7 @@ const landscapeImage=compress('/images/ui/bunker-landscape.png');
 // This removes the blank delay without flashing the unrelated old landscape.
 const posterTemp='public/images/ui/bunker-entrance-poster.tmp.webp';
 const posterRun=spawnSync('ffmpeg',['-y','-hide_banner','-loglevel','error','-ss','0.10','-i','public/videos/bunker-entrance.mp4','-frames:v','1','-vf','scale=960:-2:flags=lanczos','-c:v','libwebp','-quality','80','-compression_level','6',posterTemp]);
-if(posterRun.status!==0)throw new Error(posterRun.stderr.toString());
+if(posterRun.status!==0)throw new Error(posterRun.error?.message||posterRun.stderr?.toString()||'Poster generation failed');
 const posterPath='/images/ui/bunker-entrance-poster.webp';
 renameSync(posterTemp,'public'+posterPath);
 writeFileSync('public/card-images.js',`// Original artwork plus optimized, content-addressed copies.\nexport const disasterImages = ${JSON.stringify(disasterImages,null,2)};\nexport const landscapeImage = ${JSON.stringify(landscapeImage)};\nexport const landingPoster = ${JSON.stringify(posterPath)};\n\nexport function disasterImageFor(disaster) {\n if (!disaster || Array.isArray(disaster)) return null;\n return Object.hasOwn(disasterImages, disaster.id) ? disasterImages[disaster.id] : null;\n}\n`);
