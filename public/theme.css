@@ -2489,3 +2489,30 @@ body,button,input,select,textarea,.landing-shell,.game,#rules,#special-dialog{
 @media(max-width:480px){
  .landing-shell .landing::before{background-size:auto 460px;background-position:4% top}
 }
+
+/* Compact, immediately visible public cards for the active speaker — including test bots. */
+.game .turn-spotlight{display:grid;gap:12px;padding:15px 17px;margin:0 0 16px;border:1px solid #8cad69;background:#14261b}
+.game .turn-spotlight-title{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center}
+.game .turn-spotlight-title>strong{color:#edf7d2;font-size:18px;overflow-wrap:anywhere}
+.game .turn-spotlight-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px}
+.game .turn-spotlight-cards p{margin:0;border:1px solid #536c47;padding:9px 11px;background:#0d1b11;display:grid;gap:5px;overflow-wrap:anywhere}
+.game .turn-spotlight-cards p>span,.game .turn-spotlight-recent>span{color:#b2d188;font-size:11px;letter-spacing:.04em}
+.game .turn-spotlight-cards p>strong{color:#f1f8dd;font-size:14px;line-height:1.35}
+.game .turn-spotlight-recent{padding:10px 12px;border-left:3px solid #dce889;background:#22361e;display:grid;gap:3px;overflow-wrap:anywhere}
+.game .turn-spotlight-recent strong{font-size:14px}
+.game details.public-dossier{margin-top:12px;border-top:1px solid #4b6246;padding-top:7px}
+.game details.public-dossier>summary{cursor:pointer;min-height:44px;display:flex;align-items:center;gap:8px;padding:9px 11px;color:#d8eaa7;background:#162a19;font-size:13px;overflow-wrap:anywhere}
+.game details.public-dossier[open]>summary{margin-bottom:10px}
+.game details.public-dossier .public-cards{margin:0}
+.game .special-results-history{margin:20px 0;border:1px solid #54724b;padding:10px 13px;background:#0b1c12}
+.game .special-results-history>summary{cursor:pointer;padding:9px 7px;color:#d6eda5;min-height:44px}
+.game .special-results-history .special-results{margin:12px 0 3px;position:static}
+@media(max-width:760px){
+ .game .turn-spotlight{padding:12px;margin:0 0 12px}
+ .game .turn-spotlight-cards{grid-template-columns:minmax(0,1fr)}
+ .game .turn-spotlight-cards p{gap:3px;padding:8px 11px}
+ .mobile-last-reveal{grid-column:1/-1;min-width:0;display:flex;gap:6px;flex-wrap:wrap;line-height:1.25;font-size:12px;color:#d1e5b2}
+ .mobile-last-reveal strong{color:#f0f8d8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
+ .game .public-dossier:not([open]){margin-bottom:0}
+}
+@media(min-width:761px){.mobile-last-reveal{display:none}}
