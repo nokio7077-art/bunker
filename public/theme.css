@@ -2457,3 +2457,19 @@ body,button,input,select,textarea,.landing-shell,.game,#rules,#special-dialog{
 }
 @keyframes session-recovery-spin{to{transform:rotate(360deg)}}
 @media(prefers-reduced-motion:reduce){.session-recovery-spinner{animation:none}}
+
+/* The former pixel-landscape is not a placeholder for the new entrance video.
+   Avoid a flash of different artwork while the first video frame is buffering. */
+.landing-shell .landing::before{
+ background-image:none;
+ background-color:#071108;
+ background-size:auto;
+}
+.landing-shell .landing-video{
+ opacity:0;
+ transition:opacity .22s ease-out;
+}
+.landing-shell .landing-video.is-ready{opacity:1}
+@media(prefers-reduced-motion:reduce){
+ .landing-shell .landing-video{transition:none}
+}
