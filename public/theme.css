@@ -2388,3 +2388,24 @@ body,button,input,select,textarea,.landing-shell,.game,#rules,#special-dialog{
  #special-notice[open]{animation:special-notice-enter .19s ease-out}
  @keyframes special-notice-enter{from{opacity:.4;transform:translateY(13px) scale(.985)}to{opacity:1;transform:translateY(0) scale(1)}}
 }
+
+/* Resolve tied votes with a clearly separated discussion and restricted revote. */
+.game.phase-tie_discussion .banner{
+ border:2px solid #f2ce78;
+ background:linear-gradient(120deg,#342b19,#1d2718 75%);
+ box-shadow:0 0 22px rgba(241,204,109,.12);
+}
+.game.phase-tie_discussion .banner h2{color:#ffe09a}
+.game.phase-tie_discussion .banner p{line-height:1.55;max-width:680px}
+.game.phase-tie_discussion .banner p strong{color:#fff2c2}
+.game.phase-tie_discussion .phase-timer{border-color:#c8a45d}
+.game.phase-vote .player:not(:has(.vote-btn)){border-color:#4e6244}
+.game.phase-tie_discussion .special-card button[data-action="special-open"]:enabled{
+ border-color:#e8c67e;box-shadow:0 0 13px rgba(242,205,125,.19)
+}
+@media(max-width:760px){
+ .game.phase-tie_discussion .banner>button[data-action="start_revote"]{display:none!important}
+ .game.phase-tie_discussion .banner{padding:16px 14px}
+ .game.phase-tie_discussion .banner h2{font-size:clamp(19px,5vw,24px)}
+ .game.phase-tie_discussion .banner p{font-size:14px}
+}
