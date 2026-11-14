@@ -131,3 +131,10 @@ body:has(.game) .signal {background:#aecb67;box-shadow:none}
  .game .world-facts{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
 @media(prefers-reduced-motion:reduce){.game .card{transition:none}}
+
+/* Human player connection status: based on server heartbeat, not network reachability. */
+.game .player-top .player-presence{display:inline-flex;align-items:center;gap:6px;margin-top:5px;font:600 10px/1.3 var(--bunker-mono,monospace);letter-spacing:.04em;color:#b5c4a9}
+.game .player-top .player-presence-dot{display:inline-block;flex:0 0 7px;width:7px;height:7px;border-radius:50%;background:currentColor}
+.game .player-top .presence-online{color:#a9df79}
+.game .player-top .presence-offline{color:#e5ac82}
+.game .player-top .presence-bot{color:#94a29a}
