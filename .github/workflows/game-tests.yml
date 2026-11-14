@@ -18,6 +18,9 @@ jobs:
         with:
           node-version: '22'
       - run: npm test
+      - name: Install media optimizer
+        if: github.head_ref == 'speed-landing-and-disaster-art'
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
       - name: Build optimized imagery in PR branch
         if: github.head_ref == 'speed-landing-and-disaster-art'
         run: |
