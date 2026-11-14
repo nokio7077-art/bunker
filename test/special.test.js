@@ -204,3 +204,45 @@ test('revealing a closed card of another participant works and publishes the res
  assert.equal(room.specialEvents.at(-1).results[0].after,hidden);
  unchanged(room,()=>act(room,host,'use_special',{targetId:guest.id}));
 });
+
+test('each special action gets a unique public event id and private before/after for the recipient only',()=>{
+ const {room,host,guest}=setup('Обмен багажом');
+ const previousHost=host.cards.luggage,previousGuest=guest.cards.luggage;
+ act(room,host,'use_special',{targetId:guest.id});
+ const event=room.specialEvents.at(-1);
+ assert.match(event.id,/^[0-9a-f]{20}$/);
+ assert.equal(event.actorId,host.id);
+ assert.equal(event.categoryKey,'luggage');
+ assert.equal(event.effect,'swap');
+ const hostView=view(room,host),guestView=view(room,guest);
+ assert.equal(hostView.privateSpecialHistory,undefined);
+ assert.equal(guestView.privateSpecialHistory,undefined);
+ assert.deepEqual(hostView.specialPrivateResults,[{eventId:event.id,before:previousHost,after:previousGuest}]);
+ assert.deepEqual(guestView.specialPrivateResults,[{eventId:event.id,before:previousGuest,after:previousHost}]);
+ assert.equal(hostView.specialPrivateResults.some(x=>x.before===previousGuest),false);
+ assert.equal(guestView.specialPrivateResults.some(x=>x.before===previousHost),false);
+ assert.equal(JSON.stringify(guestView.specialEvents).includes(previousHost),false);
+ assert.equal(JSON.stringify(hostView.specialEvents).includes(previousGuest),false);
+});
+
+test('discard of hidden card provides exact previous value only to its owner',()=>{
+ const {room,host,guest}=setup('Сброс здоровья');
+ const discarded=guest.cards.health;
+ act(room,host,'use_special',{targetId:guest.id});
+ const event=room.specialEvents.at(-1);
+ assert.deepEqual(view(room,guest).specialPrivateResults,[{eventId:event.id,before:discarded,after:null}]);
+ assert.deepEqual(view(room,host).specialPrivateResults,[]);
+ assert.equal(JSON.stringify(view(room,host)).includes(discarded),false);
+});
+
+test('publicly revealed card and the player private event remain consistent',()=>{
+ const {room,host,guest}=setup('Раскрыть чужой характер');
+ const prior=guest.cards.personality;
+ act(room,host,'use_special',{targetId:guest.id});
+ const evt=view(room,host).specialEvents.at(-1);
+ assert.equal(evt.results[0].after,prior);
+ assert.equal(evt.results[0].before,'Закрытая карточка');
+ const secret=view(room,guest).specialPrivateResults[0];
+ assert.equal(secret.before,prior);
+ assert.equal(secret.after,prior);
+});
