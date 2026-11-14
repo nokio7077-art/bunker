@@ -67,6 +67,28 @@ function commitStart(room,players,prepared,testMode=false){
  delete room.voteDeadline;
  room.log.push('Шлюз закрыт. Начинается знакомство.');
 }
+// Test bots may play their one-use special during their turn. Select only
+// legitimate targets and never let an inapplicable card interrupt a bot turn.
+function botSpecialMove(room,bot){
+ const card=specialCard(bot.cards.special);
+ if(!card||bot.specialUsed)return false;
+ const key=card.category;
+ const targets=room.players.filter(p=>{
+  if(card.revealedOnly&&!p.revealed.includes(key))return false;
+  if(card.effect==='reveal')return Boolean(p.cards[key])&&!p.revealed.includes(key);
+  if(card.effect==='discard')return Boolean(p.cards[key]);
+  if(card.effect==='swap')return p.id!==bot.id&&Object.hasOwn(p.cards,key)&&p.cards[key]!==bot.cards[key]&&
+   (p.cards[key]===null||eligibleCard(key,p.cards[key],bot.cards.biology,room.disaster))&&
+   (bot.cards[key]===null||eligibleCard(key,bot.cards[key],p.cards.biology,room.disaster));
+  return false;
+ });
+ const selected=targets.length?pick(targets):null;
+ if(['discard','swap','reveal'].includes(card.effect)&&!selected)return false;
+ // Shuffles can fail to find a legal permutation; retry next round instead of
+ // consuming the special. Do not swallow unexpected application errors.
+ try{applySpecial(room,bot,selected?{targetId:selected.id}:{});return true;}
+ catch(e){if(/Не удалось безопасно перетасовать|Нужны хотя бы|В колоде нет другой|Недостаточно|не получил|несовместим/.test(e.message))return false;throw e;}
+}
 export function act(room, p, action, value) {
  if (action === 'next_game') {
   check(room.phase === 'finished' && room.host === p.id, 'Следующую партию готовит ведущий после завершения игры.');
@@ -101,6 +123,7 @@ export function act(room, p, action, value) {
   check(room.testMode && room.host === p.id && room.phase === 'turn', 'Управление ботами доступно ведущему в тестовой партии.');
   const bot = room.players.find(x => x.id === room.turn);
   check(bot?.bot && bot.alive, 'Сейчас ход живого участника, а не бота.');
+  if (!bot.specialUsed) botSpecialMove(room,bot);
   if (!room.opened) {
    const remaining = Object.keys(bot.cards).filter(k => bot.cards[k] && !bot.revealed.includes(k));
    if (remaining.length) act(room, bot, 'reveal', room.round === 1 ? 'profession' : pick(remaining));
@@ -127,6 +150,7 @@ export function act(room, p, action, value) {
   check(!room.opened && Object.hasOwn(categories,value) && p.cards[value] && !p.revealed.includes(value), 'Эту карточку сейчас нельзя открыть.');
   check(room.round !== 1 || value === 'profession', 'В первом круге откройте профессию.');
   p.revealed.push(value); room.opened = true;
+  room.lastReveal={playerId:p.id,category:value,round:room.round};
   room.log.push(`${p.name} открывает: ${categories[value]}.`);
  } else if (action === 'next') {
   check(room.phase === 'turn' && room.turn === p.id, 'Передать слово может только текущий игрок.');
@@ -199,7 +223,7 @@ export function advanceRoom(room,now=Date.now()){
    if(p&&!room.opened){
     const available=Object.keys(p.cards).filter(k=>p.cards[k]&&!p.revealed.includes(k));
     const key=room.round===1&&available.includes('profession')?'profession':available[0];
-    if(key){p.revealed.push(key);room.opened=true;room.log.push(`Время вышло: ${p.name} автоматически открывает ${categories[key]}.`);}
+    if(key){p.revealed.push(key);room.opened=true;room.lastReveal={playerId:p.id,category:key,round:room.round};room.log.push(`Время вышло: ${p.name} автоматически открывает ${categories[key]}.`);}
    }
    room.log.push(`Время хода ${p?.name||'участника'} истекло. Слово передано автоматически.`);
    nextTurn(room,now);changed=true;
