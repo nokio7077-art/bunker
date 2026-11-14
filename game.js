@@ -105,7 +105,11 @@ export function act(room, p, action, value) {
   draft.phase='turn';draft.round=1;draft.turn=draft.players[0].id;draft.opened=false;
   draft.turnDeadline=Date.now()+modeSettings(draft).turn;delete draft.voteDeadline;
   draft.log.push('Шлюз закрыт. Начинается знакомство.');
-  Object.assign(room,draft);
+  // Preserve player object identities: active sessions and the caller hold references
+  // to original player objects. Only commit the fully prepared cards and room metadata.
+  for(let i=0;i<room.players.length;i++)room.players[i].cards=draft.players[i].cards;
+  const {players:stagedPlayers,...stagedRoom}=draft;
+  Object.assign(room,stagedRoom);
  } else if (action === 'use_special') {
   applySpecial(room, p, value);
  } else if (action === 'reveal') {
