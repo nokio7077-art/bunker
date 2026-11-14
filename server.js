@@ -69,6 +69,7 @@ binaryAssets.set('/images/ui/bunker-header.webp',{path:pathJoin(root,'public','i
 for(const asset of ['dossier-avatar.svg','dossier-icons.svg'])binaryAssets.set(`/images/ui/${asset}`,{path:pathJoin(root,'public','images','ui',asset),type:'image/svg+xml'});
 for(const category of ['profession','health','luggage','phobia','hobby','biology','personality','interesting','special']){const asset=`dossier-${category}.svg`;binaryAssets.set(`/images/ui/${asset}`,{path:pathJoin(root,'public','images','ui',asset),type:'image/svg+xml'});}
 for(const image of Object.values(disasterImages)){binaryAssets.set(image.webp,{path:pathJoin(root,'public',image.webp),type:'image/webp',immutable:true});if(image.preview)binaryAssets.set(image.preview,{path:pathJoin(root,'public',image.preview),type:'image/webp',immutable:true});}
+binaryAssets.set('/images/bunkers/bunker-cards-atlas.webp',{path:pathJoin(root,'public','images','bunkers','bunker-cards-atlas.webp'),type:'image/webp',immutable:true});
 binaryAssets.set('/images/ui/bunker-entrance-poster.webp',{path:pathJoin(root,'public','images','ui','bunker-entrance-poster.webp'),type:'image/webp'});
 binaryAssets.set(landscapeImage,{path:pathJoin(root,'public',landscapeImage),type:'image/webp',immutable:true});
 // Four responsive still-image endings. Only explicitly listed files may be served.
