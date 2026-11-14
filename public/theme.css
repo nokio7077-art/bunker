@@ -2473,3 +2473,19 @@ body,button,input,select,textarea,.landing-shell,.game,#rules,#special-dialog{
 @media(prefers-reduced-motion:reduce){
  .landing-shell .landing-video{transition:none}
 }
+
+/* Same frame as the entrance video: immediate matching artwork while MP4 decodes.
+   This is intentionally NOT the old pixel landscape. */
+.landing-shell .landing::before{
+ background-image:url('/images/ui/bunker-entrance-poster.webp');
+ background-color:#071108;
+ background-size:100% auto;
+ background-position:center top;
+ background-repeat:no-repeat;
+}
+@media(max-width:860px){
+ .landing-shell .landing::before{background-size:auto 480px;background-position:5% top}
+}
+@media(max-width:480px){
+ .landing-shell .landing::before{background-size:auto 460px;background-position:4% top}
+}
