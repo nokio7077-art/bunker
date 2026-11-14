@@ -212,7 +212,7 @@ export function advanceRoom(room,now=Date.now()){
 export function view(room, me) {
  const { players, votes, voteHistory, lastActivityAt, privateSpecialHistory, ...rest } = room;
  const ownSpecialChanges=(privateSpecialHistory||[]).flatMap(event=>event.results.filter(r=>r.playerId===me.id).map(r=>({eventId:event.id,before:r.before,after:r.after})));
- return { ...rest, voteHistory:room.phase==='finished'?(voteHistory||[]):[], gameModes:GAME_MODES, specialPrivateResults:ownSpecialChanges, categories, me: me.id, recoveryCode: me.recoveryCode, specialAvailable: Boolean(specialCard(me.cards.special)) && !me.specialUsed, hasVoted: Object.hasOwn(votes,me.id), votedFor: votes[me.id] || null, voteCount: Object.keys(votes).length,
+ return { ...rest, voteHistory:room.phase==='finished'?(voteHistory||[]).map(({ballots,...summary})=>summary):[], gameModes:GAME_MODES, specialPrivateResults:ownSpecialChanges, categories, me: me.id, recoveryCode: me.recoveryCode, specialAvailable: Boolean(specialCard(me.cards.special)) && !me.specialUsed, hasVoted: Object.hasOwn(votes,me.id), votedFor: votes[me.id] || null, voteCount: Object.keys(votes).length,
   pendingBotVotes: players.filter(p => p.bot && !Object.hasOwn(votes,p.id)).length,
   players: players.map(({token, recoveryCode, lastSeen, cards, ...p}) => {
    const visible = p.id===me.id || room.phase==='finished' ? cards : Object.fromEntries(p.revealed.map(k=>[k,cards[k]]));
