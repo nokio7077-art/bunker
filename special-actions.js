@@ -5,7 +5,7 @@ import { specialCard } from './special-cards.js';
 
 const check = (ok, message) => { if (!ok) throw new Error(message); };
 function usable(room, player) {
- check(room.phase === 'turn' && room.turn === player.id && player.alive, 'Особое условие можно применить только в свой ход, пока вы в бункере.');
+ check(player.alive && ((room.phase==='turn' && room.turn===player.id)||room.phase==='tiebreak'), 'Особое условие можно применить в свой ход или во время обсуждения при ничьей, пока вы в бункере.');
  check(!player.specialUsed, 'Особое условие уже использовано.');
  const card = specialCard(player.cards.special);
  check(card, 'В этой старой партии нет карты действия. Начните новую игру.');
