@@ -180,6 +180,6 @@ export function view(room, me) {
   pendingBotVotes: players.filter(p => p.bot && !Object.hasOwn(votes,p.id)).length,
   players: players.map(({token, recoveryCode, lastSeen, cards, ...p}) => {
    const visible = p.id===me.id || room.phase==='finished' ? cards : Object.fromEntries(p.revealed.map(k=>[k,cards[k]]));
-   return {...p, cards: visible, descriptions: Object.fromEntries(Object.entries(visible).map(([k,name])=>[k,cardDescription(k,name)]).filter(([,description])=>description))};
+   return {...p, connected: p.bot ? null : Date.now() - (lastSeen ?? 0) < 35000, cards: visible, descriptions: Object.fromEntries(Object.entries(visible).map(([k,name])=>[k,cardDescription(k,name)]).filter(([,description])=>description))};
   }) };
 }
