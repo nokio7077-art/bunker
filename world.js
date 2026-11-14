@@ -4,6 +4,17 @@ import bunkers from './data/bunkers.json' with { type: 'json' };
 
 export { disasters, bunkers };
 
+export const ambientConditions = [
+ 'Связь с внешним миром нестабильна: иногда слышны короткие радиопередачи неизвестного происхождения.',
+ 'В соседних районах постепенно восстанавливаются отдельные очаги жизни, но связь между ними отсутствует.',
+ 'Несколько ночей подряд на горизонте видны вспышки; определить источник пока невозможно.',
+ 'Наблюдаются сильные перепады погоды. Даже короткие выходы наружу требуют осторожности.',
+ 'Слухи о других убежищах противоречивы. Достоверных сообщений об их состоянии нет.',
+ 'Основные дороги практически пусты; сведения о работе транспорта и помощи извне отсутствуют.',
+ 'В радиоэфире время от времени повторяется автоматическое сообщение неизвестной давности.',
+ 'Следы недавнего присутствия людей встречаются чаще, чем работающие средства связи.'
+];
+
 // Narrative compatibility, not a physical simulation or a promise of survival.
 export function incompatibilities(disaster, bunker) {
  const reasons = [];
@@ -33,5 +44,5 @@ export function chooseWorld(capacity, random = randomInt) {
    : 'Начальной обязательной изоляции нет; вылазки требуют оценки местных рисков.',
   `Горизонт восстановления — ${disaster.duration_months} мес. Это не срок непрерывного пребывания без выхода: пополнение запасов и обслуживание придётся организовать.`
  ];
- return { disaster: structuredClone(disaster), bunker };
+ return { disaster: structuredClone(disaster), bunker, atmosphere:ambientConditions[random(ambientConditions.length)] };
 }
