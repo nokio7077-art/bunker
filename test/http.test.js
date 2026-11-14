@@ -76,7 +76,9 @@ test('HTTP sessions, private cards, registered artwork, caching and durable rest
   await request(soloPath+'/action',{action:'next'},solo.token);
   demo=await request(soloPath+'/action',{action:'bot_step'},solo.token);
   assert.equal(demo.status,200);assert.equal(demo.data.players[1].revealed[0],'profession');
-  assert.equal(Object.keys(demo.data.players[1].cards).length,1);
+  // A test bot may also reveal its own one-use special, so visible cards
+  // must match its public revealed categories without leaking closed cards.
+  assert.deepEqual(Object.keys(demo.data.players[1].cards).sort(),[...demo.data.players[1].revealed].sort());
   const host=(await request('/api/rooms',{name:'Ведущий'})).data;const path='/api/rooms/'+host.code;
   assert.match(host.recoveryCode,/^[a-f0-9]{24}$/);
   const badRecovery=await request(path+'/recover',{name:'Ведущий',recoveryCode:'0'.repeat(24)});
