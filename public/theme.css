@@ -2602,3 +2602,45 @@ body,button,input,select,textarea,.landing-shell,.game,#rules,#special-dialog{
  .bunker-card-stats{top:45.9%}
  .bunker-card-stat{padding-top:42%}
 }
+
+/* The illustrated area is a visual summary, not a container for unbounded prose.
+   Text is deliberately line-clamped to prevent intrusion into the next box;
+   all facts remain in the expandable section immediately below the card. */
+.bunker-intro .bunker-card-heading{top:9.7%;height:7.3%;padding:0 5%}
+.bunker-intro .bunker-card-heading strong{font-size:clamp(13px,4.6cqw,26px);line-height:1.07;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;max-width:100%;overflow-wrap:anywhere}
+.bunker-intro .bunker-card-type{top:19.35%;height:2.45%;font-size:clamp(8px,2.3cqw,13px);line-height:1.05;display:block;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bunker-intro .bunker-card-stats{top:45.9%;height:8.0%;gap:1%;width:92.6%}
+.bunker-intro .bunker-card-stat{min-width:0;min-height:0;justify-content:flex-end;padding:0 2% 4%;gap:1px}
+.bunker-intro .bunker-card-stat strong{font-size:clamp(9px,2.7cqw,15px);line-height:1.05;color:#eafc91;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+.bunker-intro .bunker-card-stat small{font-size:clamp(7px,1.5cqw,9px);line-height:1;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+.bunker-intro .bunker-card-description{top:55.25%;height:17.25%;padding:1.4% 2.2%;overflow:hidden}
+.bunker-intro .bunker-card-equipment{top:75.3%;height:7.5%;padding:0 1.4%;overflow:hidden}
+.bunker-intro .bunker-card-threats{top:86.0%;height:7.4%;padding:0 1.4%;overflow:hidden}
+.bunker-intro .bunker-card-panel h2{font-size:clamp(8px,2.0cqw,12px);margin:0 0 4px;line-height:1.15}
+.bunker-intro .bunker-card-description p{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:4;overflow:hidden}
+.bunker-intro .bunker-card-panel :is(p,li){font-size:clamp(9px,2.1cqw,12px);line-height:1.25}
+.bunker-intro .bunker-card-equipment ul,.bunker-intro .bunker-card-threats ul{list-style:none;padding:0;margin:0}
+.bunker-intro .bunker-card-equipment li,.bunker-intro .bunker-card-threats li{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin:0 0 2px}
+.bunker-intro .bunker-intro-details{width:min(96vw,575px);max-width:100%;box-sizing:border-box;border:1px solid #759645;background:#07180d;color:#deefbc}
+.bunker-intro .bunker-intro-details>summary{min-height:48px;box-sizing:border-box;cursor:pointer;padding:13px 15px;display:flex;justify-content:space-between;align-items:center;gap:12px;font-size:13px;font-weight:700;color:#d0ee93}
+.bunker-intro .bunker-intro-details[open]>summary span{transform:rotate(180deg)}
+.bunker-intro .bunker-full-info{padding:0 16px 16px;display:grid;gap:15px;overflow-wrap:anywhere}
+.bunker-intro .bunker-full-info section{padding-top:12px;border-top:1px solid #455e34}
+.bunker-intro .bunker-full-info h2{font-size:13px;color:#d8f59d;margin:0 0 8px}
+.bunker-intro .bunker-full-info p,.bunker-intro .bunker-full-info li{font-size:13px;line-height:1.5;margin:0 0 6px}
+.bunker-intro .bunker-full-info ul{margin:0;padding-left:19px}
+.bunker-intro .bunker-intro-footer{padding:0;width:min(96vw,575px);max-width:100%;background:transparent}
+.bunker-intro .bunker-intro-footer .intro-art-tools{width:100%;padding:2px 5px;box-sizing:border-box}
+.bunker-intro .bunker-intro-footer .intro-next{font-family:monospace;font-size:clamp(12px,3.4vw,18px);text-transform:uppercase;letter-spacing:.3px;border:2px solid #b5e527;background:#c7ee54;color:#0b1605;border-radius:0;box-shadow:inset 0 0 0 3px #142606;min-height:60px;display:flex;justify-content:space-between;gap:10px;text-align:left;padding:12px 17px;overflow-wrap:anywhere;line-height:1.25}
+.bunker-intro .bunker-intro-footer .intro-next:hover{background:#ddff7c}
+.bunker-intro .bunker-intro-footer .intro-next span:last-child{flex:none;font-size:22px}
+@media(max-width:480px){
+ .bunker-intro .bunker-card-stat small{display:none}
+ .bunker-intro .bunker-card-stat strong{font-size:clamp(9px,2.7cqw,12px)}
+ .bunker-intro .bunker-card-description p{-webkit-line-clamp:3}
+ .bunker-intro .bunker-card-equipment li:nth-child(n+2),.bunker-intro .bunker-card-threats li:nth-child(n+2){display:none}
+ .bunker-intro .bunker-card-panel h2{margin-bottom:3px}
+ .bunker-intro .bunker-intro-details{width:min(98vw,575px)}
+ .bunker-intro .bunker-intro-footer{width:min(98vw,575px)}
+ .bunker-intro .bunker-intro-footer .intro-next{min-height:56px;padding:10px 12px}
+}
