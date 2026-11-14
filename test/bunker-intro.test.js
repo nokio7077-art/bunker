@@ -28,7 +28,7 @@ test('the 11 real bunker designs are shipped as one optimized image and served s
  assert.match(server,/binaryAssets\.set\('\/images\/bunkers\/bunker-cards-atlas\.webp'/);
  assert.match(css,/background-image:url\('\/images\/bunkers\/bunker-cards-atlas\.webp'\)/);
  assert.match(css,/background-size:400% 300%/);
- assert.match(html,/bunker-intro-v11/);
+ assert.match(html,/bunker-compact-v12/);
 });
 
 test('a bunker card populates actual attributes, resources, equipment and all threats',()=>{
@@ -36,7 +36,7 @@ test('a bunker card populates actual attributes, resources, equipment and all th
  for(const item of [bunker.name,bunker.type,bunker.description,...Object.values(bunker.resources),...bunker.equipment,...bunker.threats,...bunker.scenario_notes||[]]){
   assert.ok(card.includes(escape(item)),String(item).slice(0,100));
  }
- for(const item of ['Вместимость','Площадь','Глубина','Запас еды','Герметичный воздух','ОБОРУДОВАНИЕ','УГРОЗЫ'])assert.ok(card.includes(item),item);
+ for(const item of ['Мест','Площадь','Глубина','Еда','Герметичный воздух','ОБОРУДОВАНИЕ','УГРОЗЫ'])assert.ok(card.includes(item),item);
  assert.match(card,/Го!лучше так чем в подвале умирать/);
  assert.match(card,/data-action="bunker-continue"/);
  assert.equal(context.bunkerVariant(bunker),(bunker.id-1)%11);
