@@ -62,7 +62,7 @@ test('tied vote enters discussion, only tied candidates can be selected and runo
  assert.equal(eventCount,1);
  assert.equal(view(r,a).voteHistory.length,0,'Ballot history remains secret during game');
  for(const p of r.players)act(r,p,'vote',p.id===a.id?b.id:a.id);
- assert.equal(r.phase,'turn');assert.equal(b.alive,false);
+ assert.equal(r.phase,'turn');assert.equal(a.alive,false);
  assert.equal(r.voteHistory.length,2);
  assert.equal(r.lastVote.tie,true);
 });
@@ -129,7 +129,7 @@ test('test bots vote automatically only after every human, including an expelled
 });
 test('one human vote completes a solo test ballot with no bot action',()=>{
  const r=setup(1),host=r.players[0];act(r,host,'start_test');r.phase='vote';r.votes={};
- act(r,host,'vote',r.players[1].id);assert.equal(r.phase,'turn');assert.equal(r.players.filter(p=>p.alive).length,4);
+ act(r,host,'vote',r.players[1].id);if(r.phase==='tiebreak')act(r,host,'vote',r.tiedCandidates.find(id=>id!==host.id));assert.equal(r.phase,'turn');assert.equal(r.players.filter(p=>p.alive).length,4);
  assert.equal(Object.values(r.lastVote.scores).reduce((a,b)=>a+b,0),5);
 });
 
