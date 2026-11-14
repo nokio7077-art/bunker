@@ -99,9 +99,14 @@ function syncLandingMotion(){
  const video=document.querySelector('.landing-video');if(!video)return;
  video.muted=true;video.loop=true;
  video.onended=()=>{if(!motionPaused&&!document.hidden){video.currentTime=0;video.play().catch(()=>{});}};
- video.onplaying=()=>{video.classList.add('is-playing');};
+ // Reveal the video only when it has decoded a frame, not merely when
+ // playback starts: the old background must never appear during buffering.
+ const showReadyFrame=()=>{if(video.readyState>=2)video.classList.add('is-ready');};
+ video.onloadeddata=showReadyFrame;
+ video.onplaying=showReadyFrame;
  video.onpause=()=>{};
- video.onerror=()=>{video.classList.remove('is-playing');motionPaused=true;};
+ video.onerror=()=>{video.classList.remove('is-ready');motionPaused=true;};
+ showReadyFrame();
  if(motionPaused||document.hidden){video.pause();return;}
  if(!video.getAttribute('src'))video.src='/videos/bunker-entrance.mp4';
  video.play().catch(()=>{});
