@@ -322,3 +322,33 @@ test('atomic deals are complete and unique for all 5–16 player counts',()=>{
   assert.ok(r.bunker && r.disaster && r.capacity===Math.floor(n/2));
  }
 });
+
+test('bot step applies an eligible special, records event and last public reveal',()=>{
+ const r=setup(1),host=r.players[0];act(r,host,'start_test');
+ act(r,host,'reveal','profession');act(r,host,'next');
+ const bot=r.players.find(p=>p.id===r.turn);
+ bot.cards.special='Сброс здоровья';
+ const target=r.players.find(p=>p.id!==bot.id);
+ const beforeCount=r.specialEvents?.length||0;
+ act(r,host,'bot_step');
+ assert.equal(bot.specialUsed,true);
+ assert.equal(r.specialEvents.length,beforeCount+1);
+ assert.equal(r.specialEvents.at(-1).actor,bot.name);
+ assert.ok(r.specialEvents.at(-1).results.some(item=>item.playerId));
+ assert.equal(r.lastReveal.playerId,bot.id);
+ assert.equal(r.lastReveal.category,'profession');
+ assert.equal(view(r,host).players.find(p=>p.id===bot.id).cards.special,'Сброс здоровья');
+ assert.equal(view(r,host).lastReveal.playerId,bot.id);
+ assert.ok(target);
+});
+
+test('a bot with unavailable open-only shuffle still completes its normal turn',()=>{
+ const r=setup(1),host=r.players[0];act(r,host,'start_test');
+ act(r,host,'reveal','profession');act(r,host,'next');
+ const bot=r.players.find(p=>p.id===r.turn);
+ bot.cards.special='Перетасовка открытых хобби';
+ act(r,host,'bot_step');
+ assert.equal(bot.specialUsed,undefined);
+ assert.ok(bot.revealed.includes('profession'));
+ assert.equal(r.turn,r.players[2].id);
+});
