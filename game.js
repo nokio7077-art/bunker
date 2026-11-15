@@ -264,6 +264,7 @@ function finishVote(room,now=Date.now()){
  // A second tied ballot starts a private rock-paper-scissors showdown, not a random expulsion.
  if(candidates.length>1){
   room.lastVote={scores,tie:true,revote:Boolean(room.revoteCandidates),abstained,candidates};
+  delete room.rpsReveal;
   room.rps={candidates,choices:{},round:1,deadline:now+RPS_TIMEOUT_MS,ballotScores:scores};
   room.phase='rps';delete room.voteDeadline;delete room.discussionDeadline;delete room.revoteCandidates;
   room.log.push('Повторная ничья! Кандидаты играют в су-е-фа до определения проигравшего.');
@@ -310,18 +311,28 @@ function resolveRps(room,now=Date.now()){
   if(rps.candidates.some(id=>!Object.hasOwn(rps.choices,id)))return;
   const selected=new Set(Object.values(rps.choices));
   const moves=Object.fromEntries(rps.candidates.map(id=>[id,rps.choices[id]]));
+  const candidatesAtReveal=[...rps.candidates];
+  const announce=(loserIds,draw)=>{
+   room.rpsRevealSequence=(room.rpsRevealSequence||0)+1;
+   room.rpsReveal={id:`${room.gameNumber||1}:${room.rpsRevealSequence}`,
+    round:rps.round,moves,candidates:candidatesAtReveal,
+    draw,losers:[...loserIds]};
+  };
   if(selected.size===2){
    const winning=[...selected].find(move=>beats[move]&&selected.has(beats[move]));
    const losing=rps.candidates.filter(id=>moves[id]!==winning);
    if(losing.length===1){
+    announce(losing,false);
     const score=rps.ballotScores[losing[0]]??0;
     eliminate(room,losing[0],score,true,rps.ballotScores,0,now,true);
     return;
    }
    // Multiple losing gestures: winners survive, losing group plays again.
+   announce(losing,false);
    rps.candidates=losing;
   }
   // Three gestures or all identical: nobody wins, retry with same candidates.
+  if(selected.size!==2)announce([],true);
   rps.lastResult={moves,draw:selected.size!==2,round:rps.round};
   rps.choices={};rps.round++;
   rps.deadline=now+RPS_TIMEOUT_MS;
