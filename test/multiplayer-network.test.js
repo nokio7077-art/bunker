@@ -101,11 +101,13 @@ test('network multiplayer: five clients, polling, disconnect, recover and subseq
   // authoritative state; room capacity and cast must remain stable.
   let guard=0;
   while(guard++<80&& (await req(roomPath,undefined,host.token)).data.phase!=='finished'){
-   const current=(await req(roomPath,undefined,host.token)).data;
+   const poll=await req(roomPath,undefined,host.token);assert.equal(poll.status,200,JSON.stringify(poll.data));
+   const current=poll.data;
    if(current.phase==='turn'){
     const actor=players.find((p,i)=>current.players[i].id===current.turn);
     assert.ok(actor);
-    const own=(await req(roomPath,undefined,actor.token)).data;
+    const ownPoll=await req(roomPath,undefined,actor.token);assert.equal(ownPoll.status,200,JSON.stringify(ownPoll.data));
+   const own=ownPoll.data;
     if(!own.opened){
      const card=Object.keys(own.players.find(p=>p.id===own.me).cards).find(k=>k!=='special'&&!own.players.find(p=>p.id===own.me).revealed.includes(k));
      if(card)assert.equal((await req(roomPath+'/action',{action:'reveal',value:card},actor.token)).status,200);
