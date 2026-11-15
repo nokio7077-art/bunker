@@ -2,6 +2,7 @@ import http from 'node:http';
 import { getLocalIpv4, startLocalMdns } from './local-network.js';
 import { readFileSync, existsSync, statSync, createReadStream } from 'node:fs';
 import { createRoomStore } from './room-storage.js';
+import { createCloudRoomBackup } from './cloud-room-backup.js';
 import { fileURLToPath } from 'node:url';
 import { join as pathJoin } from 'node:path';
 import { randomInt, randomBytes } from 'node:crypto';
@@ -13,7 +14,11 @@ import { disasters as canonicalDisasters } from './world.js';
 const root = fileURLToPath(new URL('.', import.meta.url));
 const dataDir = process.env.DATA_DIR || pathJoin(root,'.data');
 const store=createRoomStore(dataDir);
-const rooms=store.load();
+const cloudBackup=createCloudRoomBackup();
+const localRooms=store.load();
+// Restore before accepting connections. Never serve a half-restored match.
+const rooms=await cloudBackup.restore(localRooms,dataDir);
+if(rooms!==localRooms)store.save(rooms);
 // Existing rooms predate the explicit idle clock; preserve their last real event.
 for(const room of rooms.values())if(!room.lastActivityAt)room.lastActivityAt=room.updated||Date.now();
 // On deployment, clamp previously issued five-minute turns to the new 3:16 maximum.
@@ -30,7 +35,12 @@ for(const room of rooms.values()){
     ? 'Запасы покрывают первые 90 суток обязательной изоляции.' : note);
  }
 }
-const save=()=>store.save(rooms);
+const save=()=>{
+ store.save(rooms);
+ // Failure to reach Supabase must not prevent a local game from proceeding.
+ // Serialized writes keep checkpoints ordered when actions happen rapidly.
+ void cloudBackup.persist([...rooms]);
+};
 // Idle room expiration depends on actual player activity, not automatic timer actions.
 const IDLE_LOBBY_MS=24*60*60*1000,IDLE_FINISHED_MS=24*60*60*1000,IDLE_GAME_MS=72*60*60*1000;
 function cleanupRooms(now=Date.now()){
