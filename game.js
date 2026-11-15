@@ -6,6 +6,7 @@ import { cardDescription, eligibleCard, healthyCard } from './card-catalog.js';
 import { applySpecial } from './special-actions.js';
 import { specialCard } from './special-cards.js';
 import { chooseBotVote, chooseBotReveal, chooseBotSpecialTarget } from './bot-ai.js';
+import {assignBotPersonas} from './bot-personas.js';
 export { categories };
 const pick = a => a[randomInt(a.length)];
 // Independently randomize who draws first for each category.
@@ -122,9 +123,9 @@ export function act(room, p, action, value) {
   check(room.phase === 'finished' && room.host === p.id, 'Следующую партию готовит ведущий после завершения игры.');
   const humans=room.players.filter(x=>!x.bot),next=humans[(humans.findIndex(x=>x.id===room.host)+1)%humans.length];
   const index=room.players.findIndex(x=>x.id===next.id),players=[...room.players.slice(index),...room.players.slice(0,index)];
-  const gameNumber=(room.gameNumber||1)+1,testMode=room.testMode;
+  const gameNumber=(room.gameNumber||1)+1,testMode=room.testMode,aiMode=room.aiMode;
   for(const person of players){person.alive=true;person.cards={};person.revealed=[];delete person.specialUsed;}
-  const fresh={...createRoom(room.code,next),players,gameNumber,dealHistory:recordedHistory(room)};if(testMode)fresh.testMode=true;
+  const fresh={...createRoom(room.code,next),players,gameNumber,dealHistory:recordedHistory(room)};if(testMode)fresh.testMode=true;if(aiMode){fresh.aiMode=true;fresh.aiChat=[];}
   for(const key of Object.keys(room))delete room[key];Object.assign(room,fresh);
   room.log.push(`Партия ${gameNumber}. Ведущий и первое слово: ${next.name}.`);
   } else if (action === 'transfer_host') {
@@ -149,10 +150,7 @@ export function act(room, p, action, value) {
   if(action==='start_ai_test'){
    room.aiMode=true;
    room.aiChat=[];
-   participants.filter(x=>x.bot).forEach((bot,index)=>{
-    bot.aiPersonality=['прагматичный, прямолинейный','дипломатичный и вежливый',
-     'скептичный и осторожный','смелый и находчивый'][index%4];
-   });
+   assignBotPersonas(participants.filter(x=>x.bot));
   }
   room.log.push(room.aiMode?'Тестовая игра с ИИ-персонажами: чат включён, решения проверяются правилами.':
    'Тестовая партия: ведущий запускает ходы ботов, их голоса поступают автоматически после голосов всех людей.');

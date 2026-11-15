@@ -96,8 +96,28 @@ export function teamSkillContribution(room,person,observer){
 export function chooseBotVote(room,bot,candidates,random=randomInt){
  const eligible=room.players.filter(p=>p.id!==bot.id&&candidates.includes(p.id));
  if(!eligible.length)return null;
- // Favor removal of the weakest publicly-known survival profile.
- return noisyBest(eligible,p=>-(publicSurvivalScore(p,room.disaster)+teamSkillContribution(room,p,bot)*3),random)?.id||null;
+ // Normal bots retain their original strategy. AI personas make meaningful
+ // but bounded adjustments using revealed cards, never private information.
+ return noisyBest(eligible,p=>{
+  const survival=publicSurvivalScore(p,room.disaster);
+  const teamwork=teamSkillContribution(room,p,bot);
+  if(!room.aiMode||!bot.aiPersona)return -(survival+teamwork*3);
+  const revealed=p.revealed||[];
+  const profession=revealed.includes('profession')?String(p.cards?.profession||''):'';
+  const personality=revealed.includes('personality')?String(p.cards?.personality||''):'';
+  switch(bot.aiPersona){
+   case 'leader': // Prioritize proven essential skills and balanced teams.
+    return -(survival+teamwork*4);
+   case 'diplomat': // Favor cooperative temperaments and complementarity.
+    return -(survival+teamwork*3.2+
+     (/добр|ответствен|спокой|забот|команд|общитель/i.test(personality)?3:0));
+   case 'skeptic': // Treat unknown professions cautiously, not as fake facts.
+    return -(survival+teamwork*2.5)+(revealed.includes('profession')?0:2);
+   case 'gambler': // Give rare unconventional roles a chance; pursue risk.
+    return -(survival+teamwork*2.2)+(NONESSENTIAL.test(profession)?-3:0);
+   default:return -(survival+teamwork*3);
+  }
+ },random)?.id||null;
 }
 export function chooseBotReveal(room,bot,available,random=randomInt){
  if(room.round===1&&available.includes('profession'))return 'profession';

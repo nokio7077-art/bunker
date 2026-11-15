@@ -3067,3 +3067,9 @@ body,button,input,select,textarea,.landing-shell,.game,#rules,#special-dialog{
  .ai-chat-controls select{grid-column:1/-1}
  .ai-chat-controls input{grid-column:1}
 }
+
+/* Distinct personalities in the optional AI test-room chat. */
+.ai-character-roster{display:flex;flex-wrap:wrap;gap:7px;margin:0 0 13px}
+.ai-character{display:flex;align-items:baseline;gap:6px;padding:6px 9px;border:1px solid #536e3f;border-radius:4px;background:#1a2c19;color:#edf4da;font-size:12px;max-width:100%}
+.ai-character small{font-size:11px;color:#b5ce9d;white-space:nowrap}
+.ai-character-out{opacity:.5;text-decoration:line-through}
