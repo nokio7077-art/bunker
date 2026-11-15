@@ -23,6 +23,9 @@ export const firstVoteRound = n => Math.max(1, 9 - n);
 export const TURN_TIMEOUT_MS = 3 * 60 * 1000 + 16 * 1000;
 export const VOTE_TIMEOUT_MS = 2 * 60 * 1000;
 export const TIE_DISCUSSION_MS = 90 * 1000;
+export const RPS_TIMEOUT_MS = 90 * 1000;
+const RPS_MOVES=['rock','paper','scissors'];
+const beats={rock:'scissors',paper:'rock',scissors:'paper'};
 export const HOST_INACTIVE_MS = 3 * 60 * 1000;
 const human = p => !p.bot;
 export function player(name) {
@@ -152,6 +155,12 @@ export function act(room, p, action, value) {
   // new card was already revealed when its turn began, just like a human.
   nextTurn(room);
   revealCurrentBot(room);
+ } else if (action === 'rps_move') {
+  check(room.phase==='rps'&&room.rps?.candidates.includes(p.id),'В су-е-фа участвуют только кандидаты с равным числом голосов.');
+  check(RPS_MOVES.includes(value),'Выберите камень, ножницы или бумагу.');
+  check(!Object.hasOwn(room.rps.choices,p.id),'Вы уже сделали выбор в этом раунде.');
+  room.rps.choices[p.id]=value;
+  resolveRps(room);
  } else if (action === 'start_revote') {
   check(room.phase === 'tie_discussion' && room.host === p.id, 'Начать переголосование может ведущий после ничьей.');
   beginRevote(room);
@@ -246,14 +255,73 @@ function finishVote(room,now=Date.now()){
   room.log.push('Ничья: '+room.players.filter(p=>candidates.includes(p.id)).map(p=>p.name).join(', ')+'. Обсудите выбор и переголосуйте только между ними.');
   return;
  }
- // If a restricted second ballot also ties (or nobody votes), draw among those candidates.
- const loserId=pick(candidates);const loser=room.players.find(x=>x.id===loserId);loser.alive=false;
- room.lastVote={scores,eliminated:loser.id,tie:candidates.length>1,revote:Boolean(room.revoteCandidates),abstained};
- room.log.push(`${loser.name} покидает бункер (${max} голосов)${candidates.length>1?'. После повторной ничьей решение принято жребием':''}.`);
- delete room.revoteCandidates;delete room.discussionDeadline;
- if(room.players.filter(x=>x.alive).length<=room.capacity){room.phase='finished';room.turn=null;delete room.turnDeadline;delete room.voteDeadline;room.log.push('Состав убежища определён.');}
- else {newRound(room,now);revealCurrentBot(room);}
+ // A second tied ballot starts a private rock-paper-scissors showdown, not a random expulsion.
+ if(candidates.length>1){
+  room.lastVote={scores,tie:true,revote:Boolean(room.revoteCandidates),abstained,candidates};
+  room.rps={candidates,choices:{},round:1,deadline:now+RPS_TIMEOUT_MS,ballotScores:scores};
+  room.phase='rps';delete room.voteDeadline;delete room.discussionDeadline;delete room.revoteCandidates;
+  room.log.push('Повторная ничья! Кандидаты играют в су-е-фа до определения проигравшего.');
+  resolveRps(room);
+  return;
+ }
+ eliminate(room,candidates[0],max,Boolean(room.revoteCandidates),scores,abstained,now);
 }
+
+// The eliminated player is the loser of the duel. Non-candidates are never
+// allowed to submit gestures; nobody sees an opponent's pending choice.
+function eliminate(room,loserId,votes,revote,scores,abstained,now=Date.now(),viaRps=false){
+ const loser=room.players.find(x=>x.id===loserId);
+ check(loser?.alive,'Нельзя исключить отсутствующего игрока.');
+ loser.alive=false;
+ room.lastVote={scores,eliminated:loserId,tie:viaRps,revote,abstained};
+ room.eliminationSequence=(room.eliminationSequence||0)+1;
+ room.eliminationNotice={id:`${room.gameNumber||1}:${room.eliminationSequence}`,
+  playerId:loserId,name:loser.name,votes,round:room.round,viaRps};
+ room.log.push(`${loser.name} покидает бункер (${votes} голосов)${viaRps?' после су-е-фа':''}.`);
+ delete room.rps;delete room.revoteCandidates;delete room.discussionDeadline;
+ delete room.voteDeadline;
+ if(room.players.filter(x=>x.alive).length<=room.capacity){
+  room.phase='finished';room.turn=null;delete room.turnDeadline;
+  room.log.push('Состав убежища определён.');
+ }else{newRound(room,now);revealCurrentBot(room);}
+}
+function botRpsChoices(room){
+ const rps=room.rps;
+ for(const [i,id] of rps.candidates.entries()){
+  const p=room.players.find(p=>p.id===id);
+  if(p?.bot&&!Object.hasOwn(rps.choices,id)){
+   // After several all-bot draws force progress, without affecting humans.
+   const allBots=rps.candidates.every(id=>room.players.find(p=>p.id===id)?.bot);
+   rps.choices[id]=allBots&&rps.round>=6?(i===0?'rock':'scissors'):RPS_MOVES[randomInt(3)];
+  }
+ }
+}
+function resolveRps(room,now=Date.now()){
+ if(room.phase!=='rps')return;
+ for(let attempts=0;attempts<20;attempts++){
+  botRpsChoices(room);
+  const rps=room.rps;
+  if(rps.candidates.some(id=>!Object.hasOwn(rps.choices,id)))return;
+  const selected=new Set(Object.values(rps.choices));
+  const moves=Object.fromEntries(rps.candidates.map(id=>[id,rps.choices[id]]));
+  if(selected.size===2){
+   const winning=[...selected].find(move=>beats[move]&&selected.has(beats[move]));
+   const losing=rps.candidates.filter(id=>moves[id]!==winning);
+   if(losing.length===1){
+    const score=rps.ballotScores[losing[0]]??0;
+    eliminate(room,losing[0],score,true,rps.ballotScores,0,now,true);
+    return;
+   }
+   // Multiple losing gestures: winners survive, losing group plays again.
+   rps.candidates=losing;
+  }
+  // Three gestures or all identical: nobody wins, retry with same candidates.
+  rps.lastResult={moves,draw:selected.size!==2,round:rps.round};
+  rps.choices={};rps.round++;
+  rps.deadline=now+RPS_TIMEOUT_MS;
+ }
+}
+
 // Mutates only when a deadline expires or an inactive host needs replacement.
 // Called by the server's periodic scheduler and before processing incoming actions.
 export function advanceRoom(room,now=Date.now()){
@@ -273,6 +341,11 @@ export function advanceRoom(room,now=Date.now()){
  }else if(room.phase==='tie_discussion'){
   if(!room.discussionDeadline){room.discussionDeadline=now+TIE_DISCUSSION_MS;changed=true;}
   else if(now>=room.discussionDeadline){beginRevote(room,now);changed=true;}
+ }else if(room.phase==='rps'){
+  if(now>=room.rps.deadline){
+   for(const id of room.rps.candidates)if(!Object.hasOwn(room.rps.choices,id))room.rps.choices[id]=RPS_MOVES[randomInt(3)];
+   resolveRps(room,now);changed=true;
+  }
  }else if(room.phase==='vote'){
   if(!room.voteDeadline){room.voteDeadline=now+VOTE_TIMEOUT_MS;changed=true;}
   else if(now>=room.voteDeadline){
@@ -289,9 +362,9 @@ export function advanceRoom(room,now=Date.now()){
  return changed;
 }
 export function view(room, me) {
- const { players, votes, lastActivityAt, privateSpecialHistory, dealHistory, ...rest } = room;
+ const { players, votes, rps, lastActivityAt, privateSpecialHistory, dealHistory, ...rest } = room;
  const ownSpecialChanges=(privateSpecialHistory||[]).flatMap(event=>event.results.filter(r=>r.playerId===me.id).map(r=>({eventId:event.id,before:r.before,after:r.after})));
- return { ...rest, specialPrivateResults:ownSpecialChanges, categories, me: me.id, recoveryCode: me.recoveryCode, specialAvailable: Boolean(specialCard(me.cards.special)) && !me.specialUsed, hasVoted: Object.hasOwn(votes,me.id), votedFor: votes[me.id] || null, voteCount: Object.keys(votes).length,
+ return { ...rest, rps:rps?{candidates:rps.candidates,round:rps.round,deadline:rps.deadline,submitted:rps.candidates.filter(id=>Object.hasOwn(rps.choices,id)),myChoice:rps.choices[me.id]||null,lastResult:rps.lastResult||null}:null, specialPrivateResults:ownSpecialChanges, categories, me: me.id, recoveryCode: me.recoveryCode, specialAvailable: Boolean(specialCard(me.cards.special)) && !me.specialUsed, hasVoted: Object.hasOwn(votes,me.id), votedFor: votes[me.id] || null, voteCount: Object.keys(votes).length,
   pendingBotVotes: players.filter(p => p.bot && !Object.hasOwn(votes,p.id)).length,
   players: players.map(({token, recoveryCode, lastSeen, cards, ...p}) => {
    const visible = p.id===me.id || room.phase==='finished' ? cards : Object.fromEntries(p.revealed.map(k=>[k,cards[k]]));
