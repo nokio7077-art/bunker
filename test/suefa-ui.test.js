@@ -51,7 +51,7 @@ test('after selecting, only the chosen image remains visible',()=>{
 });
 
 test('completed suefa round shows every chosen pixel hand and result',()=>{
- const start=app.indexOf('function suefaRevealDialog(){');
+ const start=app.indexOf('function suefaRevealKey(){');
  const end=app.indexOf('function rpsDialog(){',start);
  assert.ok(start>=0&&end>start);
  const section=app.slice(start,end);
