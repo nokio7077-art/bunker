@@ -141,11 +141,11 @@ const rules="<dialog id=\"rules\" class=\"survival-rules\" aria-labelledby=\"rul
 function landing(){return `<div class="landing-shell">${header()}<main class="landing"><video class="landing-video" muted loop playsinline preload="auto" poster="/images/ui/bunker-entrance-poster.webp" aria-hidden="true" tabindex="-1" disablepictureinpicture></video><section class="hero" aria-labelledby="welcome-title">
  <h1 id="welcome-title">Место есть<br><span>Не для всех.</span></h1>
  <p class="lead">Мир снаружи изменился навсегда.<br>За гермодверью — шанс начать сначала.<br>Убедите остальных, что именно вы<br class="desktop-break"> должны остаться в бункере.</p>
- <div class="hero-actions" role="group" aria-label="Начать игру"><button type="button" class="primary hero-start" data-mode="create">Создать игру <span aria-hidden="true">↓</span></button><button type="button" class="secondary hero-join" data-mode="join">Присоединиться <span aria-hidden="true">↓</span></button></div><p class="hero-action-hint">Выберите действие — откроется форма входа ниже.</p>
+ 
  
  
  </section><section class="entry-panel" aria-labelledby="entry-title">
- <div class="eyebrow entry-kicker">ДОПУСК В УБЕЖИЩЕ</div><h2 id="entry-title">Вы среди выживших?</h2><p>Соберите друзей. Остальное решит игра.</p>
+ <div class="eyebrow entry-kicker">ДОПУСК В УБЕЖИЩЕ</div><h2 id="entry-title">Вы среди выживших?</h2>
  <div class="tabs" aria-label="Способ входа"><button class="${mode==='create'?'active':''}" data-mode="create" aria-pressed="${mode==='create'}">Создать</button><button class="${mode==='join'?'active':''}" data-mode="join" aria-pressed="${mode==='join'}">Войти</button></div>
  <form id="entry"><label for="name">Ваше имя</label><input id="name" name="name" placeholder="Введите имя…" minlength="2" maxlength="24" required autocomplete="nickname">${mode!=='create'?'<label for="code">Код комнаты</label><input id="code" name="code" placeholder="000000" pattern="[0-9]{6}" maxlength="6" inputmode="numeric" value="${prefillCode}" required>':''}<button class="primary full" type="submit">${mode==='create'?'Создать убежище':'Войти в убежище'} <span aria-hidden="true">→</span></button></form>
  ${localStorage.getItem('bunker-session')?'<button class="secondary full resume-button" data-action="resume">Вернуться в сохранённую комнату <span aria-hidden="true">→</span></button>':''}
@@ -400,7 +400,7 @@ async function refresh(){
 }
 app.addEventListener('submit',async e=>{if(e.target.id!=='entry')return;e.preventDefault();if(busy)return;busy=true;actionEpoch++;const btn=e.target.querySelector('button[type=submit]');btn.disabled=true;const data=new FormData(e.target);try{session=await api(mode==='create'?'/api/rooms':`/api/rooms/${data.get('code')}/join`,{name:data.get('name')});localStorage.setItem('bunker-session',JSON.stringify(session));last='';}catch(e){toast(e.message);}finally{busy=false;btn.disabled=false;await refresh();}});
 app.addEventListener('click',async e=>{const btn=e.target.closest('button');if(!btn||btn.disabled)return;
- if(btn.dataset.mode){const fromHero=Boolean(btn.closest('.hero'));const name=document.querySelector('#name')?.value;const code=document.querySelector('#code')?.value;mode=btn.dataset.mode;render();const nameInput=document.querySelector('#name');if(nameInput)nameInput.value=name||'';const codeInput=document.querySelector('#code');if(codeInput)codeInput.value=code||'';if(fromHero){const entry=document.querySelector('.entry-panel');entry?.scrollIntoView({behavior:reducedMotion.matches?'instant':'smooth',block:'center'});const target=mode==='join'?document.querySelector('#code'):nameInput;if(target){if(reducedMotion.matches)target.focus({preventScroll:true});else setTimeout(()=>target.focus({preventScroll:true}),450);}}return;}
+ if(btn.dataset.mode){const name=document.querySelector('#name')?.value;const code=document.querySelector('#code')?.value;mode=btn.dataset.mode;render();const nameInput=document.querySelector('#name');if(nameInput)nameInput.value=name||'';const codeInput=document.querySelector('#code');if(codeInput)codeInput.value=code||'';const target=mode==='join'?codeInput:nameInput;if(target){target.scrollIntoView({behavior:reducedMotion.matches?'instant':'smooth',block:'center'});if(reducedMotion.matches)target.focus({preventScroll:true});else setTimeout(()=>target.focus({preventScroll:true}),450);}return;}
  const action=btn.dataset.action;
  if(action==='invite'){
   if(inviteOpen){inviteOpen=false;render();return;}
