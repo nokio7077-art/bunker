@@ -157,12 +157,6 @@ function shouldShowBunker(){
  const key=bunkerIntroKey();if(replayBunkerKey===key)return true;if(seenBunkers.has(key))return false;
  try{return localStorage.getItem(key)!=='seen';}catch{return true;}
 }
-// The variant is deterministic for a bunker: everyone in a room sees the
-// same artwork, including after a refresh or return visit.
-function bunkerVariant(bunker){
- const id=Number(bunker?.id);
- return Number.isInteger(id)&&id>0?(id-1)%11:0;
-}
 // Render the real bunker JSON as HTML *over* the user's one blank image.
 // Never burn text into artwork: the selected world and room size vary by game.
 function bunkerIntro(){
@@ -180,7 +174,7 @@ function bunkerIntro(){
   {label:'Запас еды',value:b.food_days!=null?`${b.food_days} сут.`:'—'}
  ];
  const detailedInfo=[
-  description,
+  legacy?'Убежище':b.type||'Убежище',description,
   resource.food?`Еда: ${resource.food}`:'',
   resource.water?`Вода: ${resource.water}`:'',
   resource.energy?`Энергия: ${resource.energy}`:'',
