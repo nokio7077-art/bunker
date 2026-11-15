@@ -2568,79 +2568,36 @@ body,button,input,select,textarea,.landing-shell,.game,#rules,#special-dialog{
  .game .card-detail>p{padding:9px;font-size:12px}
 }
 
-/* Bunker dossier stage, directly after catastrophe: 11 illustrated card variants,
-   one shared sheet. Content is server-provided and independently scrollable inside
-   the designated card fields so long equipment/threat lists are never clipped. */
-.bunker-intro{min-height:100svh;box-sizing:border-box;background:radial-gradient(circle at 50% 35%,#142916,#040d07 80%);color:#ecf5cb;display:flex;flex-direction:column;align-items:center;gap:12px;padding:18px 10px max(20px,env(safe-area-inset-bottom));font-family:var(--bunker-ui,Arial,sans-serif)}
-.bunker-card-stage{width:min(96vw,575px);max-width:100%;margin:0 auto}
-.bunker-card-panel{position:relative;isolation:isolate;width:100%;aspect-ratio:981/1602;box-sizing:border-box;background-image:url('/images/bunkers/bunker-cards-atlas.webp');background-size:400% 300%;background-position:var(--bunker-x,0%) var(--bunker-y,0%);background-repeat:no-repeat;background-color:#07170d;color:#edf3bd;container-type:inline-size;overflow:hidden}
-.bunker-card-panel h2,.bunker-card-panel p,.bunker-card-panel li,.bunker-card-panel ul{margin:0}
-.bunker-card-heading,.bunker-card-type,.bunker-card-stats,.bunker-card-description,.bunker-card-equipment,.bunker-card-threats{position:absolute;z-index:1;box-sizing:border-box;min-width:0;overflow-wrap:anywhere}
-.bunker-card-heading{left:6%;top:9.5%;width:88%;height:7.8%;display:flex;align-items:center;justify-content:center;text-align:center;padding:0 4%;overflow:hidden}
-.bunker-card-heading strong{font-family:var(--bunker-heading,'Russo One',sans-serif);color:#ecf7b7;font-size:clamp(17px,5.5cqw,32px);font-weight:700;line-height:1.13;text-wrap:balance}
-.bunker-card-type{left:18%;top:19%;width:64%;height:2.8%;display:flex;align-items:center;justify-content:center;text-align:center;white-space:normal;overflow:hidden;font-size:clamp(9px,2.65cqw,15px);font-weight:700;line-height:1.05}
-.bunker-card-stats{left:3.7%;top:45.8%;width:92.6%;height:8.2%;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1.2%;align-items:stretch}
-.bunker-card-stat{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:2px;text-align:center;padding:41% 3% 5%;min-width:0;overflow:hidden}
-.bunker-card-stat span{font-weight:800;color:#eafc91;font-size:clamp(10px,3.15cqw,20px);line-height:1.04;overflow-wrap:anywhere}
-.bunker-card-stat small{font-size:clamp(7px,1.7cqw,11px);line-height:1.1;color:#dfebbb}
-.bunker-card-description{left:5.1%;top:55.3%;width:89.8%;height:17.9%;padding:1.3% 1.6%;overflow-y:auto;scrollbar-width:thin;scrollbar-color:#9bbd61 #09160d;overscroll-behavior:contain}
-.bunker-card-equipment{left:18%;top:75%;width:76.7%;height:8.1%;padding:0 1.1%;overflow-y:auto;scrollbar-width:thin;scrollbar-color:#9bbd61 #09160d;overscroll-behavior:contain}
-.bunker-card-threats{left:18%;top:85.9%;width:76.7%;height:8.0%;padding:0 1.1%;overflow-y:auto;scrollbar-width:thin;scrollbar-color:#9bbd61 #09160d;overscroll-behavior:contain}
-.bunker-card-panel h2{color:#d2f48a;font-weight:800;font-size:clamp(9px,2.15cqw,14px);margin:0 0 5px;letter-spacing:.055em;line-height:1.2}
-.bunker-card-panel :is(p,li){font-size:clamp(9px,2.15cqw,14px);line-height:1.32;color:#e8f1d0}
-.bunker-card-description p+p{margin-top:8px}
-.bunker-card-panel li{padding-left:0;margin:0 0 4px}
-.bunker-card-panel ul{padding-left:15px}
-.bunker-intro-footer{width:min(96vw,575px);max-width:100%;display:grid;gap:10px;justify-items:stretch}
-.bunker-intro-footer>span{color:#acc77e;font-size:11px;letter-spacing:.12em;text-align:center;font-weight:700}
-.bunker-intro-footer .intro-next{width:100%;min-height:52px;line-height:1.25;text-wrap:balance;white-space:normal}
-@media(max-width:420px){
- .bunker-intro{padding:10px 5px max(14px,env(safe-area-inset-bottom));gap:8px}
- .bunker-card-stage,.bunker-intro-footer{width:min(98vw,575px)}
- .bunker-card-description p+p{margin-top:5px}
- .bunker-card-panel li{margin-bottom:2px}
- .bunker-card-stats{top:45.9%}
- .bunker-card-stat{padding-top:42%}
-}
-
-/* The illustrated area is a visual summary, not a container for unbounded prose.
-   Text is deliberately line-clamped to prevent intrusion into the next box;
-   all facts remain in the expandable section immediately below the card. */
-.bunker-intro .bunker-card-heading{top:9.7%;height:7.3%;padding:0 5%}
-.bunker-intro .bunker-card-heading strong{font-size:clamp(13px,4.6cqw,26px);line-height:1.07;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;max-width:100%;overflow-wrap:anywhere}
-.bunker-intro .bunker-card-type{top:19.35%;height:2.45%;font-size:clamp(8px,2.3cqw,13px);line-height:1.05;display:block;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.bunker-intro .bunker-card-stats{top:45.9%;height:8.0%;gap:1%;width:92.6%}
-.bunker-intro .bunker-card-stat{min-width:0;min-height:0;justify-content:flex-end;padding:0 2% 4%;gap:1px}
-.bunker-intro .bunker-card-stat strong{font-size:clamp(9px,2.7cqw,15px);line-height:1.05;color:#eafc91;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
-.bunker-intro .bunker-card-stat small{font-size:clamp(7px,1.5cqw,9px);line-height:1;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
-.bunker-intro .bunker-card-description{top:55.25%;height:17.25%;padding:1.4% 2.2%;overflow:hidden}
-.bunker-intro .bunker-card-equipment{top:75.3%;height:7.5%;padding:0 1.4%;overflow:hidden}
-.bunker-intro .bunker-card-threats{top:86.0%;height:7.4%;padding:0 1.4%;overflow:hidden}
-.bunker-intro .bunker-card-panel h2{font-size:clamp(8px,2.0cqw,12px);margin:0 0 4px;line-height:1.15}
-.bunker-intro .bunker-card-description p{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:4;overflow:hidden}
-.bunker-intro .bunker-card-panel :is(p,li){font-size:clamp(9px,2.1cqw,12px);line-height:1.25}
-.bunker-intro .bunker-card-equipment ul,.bunker-intro .bunker-card-threats ul{list-style:none;padding:0;margin:0}
-.bunker-intro .bunker-card-equipment li,.bunker-intro .bunker-card-threats li{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin:0 0 2px}
-.bunker-intro .bunker-intro-details{width:min(96vw,575px);max-width:100%;box-sizing:border-box;border:1px solid #759645;background:#07180d;color:#deefbc}
-.bunker-intro .bunker-intro-details>summary{min-height:48px;box-sizing:border-box;cursor:pointer;padding:13px 15px;display:flex;justify-content:space-between;align-items:center;gap:12px;font-size:13px;font-weight:700;color:#d0ee93}
-.bunker-intro .bunker-intro-details[open]>summary span{transform:rotate(180deg)}
-.bunker-intro .bunker-full-info{padding:0 16px 16px;display:grid;gap:15px;overflow-wrap:anywhere}
-.bunker-intro .bunker-full-info section{padding-top:12px;border-top:1px solid #455e34}
-.bunker-intro .bunker-full-info h2{font-size:13px;color:#d8f59d;margin:0 0 8px}
-.bunker-intro .bunker-full-info p,.bunker-intro .bunker-full-info li{font-size:13px;line-height:1.5;margin:0 0 6px}
-.bunker-intro .bunker-full-info ul{margin:0;padding-left:19px}
-.bunker-intro .bunker-intro-footer{padding:0;width:min(96vw,575px);max-width:100%;background:transparent}
-.bunker-intro .bunker-intro-footer .intro-art-tools{width:100%;padding:2px 5px;box-sizing:border-box}
-.bunker-intro .bunker-intro-footer .intro-next{font-family:monospace;font-size:clamp(12px,3.4vw,18px);text-transform:uppercase;letter-spacing:.3px;border:2px solid #b5e527;background:#c7ee54;color:#0b1605;border-radius:0;box-shadow:inset 0 0 0 3px #142606;min-height:60px;display:flex;justify-content:space-between;gap:10px;text-align:left;padding:12px 17px;overflow-wrap:anywhere;line-height:1.25}
-.bunker-intro .bunker-intro-footer .intro-next:hover{background:#ddff7c}
-.bunker-intro .bunker-intro-footer .intro-next span:last-child{flex:none;font-size:22px}
-@media(max-width:480px){
- .bunker-intro .bunker-card-stat small{display:none}
- .bunker-intro .bunker-card-stat strong{font-size:clamp(9px,2.7cqw,12px)}
- .bunker-intro .bunker-card-description p{-webkit-line-clamp:3}
- .bunker-intro .bunker-card-equipment li:nth-child(n+2),.bunker-intro .bunker-card-threats li:nth-child(n+2){display:none}
- .bunker-intro .bunker-card-panel h2{margin-bottom:3px}
- .bunker-intro .bunker-intro-details{width:min(98vw,575px)}
- .bunker-intro .bunker-intro-footer{width:min(98vw,575px)}
- .bunker-intro .bunker-intro-footer .intro-next{min-height:56px;padding:10px 12px}
-}
+/* One user-approved blank image, with precise JSON-driven HTML overlay.
+   The illustration never contains burned-in data. All content fits its region;
+   full resources/risks remain available below on any screen size. */
+.bunker-intro{min-height:100svh;box-sizing:border-box;background:radial-gradient(circle at 50% 30%,#162815,#040d07 80%);color:#f4fcb9;display:flex;flex-direction:column;align-items:center;gap:12px;padding:12px 8px max(22px,env(safe-area-inset-bottom));}
+.bunker-intro .bunker-card-stage,.bunker-intro .bunker-intro-details,.bunker-intro .bunker-intro-footer{width:min(96vw,600px);max-width:100%;box-sizing:border-box;}
+.bunker-intro .bunker-card-panel{position:relative;isolation:isolate;width:100%;aspect-ratio:982/1602;background:url('/images/bunkers/bunker-blank-layout.webp') center / 100% 100% no-repeat #030800;container-type:inline-size;color:#eaff00;overflow:hidden;box-sizing:border-box;}
+.bunker-intro .bunker-card-heading,.bunker-intro .bunker-card-type,.bunker-intro .bunker-card-stats,.bunker-intro .bunker-card-contents{position:absolute;min-width:0;box-sizing:border-box;}
+.bunker-intro .bunker-card-heading{top:11.1%;left:5%;width:90%;height:7.1%;padding:0 2%;display:flex;align-items:center;justify-content:center;text-align:center;overflow:hidden;}
+.bunker-intro .bunker-card-heading strong{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;max-width:100%;font-family:BunkerDisplay,monospace;font-size:clamp(12px,4.8cqw,29px);line-height:1.13;font-weight:400;letter-spacing:-.025em;overflow-wrap:anywhere;}
+.bunker-intro .bunker-card-type{top:20%;left:18%;width:64%;height:2.8%;display:flex;align-items:center;justify-content:center;text-align:center;overflow:hidden;font-family:monospace;font-weight:700;line-height:1.05;font-size:clamp(8px,2.75cqw,17px);overflow-wrap:anywhere;}
+.bunker-intro .bunker-card-stats{top:48%;left:3.2%;width:93.6%;height:7.9%;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1.1%;}
+.bunker-intro .bunker-card-stat{display:flex;justify-content:center;align-items:flex-end;min-width:0;padding:0 2% 4%;text-align:center;overflow:hidden;}
+.bunker-intro .bunker-card-stat strong{font-family:monospace;font-weight:900;font-size:clamp(9px,3.1cqw,19px);color:#efff00;letter-spacing:-.03em;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.bunker-intro .bunker-card-contents{top:58.6%;left:4.8%;width:90.4%;height:35.2%;padding:1.0% 2%;overflow:hidden;display:flex;flex-direction:column;}
+.bunker-intro .bunker-card-contents h2{flex:none;display:flex;align-items:center;justify-content:flex-start;padding-left:13.5%;margin:0;height:10%;min-height:0;font-family:BunkerDisplay,monospace;font-size:clamp(9px,3.0cqw,18px);line-height:1.1;letter-spacing:-.02em;color:#efff00;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.bunker-intro .bunker-card-content-list{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:#dcef22 #071207;padding:6px 3.2% 0;outline-offset:-2px;}
+.bunker-intro .bunker-card-content-list ul{padding-left:1.25em;margin:0;display:grid;gap:5px;list-style:square;}
+.bunker-intro .bunker-card-content-list li,.bunker-intro .bunker-card-content-list p{font-family:monospace;font-size:clamp(10px,2.5cqw,15px);line-height:1.42;overflow-wrap:anywhere;margin:0;color:#eafc58;}
+.bunker-intro .bunker-card-content-list li::marker{color:#c9ed16;}
+.bunker-intro .bunker-intro-details{border:1px solid #749b37;background:#07180d;color:#e1f2b6;}
+.bunker-intro .bunker-intro-details>summary{cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:10px;box-sizing:border-box;padding:13px 15px;min-height:48px;font-size:13px;color:#e0f49a;font-weight:700;}
+.bunker-intro .bunker-intro-details[open]>summary span{transform:rotate(180deg);}
+.bunker-intro .bunker-full-info{display:grid;gap:14px;padding:0 15px 18px;overflow-wrap:anywhere;}
+.bunker-intro .bunker-full-info section{border-top:1px solid #456133;padding-top:12px;}
+.bunker-intro .bunker-full-info h2{font-size:13px;margin:0 0 8px;color:#d7f58c;}
+.bunker-intro .bunker-full-info p,.bunker-intro .bunker-full-info li{font-size:13px;line-height:1.5;margin:0 0 7px;}
+.bunker-intro .bunker-full-info ul{margin:0;padding-left:19px;}
+.bunker-intro .bunker-intro-footer{padding:0;background:transparent;display:grid;gap:8px;}
+.bunker-intro .bunker-intro-footer .intro-art-tools{width:100%;box-sizing:border-box;padding:2px 4px;}
+.bunker-intro .bunker-intro-footer .intro-next{font-family:monospace;font-size:clamp(12px,3.4vw,18px);text-transform:uppercase;letter-spacing:.3px;border:2px solid #b5e527;background:#c7ee54;color:#0b1605;border-radius:0;box-shadow:inset 0 0 0 3px #142606;min-height:60px;display:flex;justify-content:space-between;gap:10px;text-align:left;padding:12px 17px;overflow-wrap:anywhere;line-height:1.25;}
+.bunker-intro .bunker-intro-footer .intro-next:hover{background:#ddff7c;}
+.bunker-intro .bunker-intro-footer .intro-next span:last-child{flex:none;font-size:22px;}
+@media(max-width:480px){.bunker-intro{padding:8px 4px max(18px,env(safe-area-inset-bottom));gap:9px}.bunker-intro .bunker-card-stage,.bunker-intro .bunker-intro-details,.bunker-intro .bunker-intro-footer{width:min(98vw,600px)}.bunker-intro .bunker-card-content-list ul{gap:3px}.bunker-intro .bunker-card-stat strong{font-size:clamp(9px,2.8cqw,13px)}.bunker-intro .bunker-intro-footer .intro-next{min-height:56px;padding:10px 12px;}}
