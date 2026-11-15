@@ -59,7 +59,7 @@ export function aiFallback(bot,room){
   `Моя профессия — ${profession}. Предлагаю сначала определить, кто обеспечит еду, медицину и ремонт, а потом выбирать, кого исключать.`,
   `У меня профессия: ${profession}. Оценивайте мою пользу по конкретным задачам бункера. Какие проблемы, по-вашему, возникнут первыми?`
  ];
- const index=((room?.round||1)+(Number(bot.id?.charCodeAt(0))||0))%options.length;
+ const index=((room?.round||1)+(room?.aiChat?.length||0)+(Number(bot.id?.charCodeAt(0))||0))%options.length;
  return options[index].slice(0,220);
 }
 export const BOT_PERSONALITIES=['прагматичный инженерный склад ума','дипломат, ищет компромисс',
