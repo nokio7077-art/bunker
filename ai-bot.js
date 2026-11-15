@@ -109,7 +109,7 @@ export function validateBotClaim(reply,room){
  if(/(?:может|способен|способна|пригоден|пригодна|здоров|здоровая|здоровый|фертильн)[^.!?]{0,85}(?:продолжени[яе]\s+род[а-я]*|рожать|деторождени[яе]|зачати[ея])/i.test(text))return false;
  // A conversational proposal isn't a server vote: speaking must never
  // claim that a personal vote was actually cast.
- if(/\bголосую\b|\bпроголосую\b/i.test(text))return false;
+ if(/(?:^|[^а-яё])(?:голосую|проголосую)(?:$|[^а-яё])/i.test(text))return false;
  // There is no public individual ballot history in the room state.
  if(/(?:я|мы) (?:уже )?проголосовал[аи]? (?:за|против)|я (?:уже )?отдал[а]? голос/i.test(text))
   return false;
