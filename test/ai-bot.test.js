@@ -44,7 +44,7 @@ test('AI vote suggestions accept only live other players, fall back if not valid
  assert.equal(result.voteForId,target.id);
  assert.equal(parseBotReply(JSON.stringify({reply:'Ой',voteForId:bot.id}),room,bot).voteForId,null);
  assert.equal(parseBotReply('{"reply":"Защищаю команду"}',room,bot).voteForId,null);
- assert.ok(aiFallback(bot).includes(bot.name));
+ assert.ok(aiFallback(bot,room).length>30);
 });
 
 test('offline replies give concrete character-specific arguments without repeating the name',()=>{
