@@ -5,6 +5,7 @@ import { chooseWorld } from './world.js';
 import { cardDescription, eligibleCard, healthyCard } from './card-catalog.js';
 import { applySpecial } from './special-actions.js';
 import { specialCard } from './special-cards.js';
+import { chooseBotVote, chooseBotReveal, chooseBotSpecialTarget } from './bot-ai.js';
 export { categories };
 const pick = a => a[randomInt(a.length)];
 // Independently randomize who draws first for each category.
@@ -103,7 +104,7 @@ function botSpecialMove(room,bot){
    (bot.cards[key]===null||eligibleCard(key,bot.cards[key],p.cards.biology,room.disaster));
   return false;
  });
- const selected=targets.length?pick(targets):null;
+ const selected=chooseBotSpecialTarget(room,bot,card,targets);
  if(['discard','swap','reveal'].includes(card.effect)&&!selected)return false;
  // Shuffles can fail to find a legal permutation; retry next round instead of
  // consuming the special. Do not swallow unexpected application errors.
@@ -156,7 +157,7 @@ export function act(room, p, action, value) {
   const bots = room.players.filter(x => x.bot && !Object.hasOwn(room.votes, x.id));
   check(bots.length > 0, 'Все боты уже проголосовали.');
   const candidates = voteCandidates(room);
-  for (const bot of bots) act(room, bot, 'vote', pick(candidates.filter(id=>id!==bot.id)));
+  for (const bot of bots) act(room, bot, 'vote', chooseBotVote(room,bot,candidates));
  } else if (action === 'start') {
   check(room.host === p.id && room.phase === 'lobby', 'Только ведущий может начать игру.');
   check(room.players.length >= 5 && room.players.length <= 16, 'Для игры нужно от 5 до 16 участников.');
@@ -185,7 +186,7 @@ export function act(room, p, action, value) {
   room.votes[p.id] = value;
   if (room.testMode && room.players.filter(x => !x.bot).every(x => Object.hasOwn(room.votes,x.id))) {
    const candidates = voteCandidates(room);
-   for (const bot of room.players.filter(x => x.bot && !Object.hasOwn(room.votes,x.id))) room.votes[bot.id] = pick(candidates.filter(id=>id!==bot.id));
+   for (const bot of room.players.filter(x => x.bot && !Object.hasOwn(room.votes,x.id))) room.votes[bot.id] = chooseBotVote(room,bot,candidates);
   }
   if (Object.keys(room.votes).length === room.players.length) finishVote(room);
  } else throw new Error('Неизвестное действие.');
@@ -209,7 +210,7 @@ function revealCurrentBot(room){
  const bot=room.players.find(p=>p.id===room.turn);
  if(!bot?.bot||!bot.alive||room.opened)return;
  const available=Object.keys(bot.cards).filter(k=>bot.cards[k]&&!bot.revealed.includes(k));
- const key=room.round===1&&available.includes('profession')?'profession':available.length?pick(available):null;
+ const key=chooseBotReveal(room,bot,available);
  if(key){
   bot.revealed.push(key);room.opened=true;
   room.lastReveal={playerId:bot.id,category:key,round:room.round};
