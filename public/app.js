@@ -473,6 +473,8 @@ function room(){const me=state.players.find(p=>p.id===state.me), current=state.p
  const mobileNavigation=(state.phase==='lobby'&&!mobilePlayAction)?'':`<nav class="mobile-playbar" aria-label="Управление игрой"><div class="mobile-playbar-status"><span>${state.phase==='lobby'?'ЗАЛ ОЖИДАНИЯ':state.phase==='turn'?`РАУНД ${state.round}`:state.phase==='rps'?'СУ-Е-ФА':state.phase==='tie_discussion'?'ОБСУЖДЕНИЕ НИЧЬЕЙ':state.phase==='vote'?(state.revoteCandidates?'ПЕРЕГОЛОСОВАНИЕ':'ГОЛОСОВАНИЕ'):'ИТОГИ'}</span><strong>${state.phase==='lobby'?'СОБИРАЕМ ИГРОКОВ':state.phase==='turn'?(mine?'ВАШ ХОД':escape(current?.name||'')):state.phase==='rps'?'ВЫБОР ЖЕСТА':state.phase==='tie_discussion'?'ОБСУДИТЕ КАНДИДАТОВ':state.phase==='vote'?(state.hasVoted?'ГОЛОС ПРИНЯТ':'ВЫБЕРИТЕ ИГРОКА'):'ИГРА ЗАВЕРШЕНА'}</strong></div>${deadline?`<span class="mobile-playbar-clock" data-deadline="${deadline}">${fmtTime(deadline)}</span>`:''}${state.phase==='turn'&&latest?.bot&&lastPublic!==undefined?`<div class="mobile-last-reveal"><span>${escape(latest.name)} открыл:</span> <strong>${escape(latestLabel)}</strong></div>`:''}${mobilePlayAction?`<div class="mobile-playbar-actions">${mobilePlayAction}</div>`:''}</nav>`;
  const aiPanel=state.aiMode&&state.phase!=='lobby'?`<section class="ai-chat-panel" aria-label="Чат с ИИ-ботами">
  <div class="ai-chat-heading"><span class="eyebrow">ЭКСПЕРИМЕНТ · GIGACHAT</span><h3>Обсуждение в бункере</h3><small>Лимит: до 30 ИИ-ответов за партию. Если API недоступен, отвечают обычные боты.</small></div>
+ ${state.phase==='turn'&&current?.bot&&state.host===me.id?
+ `<button type="button" class="secondary ai-bot-speak" data-action="ai-speak">🎙 Дать слово ${escape(current.name)}</button>`:''}
  <div class="ai-chat-history" role="log" aria-label="Сообщения участников">
  ${(state.aiChat||[]).length?state.aiChat.slice(-20).map(entry=>`<p class="${entry.bot?'ai-bot-message':''}"><strong>${escape(entry.name)}:</strong> ${escape(entry.text)}</p>`).join(''):'<p class="ai-chat-empty">Сообщений пока нет. Спроси ИИ-бота, почему он должен выжить.</p>'}</div>
  ${state.phase!=='finished'?`<div class="ai-chat-controls">
@@ -550,6 +552,18 @@ app.addEventListener('click',async e=>{const btn=e.target.closest('button');if(!
    }else{inviteOrigin=location.origin;inviteMdnsOrigin=null;}
    inviteOpen=true;render();
   }catch(e){toast(e.message);}
+  return;
+ }
+ if(action==='ai-speak'){
+  if(busy||!state?.aiMode||state.phase!=='turn')return;
+  const bot=state.players.find(p=>p.id===state.turn&&p.bot&&p.alive);
+  if(!bot)return;
+  busy=true;actionEpoch++;btn.disabled=true;
+  try{
+   const data=await api(`/api/rooms/${session.code}/ai-chat`,{message:'',botId:bot.id});
+   state=data;last=JSON.stringify(data);render();
+  }catch(err){toast(err.message);btn.disabled=false;}
+  finally{busy=false;}
   return;
  }
  if(action==='ai-send'){
