@@ -43,3 +43,15 @@ test('voting respects restricted candidates and never targets voter',()=>{
  assert.equal(chooseBotVote(room,bot,['doctor'],random),'doctor');
  assert.equal(chooseBotVote(room,bot,['bot'],random),null);
 });
+
+test('special swap target scores do not inspect a closed opponent card',()=>{
+ const bot={id:'bot',cards:{health:'Тяжелое заболевание'}};
+ const hidden={id:'hidden',cards:{health:'Здоров'},revealed:[]};
+ const visible={id:'visible',cards:{health:'Здоров'},revealed:['health']};
+ const local={...room,players:[bot,hidden,visible]};
+ const before=chooseBotSpecialTarget(local,bot,{effect:'swap',category:'health'},[hidden,visible],random).id;
+ hidden.cards.health='Тяжелое заболевание';
+ const after=chooseBotSpecialTarget(local,bot,{effect:'swap',category:'health'},[hidden,visible],random).id;
+ assert.equal(before,after);
+ assert.equal(after,'visible');
+});
