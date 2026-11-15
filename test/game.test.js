@@ -119,9 +119,11 @@ test('tie discussion expires automatically and revote timeout cannot deadlock',(
  assert.equal(r.phase,'rps');
  assert.equal(r.lastVote.abstained,8);
  assert.equal(r.players.filter(p=>!p.alive).length,0);
- const [first,second]=r.rps.candidates.map(id=>r.players.find(p=>p.id===id));
- act(r,first,'rps_move','rock');
- act(r,second,'rps_move','scissors');
+ const candidates=[...r.rps.candidates];
+ for(const [i,id] of candidates.entries()){
+  if(r.phase==='rps'&&!Object.hasOwn(r.rps.choices,id))
+   act(r,r.players.find(p=>p.id===id),'rps_move',i===0?'scissors':'rock');
+ }
  assert.equal(r.players.filter(p=>!p.alive).length,1);
  assert.equal(r.lastVote.revote,true);
 });
@@ -141,7 +143,8 @@ test('a solo host can complete a full test game, even after expulsion',()=>{
     act(r,host,'next');
    }else act(r,host,'bot_step');
   }else if(r.phase==='rps'){
-   for(const [i,id] of r.rps.candidates.entries())if(!Object.hasOwn(r.rps.choices,id))act(r,r.players.find(p=>p.id===id),'rps_move',i===0?'rock':'scissors');
+   const ids=[...r.rps.candidates];
+   for(const [i,id] of ids.entries())if(r.phase==='rps'&&!Object.hasOwn(r.rps.choices,id))act(r,r.players.find(p=>p.id===id),'rps_move',i===0?'scissors':'rock');
   }else if(!forcedExpulsion){
    for(const p of r.players.filter(p=>p.bot))act(r,p,'vote',host.id);
    act(r,host,'vote',r.players.find(p=>p.bot&&p.alive).id);
@@ -185,7 +188,10 @@ test('one human vote completes a solo test ballot with no bot action',()=>{
   act(r,host,'start_revote');
   act(r,host,'vote',r.revoteCandidates.find(id=>id!==host.id));
  }
- if(r.phase==='rps')for(const [i,id] of r.rps.candidates.entries())act(r,r.players.find(p=>p.id===id),'rps_move',i===0?'rock':'scissors');
+ if(r.phase==='rps'){
+  const ids=[...r.rps.candidates];
+  for(const [i,id] of ids.entries())if(r.phase==='rps'&&!Object.hasOwn(r.rps.choices,id))act(r,r.players.find(p=>p.id===id),'rps_move',i===0?'scissors':'rock');
+ }
  assert.equal(r.phase,'turn');assert.equal(r.players.filter(p=>p.alive).length,4);
  assert.equal(Object.values(r.lastVote.scores).reduce((a,b)=>a+b,0),5);
 });
