@@ -4,7 +4,7 @@ import { readFileSync, existsSync, statSync, createReadStream } from 'node:fs';
 import { createRoomStore } from './room-storage.js';
 import { createCloudRoomBackup } from './cloud-room-backup.js';
 import { createGigaChat } from './gigachat-client.js';
-import { buildBotPrompt, parseBotReply, aiFallback, validateBotClaim } from './ai-bot.js';
+import { buildBotPrompt, parseBotReply, aiFallback, validateBotClaim, isRepetitiveBotReply } from './ai-bot.js';
 import { fileURLToPath } from 'node:url';
 import { join as pathJoin } from 'node:path';
 import { randomInt, randomBytes } from 'node:crypto';
@@ -53,7 +53,7 @@ function startAutoBotSpeech(room){
   try{
    const raw=await gigaChat.generate(buildBotPrompt(room,bot,''));
    result=parseBotReply(raw,room,bot);
-   if(result&&!validateBotClaim(result.reply,room))result=null;
+   if(result&&(!validateBotClaim(result.reply,room)||isRepetitiveBotReply(room,bot,result.reply)))result=null;
   }catch(error){status=safeAiError(error);console.warn('GigaChat bot speech:',status);}
   finally{
    if(room.gameNumber===before.gameNumber&&room.round===before.round&&
@@ -258,7 +258,7 @@ export const server=http.createServer(async(req,res)=>{
      try{
       const raw=await gigaChat.generate(buildBotPrompt(room,bot,message));
       result=parseBotReply(raw,room,bot);
-   if(result&&!validateBotClaim(result.reply,room))result=null;
+   if(result&&(!validateBotClaim(result.reply,room)||isRepetitiveBotReply(room,bot,result.reply)))result=null;
      }catch(error){
       // Report only classified errors, never credentials or raw API responses.
       room.aiProviderStatus=safeAiError(error);
