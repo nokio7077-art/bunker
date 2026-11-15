@@ -2761,4 +2761,38 @@ body,button,input,select,textarea,.landing-shell,.game,#rules,#special-dialog{
 .landing-shell .apocalypse-footer .footer-contact a{font:600 clamp(13px,1.7vw,18px)/1.5 'IBM Plex Mono',monospace;color:#d7f65f;text-decoration:underline;text-underline-offset:5px;overflow-wrap:anywhere}
 .landing-shell .apocalypse-footer .footer-contact a:hover{color:#f3ffab}
 .landing-shell .apocalypse-footer .footer-contact a:focus-visible{outline:2px solid #d7f65f;outline-offset:4px}
-@media(max-width:720px){.landing-shell .hero{min-height:0;padding-bottom:8px}
+
+/* Keep the artwork as the opening screen; the form stays below it on phones. */
+@media(max-width:720px){
+ .landing-shell .hero{min-height:max(410px,calc(100svh - 140px));padding-bottom:0}
+}
+/* Compact, persistent three-column footer even on narrow screens. */
+.landing-shell>.landing-footer.apocalypse-footer{min-height:64px;padding:8px 12px}
+.landing-shell .apocalypse-footer .footer-layout{
+ display:grid;grid-template-columns:auto minmax(0,1fr) auto;
+ align-items:center;justify-content:center;gap:clamp(4px,1.5vw,16px);
+ width:100%;max-width:1180px
+}
+.landing-shell .apocalypse-footer .footer-symbols{
+ display:flex;flex-wrap:nowrap;gap:clamp(1px,.6vw,7px);
+ width:auto;min-width:0;max-width:none;padding:0
+}
+.landing-shell .apocalypse-footer .footer-symbols .apocalypse-symbol{
+ flex:0 0 auto;width:clamp(16px,3.5vw,38px);height:36px;
+ font-size:clamp(17px,3.2vw,30px)
+}
+.landing-shell .apocalypse-footer .footer-contact{
+ display:flex;flex-direction:column;align-items:center;gap:2px;
+ min-width:0;text-align:center;flex:none
+}
+.landing-shell .apocalypse-footer .footer-contact a{
+ font-size:clamp(9px,1.7vw,16px);
+ overflow-wrap:anywhere;word-break:normal
+}
+@media(max-width:480px){
+ .landing-shell>.landing-footer.apocalypse-footer{min-height:54px;padding:6px 5px}
+ .landing-shell .apocalypse-footer .footer-layout{gap:3px}
+ .landing-shell .apocalypse-footer .footer-contact-label{font-size:8px;letter-spacing:.4px}
+ .landing-shell .apocalypse-footer .footer-contact a{font-size:clamp(9px,2.6vw,12px)}
+ .landing-shell .apocalypse-footer .footer-symbols .apocalypse-symbol{width:17px;height:30px;font-size:18px}
+}
