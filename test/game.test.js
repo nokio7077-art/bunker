@@ -96,9 +96,17 @@ test('repeat vote tie triggers private su-e-fa until a clear loser emerges',()=>
  act(r,second,'rps_move','rock');
  assert.equal(r.phase,'rps');
  assert.equal(r.rps.round,2,'identical gestures repeat');
+ assert.equal(view(r,observer).rpsReveal.draw,true);
+ assert.deepEqual(Object.values(view(r,observer).rpsReveal.moves),['rock','rock']);
+ const drawId=r.rpsReveal.id;
  act(r,first,'rps_move','rock');
  act(r,second,'rps_move','scissors');
  assert.equal(r.phase,'turn');
+ assert.notEqual(r.rpsReveal.id,drawId);
+ assert.equal(view(r,observer).rpsReveal.draw,false);
+ assert.equal(view(r,observer).rpsReveal.moves[first.id],'rock');
+ assert.equal(view(r,observer).rpsReveal.moves[second.id],'scissors');
+ assert.deepEqual(view(r,observer).rpsReveal.losers,[second.id]);
  assert.equal(r.lastVote.eliminated,second.id);
  assert.equal(r.eliminationNotice.name,second.name);
  assert.equal(r.eliminationNotice.votes,4);
