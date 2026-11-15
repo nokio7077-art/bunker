@@ -232,8 +232,8 @@ test('bot cannot claim a particular number of ballots without stored records',()
  const host=player('Ольга'),room=createRoom('777111',host);
  act(room,host,'start_ai_test');
  const bot=room.players.find(p=>p.bot);
- assert.match(explainOwnBotVote(room,bot,'За кого ты проголосовал в прошлом круге?'),/нет сохранённой записи/);
- assert.match(explainOwnBotVote(room,bot,'Почему ты проголосовал именно за этого игрока?'),/нет сохранённой записи/);
+ assert.match(explainOwnBotVote(room,bot,'За кого ты проголосовал в прошлом круге?'),/нет подтверждённой записи/);
+ assert.match(explainOwnBotVote(room,bot,'Почему ты проголосовал именно за этого игрока?'),/нет подтверждённой записи/);
 });
 test('fixed rules and eliminated status get grounded answers without model fallback',()=>{
  const host=player('Ольга'),room=createRoom('777111',host);
