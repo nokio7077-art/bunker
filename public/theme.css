@@ -2620,3 +2620,48 @@ body,button,input,select,textarea,.landing-shell,.game,#rules,#special-dialog{
  .bunker-intro .bunker-card-content-list li{font-size:clamp(10px,2.65cqw,12px);line-height:1.27}
  .bunker-intro .bunker-card-contents--compact .bunker-card-content-list li,.bunker-intro .bunker-card-contents--dense .bunker-card-content-list li{font-size:10px;line-height:1.2}
 }
+
+/* Final bunker-card polish: subtitle kept below the top rule, inventory aligned
+   safely past the left decorated edge, and genuinely scrollable unabridged copy. */
+.bunker-intro .bunker-card-type{
+ top:21%;height:2.55%;left:19%;width:62%;
+ font-family:'IBM Plex Mono',monospace;font-weight:600;
+ font-size:clamp(10px,2.6cqw,16px);line-height:1.2;
+ display:flex;align-items:center;justify-content:center;
+ overflow:hidden;text-align:center;
+}
+.bunker-intro .bunker-card-contents h2{
+ font-family:BunkerDisplay,'Russo One',sans-serif;
+ letter-spacing:-.035em;font-weight:400;
+}
+.bunker-intro .bunker-card-content-list{
+ padding:7px 5% 12px 7.5%;
+ overflow-y:auto;overflow-x:hidden;
+ scrollbar-gutter:stable;scrollbar-width:thin;
+ scrollbar-color:#dcef22 #071207;
+ overscroll-behavior:contain;-webkit-overflow-scrolling:touch;
+}
+.bunker-intro .bunker-card-content-list ul{
+ padding-left:1.25em;gap:6px;
+}
+.bunker-intro .bunker-card-content-list li,.bunker-intro .bunker-card-content-list p{
+ font-family:'IBM Plex Mono',monospace;font-weight:500;
+ font-size:clamp(11px,2.6cqw,16px);line-height:1.46;
+ letter-spacing:-.012em;color:#eafc58;
+}
+.bunker-intro .bunker-card-contents--compact .bunker-card-content-list ul,
+.bunker-intro .bunker-card-contents--dense .bunker-card-content-list ul{gap:5px}
+.bunker-intro .bunker-card-contents--compact .bunker-card-content-list li,
+.bunker-intro .bunker-card-contents--dense .bunker-card-content-list li{
+ font-size:clamp(11px,2.45cqw,15px);line-height:1.4;
+}
+@media(max-width:480px){
+ .bunker-intro .bunker-card-type{top:21%;height:2.65%;font-size:clamp(9px,2.5cqw,12px)}
+ .bunker-intro .bunker-card-content-list{padding:5px 5% 10px 7.5%}
+ .bunker-intro .bunker-card-content-list ul{gap:5px}
+ .bunker-intro .bunker-card-content-list li,
+ .bunker-intro .bunker-card-contents--compact .bunker-card-content-list li,
+ .bunker-intro .bunker-card-contents--dense .bunker-card-content-list li{
+  font-size:clamp(10px,2.6cqw,13px);line-height:1.43;
+ }
+}
