@@ -7,6 +7,18 @@ import { applySpecial } from './special-actions.js';
 import { specialCard } from './special-cards.js';
 export { categories };
 const pick = a => a[randomInt(a.length)];
+// Independently randomize who draws first for each category.
+const shuffledIndices = length => {
+ const order=Array.from({length},(_,i)=>i);
+ for(let i=order.length-1;i>0;i--){const j=randomInt(i+1);[order[i],order[j]]=[order[j],order[i]];}
+ return order;
+};
+const freshPick = (eligible,seen) => {
+ const unused=eligible.filter(value=>!seen.has(value));
+ return pick(unused.length?unused:eligible);
+};
+const recordedHistory = room => room.dealHistory&&typeof room.dealHistory==='object'?room.dealHistory:{};
+
 const id = () => randomBytes(18).toString('hex');
 const check = (ok, message) => { if (!ok) throw new Error(message); };
 export const firstVoteRound = n => Math.max(1, 9 - n);
@@ -32,13 +44,15 @@ export function join(room, p) {
 }
 // Prepare the entire starting state off-room. No mutation is committed until every
 // character has a valid, complete hand and a compatible disaster/bunker exists.
-function prepareStart(players) {
+function prepareStart(players,history={}) {
  const capacity=Math.floor(players.length/2);
- const {disaster,bunker}=chooseWorld(capacity);
+ const {disaster,bunker}=chooseWorld(capacity,randomInt,{disasters:history.disasters,bunkers:history.bunkers});
  const pools=Object.fromEntries(Object.entries(decks).map(([key,values])=>[key,[...values]]));
- const hands=players.map(()=>{
-  const cards={biology:createBiologyCard()};
-  for(const [key,pool] of Object.entries(pools)){
+ const hands=players.map(()=>({biology:createBiologyCard()}));
+ for(const [key,pool] of Object.entries(pools)){
+  const seen=new Set(history[key]||[]);
+  for(const index of shuffledIndices(players.length)){
+   const cards=hands[index];
    let eligible=pool.filter(name=>eligibleCard(key,name,cards.biology,disaster));
    if(key==='health'){
     const wantHealthy=randomInt(4)===0;
@@ -46,13 +60,12 @@ function prepareStart(players) {
     if(preferred.length)eligible=preferred;
    }
    if(!eligible.length)throw new Error(`Недостаточно подходящих карточек: ${key}`);
-   const name=pick(eligible);
+   const name=freshPick(eligible,seen);
    cards[key]=name;
    pool.splice(pool.indexOf(name),1);
   }
-  check(Object.keys(cards).length===Object.keys(decks).length+1,'Раздача карточек неполная.');
-  return cards;
- });
+ }
+ for(const cards of hands)check(Object.keys(cards).length===Object.keys(decks).length+1,'Раздача карточек неполная.');
  return {capacity,firstVote:firstVoteRound(players.length),disaster,bunker,hands};
 }
 function commitStart(room,players,prepared,testMode=false){
@@ -61,6 +74,14 @@ function commitStart(room,players,prepared,testMode=false){
  for(let i=0;i<players.length;i++)players[i].cards=prepared.hands[i];
  room.capacity=prepared.capacity;room.firstVote=prepared.firstVote;
  room.disaster=prepared.disaster;room.bunker=prepared.bunker;
+ // Successful deals only: persisted server-side across the room's games.
+ const history=recordedHistory(room);
+ for(const [key,values] of Object.entries(decks)){
+  history[key]=[...new Set([...(history[key]||[]),...prepared.hands.map(hand=>hand[key])])].filter(name=>values.includes(name));
+ }
+ history.disasters=[...new Set([...(history.disasters||[]),prepared.disaster.id])];
+ history.bunkers=[...new Set([...(history.bunkers||[]),prepared.bunker.id])];
+ room.dealHistory=history;
  if(testMode)room.testMode=true;
  room.phase='turn';room.round=1;room.turn=players[0].id;
  room.opened=false;room.turnDeadline=Date.now()+TURN_TIMEOUT_MS;
@@ -96,7 +117,7 @@ export function act(room, p, action, value) {
   const index=room.players.findIndex(x=>x.id===next.id),players=[...room.players.slice(index),...room.players.slice(0,index)];
   const gameNumber=(room.gameNumber||1)+1,testMode=room.testMode;
   for(const person of players){person.alive=true;person.cards={};person.revealed=[];delete person.specialUsed;}
-  const fresh={...createRoom(room.code,next),players,gameNumber};if(testMode)fresh.testMode=true;
+  const fresh={...createRoom(room.code,next),players,gameNumber,dealHistory:recordedHistory(room)};if(testMode)fresh.testMode=true;
   for(const key of Object.keys(room))delete room[key];Object.assign(room,fresh);
   room.log.push(`Партия ${gameNumber}. Ведущий и первое слово: ${next.name}.`);
   } else if (action === 'transfer_host') {
@@ -116,7 +137,7 @@ export function act(room, p, action, value) {
    if(participants.some(x=>x.name.toLowerCase()===name.toLowerCase()))continue;
    const bot=player(name);bot.bot=true;participants.push(bot);
   }
-  const prepared=prepareStart(participants);
+  const prepared=prepareStart(participants,recordedHistory(room));
   commitStart(room,participants,prepared,true);
   room.log.push('Тестовая партия: ведущий запускает ходы ботов, их голоса поступают автоматически после голосов всех людей.');
  } else if (action === 'bot_step') {
@@ -139,7 +160,7 @@ export function act(room, p, action, value) {
  } else if (action === 'start') {
   check(room.host === p.id && room.phase === 'lobby', 'Только ведущий может начать игру.');
   check(room.players.length >= 5 && room.players.length <= 16, 'Для игры нужно от 5 до 16 участников.');
-  const prepared=prepareStart(room.players);
+  const prepared=prepareStart(room.players,recordedHistory(room));
   commitStart(room,room.players,prepared);
  } else if (action === 'use_special') {
   applySpecial(room, p, value);
