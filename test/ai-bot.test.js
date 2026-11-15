@@ -140,7 +140,7 @@ test('never show malformed model JSON as a spoken bot message',()=>{
  act(room,host,'start_ai_test');
  const bot=room.players.find(p=>p.bot);
  assert.equal(parseBotReply('{"reply":"Я голосую за исключение',room,bot),null);
- assert.equal(parseBotReply('\\`\\`\\`json\\n{"reply":"Недописанная',room,bot),null);
+ assert.equal(parseBotReply('```json\n{"reply":"Недописанная',room,bot),null);
  const valid=parseBotReply('{"reply":"Предлагаю обсудить ситуацию.","voteForId":null}',room,bot);
  assert.equal(valid.reply,'Предлагаю обсудить ситуацию.');
 });
