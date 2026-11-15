@@ -14,10 +14,6 @@ const shuffledIndices = length => {
  for(let i=order.length-1;i>0;i--){const j=randomInt(i+1);[order[i],order[j]]=[order[j],order[i]];}
  return order;
 };
-const freshPick = (eligible,seen) => {
- const unused=eligible.filter(value=>!seen.has(value));
- return pick(unused.length?unused:eligible);
-};
 const recordedHistory = room => room.dealHistory&&typeof room.dealHistory==='object'?room.dealHistory:{};
 
 const id = () => randomBytes(18).toString('hex');
@@ -55,13 +51,20 @@ function prepareStart(players,history={}) {
   for(const index of shuffledIndices(players.length)){
    const cards=hands[index];
    let eligible=pool.filter(name=>eligibleCard(key,name,cards.biology,disaster));
+   if(!eligible.length)throw new Error(`Недостаточно подходящих карточек: ${key}`);
+   // Previously the health preference ran BEFORE the unseen-card filter.
+   // With only a few "healthy" entries this could repeat a previous game's
+   // health card despite many unseen eligible alternatives in the deck.
+   // Freshness takes precedence; the 1-in-4 preference applies only within
+   // the currently available freshness tier.
+   const unused=eligible.filter(name=>!seen.has(name));
+   let candidates=unused.length?unused:eligible;
    if(key==='health'){
     const wantHealthy=randomInt(4)===0;
-    const preferred=eligible.filter(name=>healthyCard(name)===wantHealthy);
-    if(preferred.length)eligible=preferred;
+    const preferred=candidates.filter(name=>healthyCard(name)===wantHealthy);
+    if(preferred.length)candidates=preferred;
    }
-   if(!eligible.length)throw new Error(`Недостаточно подходящих карточек: ${key}`);
-   const name=freshPick(eligible,seen);
+   const name=pick(candidates);
    cards[key]=name;
    pool.splice(pool.indexOf(name),1);
   }

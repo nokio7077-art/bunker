@@ -388,6 +388,22 @@ test('two consecutive company games prioritize cards not previously dealt',()=>{
  assert.notEqual(r.bunker.id,originalBunker);
  assert.equal(r.dealHistory.profession.length,10);
 });
+test('health freshness remains stable across repeated back-to-back parties',()=>{
+ // Regression: the small healthy subset must not override unseen eligible
+ // cards from the previous game. Repeat with fresh randomized demographics.
+ for(let trial=0;trial<40;trial++){
+  const room=setup(5);
+  act(room,room.players[0],'start');
+  const first=new Set(room.players.map(p=>p.cards.health));
+  room.phase='finished';
+  act(room,room.players[0],'next_game');
+  act(room,room.players[0],'start');
+  const second=room.players.map(p=>p.cards.health);
+  assert.equal(new Set(second).size,5,'within-game health cards unique');
+  assert.ok(second.every(value=>!first.has(value)),
+   'health should prefer unused eligible cards (trial '+trial+')');
+ }
+});
 test('deal history survives room serialization without leaking through player views',()=>{
  const r=setup(5);act(r,r.players[0],'start');
  const restored=structuredClone(r);
