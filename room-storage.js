@@ -13,7 +13,7 @@ function validate(data){
   if(typeof code!=='string'||!/^[0-9]{6}$/.test(code)||seen.has(code)||
     !room||typeof room!=='object'||room.code!==code||
     !Array.isArray(room.players)||!room.players.length||
-    !['lobby','turn','vote','tie_discussion','finished'].includes(room.phase))
+    !['lobby','turn','vote','tie_discussion','rps','finished'].includes(room.phase))
    throw new Error('Повреждено сохранение комнаты.');
   seen.add(code);
  }
