@@ -2928,3 +2928,15 @@ body,button,input,select,textarea,.landing-shell,.game,#rules,#special-dialog{
   object-fit:fill;object-position:center top;
  }
 }
+
+/* Public cards in the current-speaker panel: description closed by default.
+   Preserve the existing private-dossier disclosure styles and actions. */
+.game .active-dossier .dossier-public-card{position:relative;padding-bottom:8px}
+.game .active-dossier .dossier-public-card .dossier-card-content{padding-right:36px}
+.game .active-dossier .dossier-public-card .card-detail>summary,
+.game .active-dossier .dossier-public-card .card-detail[open]>summary{
+ top:auto;bottom:10px;right:7px;
+}
+.game .active-dossier .dossier-public-card .card-detail[open]>p{
+ margin-top:8px;
+}
