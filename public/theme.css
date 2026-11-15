@@ -2909,18 +2909,22 @@ body,button,input,select,textarea,.landing-shell,.game,#rules,#special-dialog{
  }
 }
 
-/* Desktop: keep the full moving scene visible (skull included), but
-   fill the side letterbox space with a cropped copy of the SAME poster.
-   No black/empty columns and no additional video zoom. */
+/* Desktop: ONE full-width, uncropped entrance frame.
+   Match poster and video to natural 16:9 geometry; never use a cropped
+   poster behind a letterboxed video or stretch the video to hero height. */
 @media(min-width:861px){
+ .landing-shell>.landing{
+  min-height:max(680px,56.25vw);
+ }
  .landing-shell .landing::before{
-  background-size:cover;
+  background-size:100% auto;
   background-position:center top;
   background-repeat:no-repeat;
  }
  .landing-shell .landing-video{
-  left:0;top:0;right:auto;bottom:auto;
-  width:100%;max-width:none;height:100%;
-  object-fit:contain;object-position:center top;
+  display:block;left:0;top:0;right:auto;bottom:auto;
+  width:100%;max-width:none;height:auto;
+  aspect-ratio:16 / 9;
+  object-fit:fill;object-position:center top;
  }
 }
