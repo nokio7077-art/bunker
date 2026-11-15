@@ -24,7 +24,8 @@ test('discard is public without leaking the former value, one-use, and not a nor
  unchanged(room,()=>act(room,host,'use_special',{targetId:host.id}));
  unchanged(room,()=>act(room,host,'next'));
  act(room,host,'reveal','profession');act(room,host,'next');
- assert.ok(guest.revealed.includes('profession'),'bot automatically reveals profession before handing off');
+ assert.equal(room.turn,guest.id);
+ assert.ok(guest.revealed.includes('profession'),'bot opens its card on turn entry');
 });
 
 test('invalid targets, phases, turn owners and empty slots never consume an action',()=>{
