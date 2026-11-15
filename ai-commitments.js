@@ -1,9 +1,12 @@
 // Public-information commitments must survive chat turns and be respected at
 // voting time. No model is allowed to write the vote itself.
 export function publicEvidenceFingerprint(room,player){
- const open=Object.fromEntries((player.revealed||[]).filter(k=>k!=='special')
-  .map(k=>[k,player.cards?.[k]??null]));
- return JSON.stringify({open,disaster:room.disaster?.id,bunker:room.bunker?.id});
+ const publicTeam=(room.players||[]).filter(p=>p.alive).map(p=>({
+  id:p.id,opened:Object.fromEntries((p.revealed||[]).filter(k=>k!=='special')
+   .map(k=>[k,p.cards?.[k]??null]))
+ }));
+ return JSON.stringify({targetId:player.id,publicTeam,
+  disaster:room.disaster?.id,bunker:room.bunker?.id});
 }
 export function rememberBotEndorsements(room,bot,result){
  if(!room.aiMode||!bot?.bot||!result?.reply)return;
