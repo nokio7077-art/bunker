@@ -1,6 +1,7 @@
 import http from 'node:http';
 import { getLocalIpv4, startLocalMdns } from './local-network.js';
-import { readFileSync, mkdirSync, writeFileSync, renameSync, existsSync, statSync, createReadStream } from 'node:fs';
+import { readFileSync, existsSync, statSync, createReadStream } from 'node:fs';
+import { createRoomStore } from './room-storage.js';
 import { fileURLToPath } from 'node:url';
 import { join as pathJoin } from 'node:path';
 import { randomInt, randomBytes } from 'node:crypto';
@@ -11,9 +12,8 @@ import { disasters as canonicalDisasters } from './world.js';
 
 const root = fileURLToPath(new URL('.', import.meta.url));
 const dataDir = process.env.DATA_DIR || pathJoin(root,'.data');
-mkdirSync(dataDir,{recursive:true,mode:0o700});
-const file=pathJoin(dataDir,'rooms.json');
-const rooms=new Map(existsSync(file) ? JSON.parse(readFileSync(file,'utf8')) : []);
+const store=createRoomStore(dataDir);
+const rooms=store.load();
 // Existing rooms predate the explicit idle clock; preserve their last real event.
 for(const room of rooms.values())if(!room.lastActivityAt)room.lastActivityAt=room.updated||Date.now();
 // On deployment, clamp previously issued five-minute turns to the new 3:16 maximum.
@@ -30,7 +30,7 @@ for(const room of rooms.values()){
     ? 'Запасы покрывают первые 90 суток обязательной изоляции.' : note);
  }
 }
-const save=()=>{writeFileSync(file+'.tmp',JSON.stringify([...rooms]),{mode:0o600});renameSync(file+'.tmp',file);};
+const save=()=>store.save(rooms);
 // Idle room expiration depends on actual player activity, not automatic timer actions.
 const IDLE_LOBBY_MS=24*60*60*1000,IDLE_FINISHED_MS=24*60*60*1000,IDLE_GAME_MS=72*60*60*1000;
 function cleanupRooms(now=Date.now()){
