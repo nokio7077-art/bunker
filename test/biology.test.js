@@ -45,7 +45,9 @@ test('new biology is dealt to real players and bots, stays private until reveale
  }
  assert.equal(view(room,guest).players[0].cards.biology, undefined);
  for (const p of [host,guest]) { act(room,p,'reveal','profession'); act(room,p,'next'); }
- assert.equal(room.botReveals.items.length,3);
+ assert.equal(room.turn,room.players[2].id);
+ assert.ok(room.players[2].revealed.includes('profession'));
+ for(let i=2;i<room.players.length;i++)act(room,host,'bot_step');
  assert.equal(room.turn,host.id);
  act(room,host,'reveal','biology');
  assert.equal(view(room,guest).players[0].cards.biology, host.cards.biology);
