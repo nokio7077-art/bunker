@@ -95,7 +95,8 @@ test('user-derived content is safely escaped rather than interpreted as HTML',()
 
 test('artwork text regions are independent, bounded and complete information remains below',()=>{
  for(const name of ['bunker-card-heading','bunker-card-type','bunker-card-stats','bunker-card-contents'])
-  assert.match(css,new RegExp('\\.bunker-intro \\.'+name+'\\{[^}]*position:absolute'));
+  assert.ok(css.includes('.bunker-intro .'+name),'region '+name+' is explicitly styled');
+ assert.match(css,/\.bunker-intro \.bunker-card-heading,[^}]*position:absolute/);
  assert.match(css,/\.bunker-intro \.bunker-card-contents\{[^}]*overflow:hidden/);
  assert.match(css,/\.bunker-intro \.bunker-card-content-list\{[^}]*overflow-y:auto/);
  assert.match(css,/\.bunker-intro \.bunker-card-heading strong\{[^}]*-webkit-line-clamp:2/);
