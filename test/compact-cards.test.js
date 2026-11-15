@@ -79,3 +79,14 @@ test('active player appears in the lower dossier only; bot explanation belongs i
  assert.match(source,/Для перехода к следующему боту нажмите/);
  assert.match(source,/id="active-dossier"/);
 });
+
+test('mobile badge positioning uses one authoritative grid layout with no later column override',()=>{
+ const marker='/* Mobile dossier layout — single authoritative rule set.';
+ const final=styles.slice(styles.indexOf(marker));
+ assert.ok(final.startsWith(marker),'single definitive mobile layout exists');
+ assert.match(final,/grid-template-columns:minmax\(0,1fr\) max-content/);
+ assert.match(final,/grid-column:2;grid-row:1/);
+ assert.match(final,/align-self:start/);
+ assert.doesNotMatch(final,/flex-direction:column;align-items:stretch/);
+ assert.doesNotMatch(final,/\.dossier-card-status\{[^}]*align-self:flex-end/);
+});
