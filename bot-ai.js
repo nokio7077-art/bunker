@@ -97,7 +97,7 @@ export function chooseBotVote(room,bot,candidates,random=randomInt){
  const eligible=room.players.filter(p=>p.id!==bot.id&&candidates.includes(p.id));
  if(!eligible.length)return null;
  // Favor removal of the weakest publicly-known survival profile.
- return noisyBest(eligible,p=>-(publicSurvivalScore(p,room.disaster)+teamSkillContribution(room,p,bot)*1.65),random)?.id||null;
+ return noisyBest(eligible,p=>-(publicSurvivalScore(p,room.disaster)+teamSkillContribution(room,p,bot)*3),random)?.id||null;
 }
 export function chooseBotReveal(room,bot,available,random=randomInt){
  if(room.round===1&&available.includes('profession'))return 'profession';
