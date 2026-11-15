@@ -26,7 +26,7 @@ test('only the exact uploaded blank card is used, optimized and served safely',(
  assert.match(server,/binaryAssets\.set\('\/images\/bunkers\/bunker-blank-layout\.webp'/);
  assert.match(css,/background:url\('\/images\/bunkers\/bunker-blank-layout\.webp'\)/);
  assert.match(css,/aspect-ratio:982\/1602/);
- assert.match(html,/bunker-json-overlay-v13/);
+ assert.match(html,/bunker-equipment-v14/);
  assert.ok(!app.slice(start,end).includes('bunkerVariant('));
 });
 
@@ -37,12 +37,12 @@ test('the live room capacity and actual JSON measurements populate the four artw
  for(const v of [state.bunker.area_sqm+' м²',state.bunker.depth_m+' м',state.bunker.food_days+' сут.'])
   assert.ok(card.includes(escape(v)),v);
  assert.equal((card.match(/class="bunker-card-stat"/g)||[]).length,4);
- assert.match(card,/class="bunker-card-contents"/);
+ assert.match(card,/class="bunker-card-contents bunker-card-contents--(?:regular|compact|dense)"/);
  assert.match(card,/data-action="bunker-continue"/);
  assert.match(card,/Го!лучше так чем в подвале умирать/);
 });
 
-test('every one of the 81 real JSON bunkers keeps all equipment, threats and detailed resources',()=>{
+test('every one of the 81 real JSON bunkers keeps all equipment on the card and detailed resources below',()=>{
  assert.equal(bunkers.length,81);
  for(const bunker of bunkers){
   const copy=structuredClone(bunker);
@@ -57,10 +57,11 @@ test('every one of the 81 real JSON bunkers keeps all equipment, threats and det
    assert.ok(pane.includes(escape(item)),bunker.name+' missing equipment '+item);
   }
   const details=card.slice(card.indexOf('<details class="bunker-intro-details">'));
-  for(const item of [...Object.values(bunker.resources),...bunker.threats]){
+  for(const item of Object.values(bunker.resources)){
    assert.ok(details.includes(escape(item)),bunker.name+' missing details '+item);
   }
   assert.match(card,/class="bunker-card-content-list" role="region"/);
+  assert.ok(!card.includes('<h2>Угрозы и ограничения</h2>'),'No threats in bunker presentation');
   assert.match(card,/tabindex="0"/);
  }
  state.bunker=structuredClone(bunkers[0]);state.bunker.capacity=3;
@@ -100,7 +101,8 @@ test('artwork text regions are independent, bounded and complete information rem
  assert.match(css,/\.bunker-intro \.bunker-card-contents\{[^}]*overflow:hidden/);
  assert.match(css,/\.bunker-intro \.bunker-card-content-list\{[^}]*overflow-y:auto/);
  assert.match(css,/\.bunker-intro \.bunker-card-heading strong\{[^}]*-webkit-line-clamp:2/);
- assert.match(context.bunkerIntro(),/Все сведения и угрозы/);
+ assert.match(context.bunkerIntro(),/Описание и запасы/);
+ assert.match(css,/\.bunker-intro \.bunker-card-content-list\{[^}]*overflow-y:auto/);
 });
 
 test('the bunker continue button uses the same visual treatment as the disaster button',()=>{
@@ -108,4 +110,18 @@ test('the bunker continue button uses the same visual treatment as the disaster 
  assert.match(card,/class="bunker-intro disaster-intro--art"/);
  assert.match(card,/class="primary intro-next" data-action="bunker-continue"/);
  assert.match(css,/\.bunker-intro \.bunker-intro-footer \.intro-next\{[^}]*border:2px solid #b5e527/);
+});
+
+test('full equipment list stays visible in card markup even for long inventories',()=>{
+ const original=state.bunker;
+ state.bunker={...original,equipment:Array.from({length:15},(_,i)=>'Оборудование '+i+' — '+('очень длинное название '.repeat(5))),threats:['Тайная угроза']};
+ const card=context.bunkerIntro();
+ const area=card.slice(card.indexOf('<section class="bunker-card-contents'),card.indexOf('</section></article>'));
+ for(const item of state.bunker.equipment)assert.ok(area.includes(escape(item)),item);
+ assert.match(area,/bunker-card-contents--dense/);
+ assert.match(card,/Описание и запасы/);
+ assert.ok(!card.includes('Тайная угроза'));
+ assert.ok(!card.includes('Угрозы и ограничения'));
+ assert.match(css,/\.bunker-intro \.bunker-card-contents--dense \.bunker-card-content-list li/);
+ state.bunker=original;
 });
