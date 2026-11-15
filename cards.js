@@ -2,7 +2,7 @@ import { professions } from './professions.js';
 import { catalog } from './card-catalog.js';
 export { disasters, bunkers } from './world.js';
 
-export const categories = { profession: 'Профессия', personality: 'Характер', biology: 'Биология', health: 'Здоровье', phobia: 'Фобия', luggage: 'Багаж', hobby: 'Хобби', interesting: 'Интересный факт', special: 'Особые условия' };
+export const categories = { profession: 'Профессия', personality: 'Характер', biology: 'Биология', health: 'Здоровье', phobia: 'Фобия', luggage: 'Багаж', hobby: 'Хобби', interesting: 'Фан Факт', special: 'Особые условия' };
 // Catalogs are curated from user-provided lists; specials have server-validated effects.
 export const decks = {
  profession: professions,
