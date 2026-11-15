@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {player,createRoom,join,act,view} from '../game.js';
-import {buildBotPrompt,parseBotReply,aiFallback,validateBotClaim,isRepetitiveBotReply,explainOwnBotVote} from '../ai-bot.js';
+import {buildBotPrompt,parseBotReply,aiFallback,validateBotClaim,isRepetitiveBotReply,explainOwnBotVote,explainFixedGameRule} from '../ai-bot.js';
 
 test('AI test mode opt-in preserves all normal test controls',()=>{
  const host=player('Ведущий'),room=createRoom('432987',host);
@@ -211,4 +211,37 @@ test('a bot action records the true ballot without leaking it to other players',
  assert.ok(!JSON.stringify(view(room,host)).includes('aiBotVoteHistory'));
  const prompt=JSON.parse(buildBotPrompt(room,bot,'')[1].content);
  assert.deepEqual(prompt.ownConfirmedVotes,[],'pending vote must remain private until ballot resolves');
+});
+
+test('generic self-vote question uses private confirmed ballot, not free-form AI',()=>{
+ const host=player('Ольга'),room=createRoom('777111',host);
+ act(room,host,'start_ai_test');
+ const bot=room.players.find(p=>p.bot),other=room.players.find(p=>p.bot&&p.id!==bot.id);
+ room.round=2;
+ room.aiBotVoteHistory={[bot.id]:[{round:1,targetId:host.id,revote:false},{round:1,targetId:other.id,revote:true}]};
+ const answer=explainOwnBotVote(room,bot,'За кого ты действительно проголосовал в прошлом круге?');
+ assert.match(answer,/Ольга/);
+ assert.match(answer,/переголосование/);
+ assert.match(answer,/Бот/);
+ const reasons=explainOwnBotVote(room,bot,'Почему ты проголосовал именно за этого игрока?');
+ assert.match(reasons,/точную причину.*не сохраняли/i);
+ const unrelated=explainOwnBotVote(room,bot,'Какие ресурсы нужны для холодной зимы?');
+ assert.equal(unrelated,null);
+});
+test('bot cannot claim a particular number of ballots without stored records',()=>{
+ const host=player('Ольга'),room=createRoom('777111',host);
+ act(room,host,'start_ai_test');
+ const bot=room.players.find(p=>p.bot);
+ assert.match(explainOwnBotVote(room,bot,'За кого ты проголосовал в прошлом круге?'),/нет сохранённой записи/);
+ assert.match(explainOwnBotVote(room,bot,'Почему ты проголосовал именно за этого игрока?'),/нет сохранённой записи/);
+});
+test('fixed rules and eliminated status get grounded answers without model fallback',()=>{
+ const host=player('Ольга'),room=createRoom('777111',host);
+ act(room,host,'start_ai_test');
+ const target=room.players.find(p=>p.bot);
+ assert.match(explainFixedGameRule(room,'Можем ли мы вернуть ранее исключённого участника?'),/Нет/);
+ assert.match(explainFixedGameRule(room,'Я утверждаю, что мы исключили '+target.name+'. Это правда?'),/не исключали/);
+ target.alive=false;
+ assert.match(explainFixedGameRule(room,'Я утверждаю, что мы исключили '+target.name+'. Это правда?'),/уже исключён/);
+ assert.equal(explainFixedGameRule(room,'Что думаешь о складах?'),null);
 });
