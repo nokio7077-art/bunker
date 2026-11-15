@@ -19,7 +19,7 @@ test('discard is public without leaking the former value, one-use, and not a nor
  assert.equal(guest.cards.health,null);assert.ok(guest.revealed.includes('health'));
  assert.equal(room.opened,false);assert.equal(host.specialUsed,true);
  assert.deepEqual(Object.keys(view(room,host).players[1].cards),['health']);
- assert.ok(!room.log.join(' ').includes(previous));
+ assert.ok(room.log.join(' ').includes(previous),'already revealed opponent card may be mentioned publicly');
  assert.equal(view(room,guest).players[0].cards.special,'Сброс здоровья');
  unchanged(room,()=>act(room,host,'use_special',{targetId:host.id}));
  unchanged(room,()=>act(room,host,'next'));
@@ -278,7 +278,10 @@ test('during tie discussion all surviving players can use their own unused speci
  // Players expelled earlier may still vote, but cannot use specials in discussion.
  const out=room.players[2];out.alive=false;
  unchanged(room,()=>act(room,out,'use_special',{targetId:host.id}));
- // The host may use their own remaining special in the same discussion.
+ // The host may use their own remaining special in the same discussion;
+ // a hidden card belonging to another player still cannot be discarded.
+ unchanged(room,()=>act(room,host,'use_special',{targetId:guest.id}));
+ guest.revealed.push('health');
  act(room,host,'use_special',{targetId:guest.id});
  assert.equal(room.specialEvents.length,2);
 });
