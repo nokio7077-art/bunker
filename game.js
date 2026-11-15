@@ -133,7 +133,7 @@ export function act(room, p, action, value) {
   check(target && target.id !== p.id, 'Выберите другого участника (не бота).');
   room.host = target.id;
   room.log.push(`Ведущий теперь ${target.name}.`);
- } else if (action === 'start_test') {
+ } else if (action === 'start_test' || action === 'start_ai_test') {
   check(room.host === p.id && room.phase === 'lobby', 'Тестовую игру запускает ведущий до начала партии.');
   check(room.players.length < 5, 'В комнате уже достаточно участников для обычной игры.');
   // Bots are staged locally: failed dealing leaves the lobby and its humans intact.
@@ -146,7 +146,16 @@ export function act(room, p, action, value) {
   }
   const prepared=prepareStart(participants,recordedHistory(room));
   commitStart(room,participants,prepared,true);
-  room.log.push('Тестовая партия: ведущий запускает ходы ботов, их голоса поступают автоматически после голосов всех людей.');
+  if(action==='start_ai_test'){
+   room.aiMode=true;
+   room.aiChat=[];
+   participants.filter(x=>x.bot).forEach((bot,index)=>{
+    bot.aiPersonality=['прагматичный, прямолинейный','дипломатичный и вежливый',
+     'скептичный и осторожный','смелый и находчивый'][index%4];
+   });
+  }
+  room.log.push(room.aiMode?'Тестовая игра с ИИ-персонажами: чат включён, решения проверяются правилами.':
+   'Тестовая партия: ведущий запускает ходы ботов, их голоса поступают автоматически после голосов всех людей.');
  } else if (action === 'bot_step') {
   check(room.testMode && room.host === p.id && room.phase === 'turn', 'Управление ботами доступно ведущему в тестовой партии.');
   const bot=room.players.find(x=>x.id===room.turn);
@@ -169,7 +178,11 @@ export function act(room, p, action, value) {
   const bots = room.players.filter(x => x.bot && !Object.hasOwn(room.votes, x.id));
   check(bots.length > 0, 'Все боты уже проголосовали.');
   const candidates = voteCandidates(room);
-  for (const bot of bots) act(room, bot, 'vote', chooseBotVote(room,bot,candidates));
+  for (const bot of bots) {
+   const aiChoice=room.aiVotePlans?.[bot.id];
+   act(room,bot,'vote',aiChoice&&candidates.includes(aiChoice)&&aiChoice!==bot.id
+    ?aiChoice:chooseBotVote(room,bot,candidates));
+  }
  } else if (action === 'start') {
   check(room.host === p.id && room.phase === 'lobby', 'Только ведущий может начать игру.');
   check(room.players.length >= 5 && room.players.length <= 16, 'Для игры нужно от 5 до 16 участников.');
@@ -198,7 +211,11 @@ export function act(room, p, action, value) {
   room.votes[p.id] = value;
   if (room.testMode && room.players.filter(x => !x.bot).every(x => Object.hasOwn(room.votes,x.id))) {
    const candidates = voteCandidates(room);
-   for (const bot of room.players.filter(x => x.bot && !Object.hasOwn(room.votes,x.id))) room.votes[bot.id] = chooseBotVote(room,bot,candidates);
+   for (const bot of room.players.filter(x => x.bot && !Object.hasOwn(room.votes,x.id))) {
+    const aiChoice=room.aiVotePlans?.[bot.id];
+    room.votes[bot.id]=aiChoice&&candidates.includes(aiChoice)&&aiChoice!==bot.id
+     ?aiChoice:chooseBotVote(room,bot,candidates);
+   }
   }
   if (Object.keys(room.votes).length === room.players.length) finishVote(room);
  } else throw new Error('Неизвестное действие.');
@@ -206,6 +223,7 @@ export function act(room, p, action, value) {
 }
 function newRound(room, now=Date.now()) {
  room.round++;room.phase='turn';room.turn=room.players.find(x=>x.alive).id;room.opened=false;room.votes={};
+ delete room.aiVotePlans;
  room.turnDeadline=now+TURN_TIMEOUT_MS;delete room.voteDeadline;
 }
 function nextTurn(room,now=Date.now()){
@@ -379,7 +397,7 @@ export function advanceRoom(room,now=Date.now()){
  return changed;
 }
 export function view(room, me) {
- const { players, votes, rps, lastActivityAt, privateSpecialHistory, dealHistory, ...rest } = room;
+ const { players, votes, rps, aiVotePlans, aiChatLocks, lastActivityAt, privateSpecialHistory, dealHistory, ...rest } = room;
  const ownSpecialChanges=(privateSpecialHistory||[]).flatMap(event=>event.results.filter(r=>r.playerId===me.id).map(r=>({eventId:event.id,before:r.before,after:r.after})));
  return { ...rest, rps:rps?{candidates:rps.candidates,round:rps.round,deadline:rps.deadline,submitted:rps.candidates.filter(id=>Object.hasOwn(rps.choices,id)),myChoice:rps.choices[me.id]||null,lastResult:rps.lastResult||null}:null, specialPrivateResults:ownSpecialChanges, categories, me: me.id, recoveryCode: me.recoveryCode, specialAvailable: Boolean(specialCard(me.cards.special)) && !me.specialUsed, hasVoted: Object.hasOwn(votes,me.id), votedFor: votes[me.id] || null, voteCount: Object.keys(votes).length,
   pendingBotVotes: players.filter(p => p.bot && !Object.hasOwn(votes,p.id)).length,
