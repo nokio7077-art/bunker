@@ -90,3 +90,19 @@ test('mobile badge positioning uses one authoritative grid layout with no later 
  assert.doesNotMatch(final,/flex-direction:column;align-items:stretch/);
  assert.doesNotMatch(final,/\.dossier-card-status\{[^}]*align-self:flex-end/);
 });
+
+test('waiting-room bot option precedes the survivor gathering banner',()=>{
+ const html=readFileSync(new URL('../public/app.js',import.meta.url),'utf8');
+ const start=html.indexOf('function room()');
+ const end=html.indexOf('function render()',start);
+ const room=html.slice(start,end);
+ assert.ok(room.indexOf('${collapsibleWorld()}${testPanel}<section class="banner">')>=0);
+ assert.ok(!room.includes('</section>`:''}${testPanel}<div class="game-columns">'));
+});
+test('speaker panel hides special conditions and folds card descriptions',()=>{
+ const script=readFileSync(new URL('../public/app.js',import.meta.url),'utf8');
+ const speaker=script.slice(script.indexOf('function dossier('),script.indexOf('function invitation('));
+ assert.match(speaker,/current\.revealed\.filter\(k=>k!=='special'/);
+ assert.match(speaker,/cardDetails\(current\.id,k,current\.descriptions\?\.\[k\]\)/);
+ assert.doesNotMatch(speaker,/class="card-description"/);
+});
