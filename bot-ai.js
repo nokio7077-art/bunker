@@ -48,11 +48,56 @@ function noisyBest(items,score,random=randomInt){
  }
  return chosen;
 }
+
+// A useful team needs complementary roles, not simply the most high-scoring
+// individuals. Only revealed professions count when examining other players.
+// The bot may use its own profession even before revealing it.
+const TEAM_ROLES=[
+ {id:'medical',match:PROFESSION_GROUPS[0].pattern,hazards:PROFESSION_GROUPS[0].hazards,base:3},
+ {id:'food',match:PROFESSION_GROUPS[1].pattern,hazards:PROFESSION_GROUPS[1].hazards,base:3},
+ {id:'engineering',match:PROFESSION_GROUPS[2].pattern,hazards:PROFESSION_GROUPS[2].hazards,base:3},
+ {id:'construction',match:PROFESSION_GROUPS[3].pattern,hazards:PROFESSION_GROUPS[3].hazards,base:2},
+ {id:'security',match:PROFESSION_GROUPS[4].pattern,hazards:PROFESSION_GROUPS[4].hazards,base:2},
+ {id:'cooking',match:PROFESSION_GROUPS[5].pattern,hazards:PROFESSION_GROUPS[5].hazards,base:2}
+];
+function knownRoles(person,observer){
+ if(!person?.alive)return [];
+ if(person.id!==observer.id&&!person.revealed?.includes('profession'))return [];
+ const profession=person.cards?.profession;
+ if(!profession)return [];
+ return TEAM_ROLES.filter(role=>role.match.test(String(profession))).map(role=>role.id);
+}
+function teamRoleWeights(room){
+ const hazard=room.disaster?.hazard;
+ const inventory=(room.bunker?.equipment||[]).join(' ').toLowerCase();
+ const weights=Object.fromEntries(TEAM_ROLES.map(role=>[
+  role.id,role.base+(role.hazards.includes(hazard)?4:0)
+ ]));
+ // Shelter deficiencies change which specialists the team needs.
+ if(/генератор|электр|кабель|насос|вентиляц|фильтр/i.test(inventory))weights.engineering+=2;
+ if(/теплиц|грядк|семен|гидропон|грибниц/i.test(inventory))weights.food+=2;
+ if(/аптечк|медицин|операцион/i.test(inventory))weights.medical+=1;
+ if(/затоплен|обвал|протеч|неустойчив/i.test((room.bunker?.threats||[]).join(' ')))weights.construction+=2;
+ return weights;
+}
+// How much one participant contributes to a balanced *remaining* team.
+// Second/third expert in the same area still helps, but less than the first.
+export function teamSkillContribution(room,person,observer){
+ const skills=knownRoles(person,observer);
+ if(!skills.length)return 0;
+ const others=room.players.filter(p=>p.alive&&p.id!==person.id);
+ const weights=teamRoleWeights(room);
+ return skills.reduce((sum,role)=>{
+  const existing=others.filter(p=>knownRoles(p,observer).includes(role)).length;
+  return sum+weights[role]/(1+existing*1.5);
+ },0);
+}
+
 export function chooseBotVote(room,bot,candidates,random=randomInt){
  const eligible=room.players.filter(p=>p.id!==bot.id&&candidates.includes(p.id));
  if(!eligible.length)return null;
  // Favor removal of the weakest publicly-known survival profile.
- return noisyBest(eligible,p=>-publicSurvivalScore(p,room.disaster),random)?.id||null;
+ return noisyBest(eligible,p=>-(publicSurvivalScore(p,room.disaster)+teamSkillContribution(room,p,bot)*1.65),random)?.id||null;
 }
 export function chooseBotReveal(room,bot,available,random=randomInt){
  if(room.round===1&&available.includes('profession'))return 'profession';
@@ -60,7 +105,7 @@ export function chooseBotReveal(room,bot,available,random=randomInt){
  // Don't waste a normal turn on an action card if other cards remain.
  const pool=candidates.length?candidates:available;
  if(!pool.length)return null;
- return noisyBest(pool,key=>scoreCharacteristic(key,bot.cards[key],room.disaster?.hazard),random);
+ return noisyBest(pool,key=>scoreCharacteristic(key,bot.cards[key],room.disaster?.hazard)+(key==='profession'?teamSkillContribution(room,bot,bot)*1.2:0),random);
 }
 export function chooseBotSpecialTarget(room,bot,card,targets,random=randomInt){
  if(!targets.length)return null;
