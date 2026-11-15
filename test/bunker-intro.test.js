@@ -26,7 +26,7 @@ test('only the exact uploaded blank card is used, optimized and served safely',(
  assert.match(server,/binaryAssets\.set\('\/images\/bunkers\/bunker-blank-layout\.webp'/);
  assert.match(css,/background:url\('\/images\/bunkers\/bunker-blank-layout\.webp'\)/);
  assert.match(css,/aspect-ratio:982\/1602/);
- assert.match(html,/bot-cards-v18/);
+ assert.match(html,/bot-handoff-v19/);
  assert.ok(!app.slice(start,end).includes('bunkerVariant('));
 });
 
@@ -131,4 +131,10 @@ test('subtitle is lowered, inventory inset from left decoration and scroll is re
  assert.match(latest,/font-family:'IBM Plex Mono',monospace/);
  assert.ok(!context.bunkerIntro().includes('bunker-intro-details'));
  assert.match(app,/class="world-details"/);
+});
+
+test('bunker equipment list is inset farther right while keeping vertical scrolling',()=>{
+ const final=css.slice(css.lastIndexOf('/* Keep the old scrollable equipment list'));
+ assert.match(final,/padding-left:9\.5%/);
+ assert.match(css,/\.bunker-intro \.bunker-card-content-list\{[^}]*overflow-y:auto/);
 });
