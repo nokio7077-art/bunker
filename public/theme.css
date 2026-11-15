@@ -2913,3 +2913,22 @@ body,button,input,select,textarea,.landing-shell,.game,#rules,#special-dialog{
   height:auto;min-height:62px;max-height:none;flex-basis:auto;
  }
 }
+
+/* Mobile dossier: shorten the two-line headings without stretching the
+   status, and reduce only exceptionally long characteristic values. */
+@media(max-width:760px){
+ .game .dossier-file-list>.dossier-tile>.card .dossier-card-top{
+  height:53px;min-height:53px;max-height:53px;flex-basis:53px;
+  justify-content:center;gap:2px;padding:4px 7px;
+ }
+ .game .dossier-file-list>.dossier-tile .card-detail>summary,
+ .game .dossier-file-list>.dossier-tile .card-detail[open]>summary{top:61px}
+ .game .dossier-file-list .dossier-card-content strong.dossier-value-long{
+  font-size:clamp(11px,2.9vw,13px);
+  line-height:1.3;letter-spacing:-.035em;
+  word-break:normal;hyphens:auto;overflow-wrap:break-word;
+ }
+ .game .dossier-file-list>.dossier-tile.is-special>.card .dossier-card-top{
+  height:auto;max-height:none;min-height:53px;flex-basis:auto;
+ }
+}
