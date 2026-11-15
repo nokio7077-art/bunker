@@ -2874,3 +2874,42 @@ body,button,input,select,textarea,.landing-shell,.game,#rules,#special-dialog{
   height:auto;max-height:none;min-height:42px;flex-basis:auto;
  }
 }
+
+/* Mobile dossier labels: the previous grid inherited absolute-positioned
+   status badges; put category and status in two contained rows instead. */
+@media(max-width:760px){
+ .game .dossier-file-list>.dossier-tile>.card .dossier-card-top{
+  position:relative;box-sizing:border-box;
+  display:flex;flex-direction:column;align-items:stretch;justify-content:center;
+  width:100%;height:62px;min-height:62px;max-height:62px;
+  flex:0 0 62px;gap:4px;padding:5px 7px;
+ }
+ .game .dossier-file-list>.dossier-tile>.card .dossier-card-top .card-label{
+  display:flex;align-items:center;gap:5px;
+  min-width:0;max-width:100%;font-size:clamp(10px,2.55vw,12px);
+  line-height:1.2;white-space:normal;overflow-wrap:anywhere;
+ }
+ .game .dossier-file-list>.dossier-tile>.card .dossier-card-status{
+  position:static;top:auto;right:auto;left:auto;bottom:auto;
+  display:inline-block;align-self:flex-end;flex:0 0 auto;
+  min-width:0;max-width:100%;margin:0;
+  padding:3px 5px;box-sizing:border-box;
+  font-size:clamp(8px,2vw,10px);line-height:1;
+  letter-spacing:0;white-space:nowrap;
+ }
+ .game .dossier-file-list>.dossier-tile .card-detail>summary,
+ .game .dossier-file-list>.dossier-tile .card-detail[open]>summary{
+  top:70px;right:5px;
+ }
+ .game .dossier-file-list>.dossier-tile>.card .reveal-hint{
+  display:flex;flex-direction:row;align-items:center;justify-content:center;
+  gap:4px;min-width:0;max-width:calc(100% - 14px);
+  padding:7px 3px;white-space:nowrap;
+  font-size:clamp(9px,2.4vw,11px);line-height:1.2;letter-spacing:-.035em;
+ }
+ .game .dossier-file-list>.dossier-tile>.card .reveal-hint>span{display:inline;white-space:nowrap}
+ .game .dossier-file-list>.dossier-tile>.card .reveal-hint-arrow{flex:0 0 auto;font-size:13px}
+ .game .dossier-file-list>.dossier-tile.is-special>.card .dossier-card-top{
+  height:auto;min-height:62px;max-height:none;flex-basis:auto;
+ }
+}
