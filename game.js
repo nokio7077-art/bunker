@@ -146,6 +146,7 @@ export function act(room, p, action, value) {
   check(!room.opened && Object.hasOwn(categories,value) && p.cards[value] && !p.revealed.includes(value), 'Эту карточку сейчас нельзя открыть.');
   check(room.round !== 1 || value === 'profession', 'В первом круге откройте профессию.');
   p.revealed.push(value); room.opened = true;
+  if(!p.bot)delete room.botReveals;
   room.lastReveal={playerId:p.id,category:value,round:room.round};
   room.log.push(`${p.name} открывает: ${categories[value]}.`);
  } else if (action === 'next') {
