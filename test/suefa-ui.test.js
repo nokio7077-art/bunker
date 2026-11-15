@@ -73,4 +73,7 @@ test('completed suefa round shows every chosen pixel hand and result',()=>{
  assert.ok(html.includes('Проиграл'));
  assert.ok(html.includes('data-action="suefa-reveal-close"'));
  assert.ok(app.includes('if(suefaReveal&&!suefaReveal.open)suefaReveal.showModal()'));
+ assert.ok(app.indexOf('if(suefaReveal&&!suefaReveal.open)suefaReveal.showModal()')<
+  app.indexOf('else if(expulsion&&!expulsion.open)expulsion.showModal()'),
+  'show both gestures before showing who is expelled');
 });
