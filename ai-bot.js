@@ -104,6 +104,7 @@ export function validateBotClaim(reply,room){
  // A survivor bot must not surrender or announce an impossible self-vote.
  if(/(?:голосую|голосовать|проголосую|предлагаю голосовать|поддерживаю исключение|за исключение|исключить|выгнать|избавиться от)\s+(?:за\s+)?(?:себя|самого себя|самой себя|меня|сво[её] исключени)/i.test(text))return false;
  if(/(?:я\s+(?:бесполезен|бесполезна|лишний|лишняя)|мне\s+лучше\s+уйти|я\s+должен\s+уйти|я\s+должна\s+уйти)/i.test(text))return false;
+ if(/(?:я\s+)?за\s+(?:сво[её]|мо[её])\s+исключени[ея]|(?:исключени[ея]\s+себя)/i.test(text))return false;
  // Claims about fertility or health from a profession alone are not grounded.
  if(/(?:может|способен|способна|пригоден|пригодна|здоров|здоровая|здоровый|фертильн)[^.!?]{0,85}(?:продолжени[яе]\s+род[а-я]*|рожать|деторождени[яе]|зачати[ея])/i.test(text))return false;
  // A conversational proposal isn't a server vote: speaking must never
