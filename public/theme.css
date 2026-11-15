@@ -2909,11 +2909,12 @@ body,button,input,select,textarea,.landing-shell,.game,#rules,#special-dialog{
  }
 }
 
-/* Desktop: fit the entire entrance frame inside the hero area.
-   The previous 115% zoom and width-based video clipped the lower artwork. */
+/* Desktop: keep the full moving scene visible (skull included), but
+   fill the side letterbox space with a cropped copy of the SAME poster.
+   No black/empty columns and no additional video zoom. */
 @media(min-width:861px){
  .landing-shell .landing::before{
-  background-size:contain;
+  background-size:cover;
   background-position:center top;
   background-repeat:no-repeat;
  }
