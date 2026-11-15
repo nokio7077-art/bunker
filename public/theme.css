@@ -2815,3 +2815,13 @@ body,button,input,select,textarea,.landing-shell,.game,#rules,#special-dialog{
   font-size:clamp(9px,2.5vw,12px)
  }
 }
+
+/* Desktop footer: larger legible labels without adding vertical height. */
+@media(min-width:861px){
+ .landing-shell>.landing-footer.apocalypse-footer{min-height:0;height:auto;padding:5px 16px}
+ .landing-shell .apocalypse-footer .footer-contact{gap:0}
+ .landing-shell .apocalypse-footer .footer-contact-label{font-size:14px;line-height:1.2;letter-spacing:1.1px}
+ .landing-shell .apocalypse-footer .footer-contact a{font-size:20px;line-height:1.3}
+ .landing-shell .footer-layout .apocalypse-symbol,
+ .landing-shell .footer-layout .footer-symbols .apocalypse-symbol{height:31px;width:32px;font-size:27px}
+}
