@@ -475,6 +475,7 @@ function room(){const me=state.players.find(p=>p.id===state.me), current=state.p
  <div class="ai-chat-heading"><span class="eyebrow">ЭКСПЕРИМЕНТ · GIGACHAT</span><h3>Обсуждение в бункере</h3><small>Лимит: до 30 ИИ-ответов за партию. Если API недоступен, отвечают обычные боты.</small></div>
  ${state.phase==='turn'&&current?.bot&&state.host===me.id?
  `<button type="button" class="secondary ai-bot-speak" data-action="ai-speak">🎙 Дать слово ${escape(current.name)}</button>`:''}
+ ${state.aiProviderStatus?`<p class="ai-provider-warning" role="status">⚠ ИИ не подключился: ${escape(state.aiProviderStatus)} Сейчас работают запасные игровые ответы.</p>`:''}
  <div class="ai-chat-history" role="log" aria-label="Сообщения участников">
  ${(state.aiChat||[]).length?state.aiChat.slice(-20).map(entry=>`<p class="${entry.bot?'ai-bot-message':''}"><strong>${escape(entry.name)}:</strong> ${escape(entry.text)}</p>`).join(''):'<p class="ai-chat-empty">Сообщений пока нет. Спроси ИИ-бота, почему он должен выжить.</p>'}</div>
  ${state.phase!=='finished'?`<div class="ai-chat-controls">
