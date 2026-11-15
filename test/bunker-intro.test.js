@@ -26,7 +26,7 @@ test('only the exact uploaded blank card is used, optimized and served safely',(
  assert.match(server,/binaryAssets\.set\('\/images\/bunkers\/bunker-blank-layout\.webp'/);
  assert.match(css,/background:url\('\/images\/bunkers\/bunker-blank-layout\.webp'\)/);
  assert.match(css,/aspect-ratio:982\/1602/);
- assert.match(html,/bunker-equipment-v14/);
+ assert.match(html,/bunker-scroll-v15/);
  assert.ok(!app.slice(start,end).includes('bunkerVariant('));
 });
 
@@ -51,7 +51,7 @@ test('all 81 bunker inventories remain complete on the introductory card',()=>{
   const card=context.bunkerIntro();
   assert.ok(card.includes(escape(bunker.name)),bunker.name);
   assert.ok(card.includes(escape(bunker.type)),bunker.name+' type');
-  assert.ok(card.includes(escape(bunker.description)),bunker.name+' description');
+  assert.ok(!card.includes('<details class="bunker-intro-details">'),bunker.name+' has no separate details panel');
   const pane=card.slice(card.indexOf('class="bunker-card-content-list"'),card.indexOf('</section></article>'));
   for(const item of bunker.equipment){
    assert.ok(pane.includes(escape(item)),bunker.name+' missing equipment '+item);
