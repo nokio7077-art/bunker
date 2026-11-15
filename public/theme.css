@@ -2825,3 +2825,7 @@ body,button,input,select,textarea,.landing-shell,.game,#rules,#special-dialog{
  .landing-shell .footer-layout .apocalypse-symbol,
  .landing-shell .footer-layout .footer-symbols .apocalypse-symbol{height:31px;width:32px;font-size:27px}
 }
+
+/* Confine the video and poster to the illustrated main area so they
+   cannot visibly spill under the opaque footer when the viewport is tall. */
+.landing-shell>.landing{overflow:clip}
