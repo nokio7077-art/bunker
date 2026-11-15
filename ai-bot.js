@@ -106,6 +106,9 @@ export function validateBotClaim(reply,room){
  if(/(?:я\s+(?:бесполезен|бесполезна|лишний|лишняя)|мне\s+лучше\s+уйти|я\s+должен\s+уйти|я\s+должна\s+уйти)/i.test(text))return false;
  // Claims about fertility or health from a profession alone are not grounded.
  if(/(?:может|способен|способна|пригоден|пригодна|здоров|здоровая|здоровый|фертильн)[^.!?]{0,85}(?:продолжени[яе]\s+род[а-я]*|рожать|деторождени[яе]|зачати[ея])/i.test(text))return false;
+ // A conversational proposal isn't a server vote: speaking must never
+ // claim that a personal vote was actually cast.
+ if(/\bголосую\b|\bпроголосую\b/i.test(text))return false;
  // There is no public individual ballot history in the room state.
  if(/(?:я|мы) (?:уже )?проголосовал[аи]? (?:за|против)|я (?:уже )?отдал[а]? голос/i.test(text))
   return false;
@@ -120,6 +123,21 @@ export function validateBotClaim(reply,room){
   }
  }
  return true;
+}
+// Repeating essentially the same argument several times makes bots look stuck.
+// Compare only this bot's last statements, and keep the engine's fallback if
+// the provider offers a near-duplicate.
+export function isRepetitiveBotReply(room,bot,reply){
+ const words=str=>new Set(String(str||'').toLowerCase().match(/[а-яёa-z]{4,}/gi)||[]);
+ const current=words(reply);
+ if(current.size<6)return false;
+ const recent=(room.aiChat||[]).filter(x=>x.botId===bot.id).slice(-4);
+ return recent.some(line=>{
+  const previous=words(line.text);
+  if(previous.size<6)return false;
+  let common=0;for(const word of current)if(previous.has(word))common++;
+  return common/Math.max(current.size,previous.size)>=0.78;
+ });
 }
 export function aiFallback(bot,room){
  const profession=bot.revealed?.includes('profession')?String(bot.cards?.profession||''):null;
