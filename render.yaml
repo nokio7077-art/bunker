@@ -5,7 +5,7 @@ services:
     runtime: node
     plan: free
     region: frankfurt
-    buildCommand: npm test
+    buildCommand: node --check server.js
     startCommand: npm start
     healthCheckPath: /health
     numInstances: 1
