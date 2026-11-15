@@ -49,6 +49,14 @@ function finishGame(room,{tieFirst=false,timeout=false}={}){
     }
     act(room,p,'next');
    }
+  }else if(room.phase==='rps'){
+   // Resolve a duel decisively; all but the first participant show rock.
+   const ids=[...room.rps.candidates];
+   for(const [i,id] of ids.entries()){
+    if(room.phase!=='rps')break;
+    if(!Object.hasOwn(room.rps.choices,id))
+     act(room,room.players.find(p=>p.id===id),'rps_move',i===0?'scissors':'rock');
+   }
   }else if(room.phase==='tie_discussion'){
    ties++;
    const host=room.players.find(p=>p.id===room.host);

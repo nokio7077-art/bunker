@@ -2940,3 +2940,35 @@ body,button,input,select,textarea,.landing-shell,.game,#rules,#special-dialog{
 .game .active-dossier .dossier-public-card .card-detail[open]>p{
  margin-top:8px;
 }
+
+/* Voting outcome and the tied revote's simultaneous su-e-fa showdown. */
+#expulsion-notice.special-notice,#suefa-notice.special-notice{
+ position:fixed;inset:0;margin:auto;width:min(620px,calc(100vw - 24px));
+ max-height:calc(100dvh - 40px);overflow-y:auto;box-sizing:border-box;
+ padding:clamp(18px,3.5vw,30px);border:2px solid #d1db8c;border-radius:9px;
+ background:linear-gradient(145deg,#152718,#08160c);
+ box-shadow:0 0 0 5px #30422a,0 22px 80px #000c;
+ color:#f2f7df;z-index:103;
+ font-family:var(--bunker-ui,Arial,sans-serif);
+}
+#expulsion-notice::backdrop,#suefa-notice::backdrop{background:rgba(0,7,3,.85);backdrop-filter:blur(5px)}
+#expulsion-notice h2,#suefa-notice h2{font-size:clamp(23px,5vw,34px);color:#f0f7ca;margin:0 0 16px;line-height:1.2;overflow-wrap:anywhere}
+#expulsion-notice p,#suefa-notice p{font-size:15px;line-height:1.5;color:#d1d9c5}
+#expulsion-notice .expulsion-count{display:flex;align-items:baseline;gap:12px;color:#f0e1ad;font-weight:750}
+.expulsion-count strong{font:700 clamp(44px,11vw,72px)/1 var(--bunker-display,Arial,sans-serif);color:#f5d98d}
+#expulsion-notice .special-notice-ok{width:100%;min-height:52px}
+#suefa-notice .suefa-options{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:20px 0}
+#suefa-notice .suefa-choice{display:flex;flex-direction:column;justify-content:center;align-items:center;gap:9px;min-height:110px;
+ background:#1c301e;border:2px solid #829960;color:#ecf5d8;cursor:pointer;border-radius:6px}
+#suefa-notice .suefa-choice span{font-size:36px}
+#suefa-notice .suefa-choice strong{font-size:14px}
+#suefa-notice .suefa-choice:hover,#suefa-notice .suefa-choice:focus-visible{background:#344c28;border-color:#ddf38b}
+#suefa-notice .suefa-wait,#suefa-notice .suefa-last{padding:12px 14px;border:1px solid #799459;background:#203420}
+#suefa-notice .suefa-submitted{font-size:12px;color:#bbcba9}
+#suefa-notice .phase-timer{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:12px}
+@media(max-width:480px){
+ #suefa-notice .suefa-options{gap:6px}
+ #suefa-notice .suefa-choice{min-height:100px;padding:7px 2px}
+ #suefa-notice .suefa-choice span{font-size:28px}
+ #suefa-notice .suefa-choice strong{font-size:12px}
+}
