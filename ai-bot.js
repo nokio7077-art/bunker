@@ -171,11 +171,11 @@ export function explainOwnBotVote(room,bot,message){
   const chosen=history.filter(entry=>entry.targetId===named.id);
   if(!chosen.length)return 'В истории моих подтверждённых голосов нет выбора '+named.name+'. Я не стану утверждать, что голосовал за этого игрока.';
   const found=chosen.at(-1);
-  return 'Да, я голосовал за исключение '+named.name+' в круге '+found.round+(found.revote?' на переголосовании':'')+'. Но точная причина прошлого решения в журнале не сохранялась, поэтому могу лишь оценить его сейчас.';
+  return 'Да, я голосовал за исключение '+named.name+' в круге '+found.round+(found.revote?' на переголосовании':'')+'. '+(found.reason?'Тогда я указал такую причину: '+found.reason:'Но точная причина прошлого решения в журнале не сохранялась, поэтому могу лишь оценить его сейчас.');
  }
  if(asksWhy||followup){
   const target=room.players.find(p=>p.id===last.targetId);
-  return 'Мой последний подтверждённый голос был за исключение '+(target?.name||'участника')+' в круге '+last.round+'. Точную причину того решения мы не сохраняли; не буду её придумывать задним числом.';
+  return 'Мой последний подтверждённый голос был за исключение '+(target?.name||'участника')+' в круге '+last.round+'. '+(last.reason?'Моя записанная тогда причина: '+last.reason:'Точную причину того решения мы не сохраняли; не буду её придумывать задним числом.');
  }
  const selected=/(?:в прошлом круге|в предыдущем круге|прошл(?:ом|ый) раунд)/.test(text)
   ?history.filter(entry=>entry.round===room.round-1):history;
