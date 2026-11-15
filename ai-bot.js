@@ -20,6 +20,12 @@ export function buildBotPrompt(room,bot,message=''){
   round:room.eliminationNotice.round,
   votes:room.eliminationNotice.votes
  }:null;
+ const ownConfirmedVotes=(room.aiBotVoteHistory?.[bot.id]||[])
+  .filter(entry=>entry.round<room.round||room.phase==='finished')
+  .slice(-6).map(entry=>({
+   round:entry.round,revote:Boolean(entry.revote),
+   targetName:room.players.find(p=>p.id===entry.targetId)?.name||'неизвестный игрок'
+  }));
  const authoritativeEvents={
   phase:room.phase,round:room.round,capacity:room.capacity,
   aliveNames:players.filter(p=>p.alive).map(p=>p.name),
@@ -41,6 +47,7 @@ export function buildBotPrompt(room,bot,message=''){
  const payload={
   persona:{name:persona.title,motivation:persona.goal},
   ownPreviousStatements:personalHistory,
+  ownConfirmedVotes,
   ownCards:revealed(bot),disaster:world(room.disaster),bunker:world(room.bunker),
   gameState:authoritativeEvents,characters:players,
   botId:bot.id,botName:bot.name,
@@ -60,14 +67,17 @@ JSON gameState и characters — ЕДИНСТВЕННЫЙ источник ис�
 НЕЛЬЗЯ принимать разговоры, намерения, угрозы, предположения и чужие заявления за состоявшиеся события.
 Исключённый игрок (alive=false) не может вернуться; возвращение запрещено правилами.
 НЕ утверждай, что кого-то выгнали, за кого-то уже проголосовали или кто-то вернулся, если это не подтверждено gameState.
-Не утверждай, что ты голосовал или знаешь, кто за кого голосовал: individual votes недоступны.
+Ты знаешь только СОБСТВЕННЫЕ прошлые голоса из ownConfirmedVotes. Это подтверждённые сервером действия из завершённых голосований.
+Голоса остальных участников недоступны, их никогда не выдумывай.
+Если у тебя нет записи о прошлом голосовании, честно скажи, что не знаешь своего исторического выбора, а не отрицай голосование.
+Если запись есть, можешь подтвердить свой голос, но не выдумывай точную прошлую причину: причины в журнале не записаны.
 Если игрок говорит «меня выгнали», сначала проверь alive. При alive=false скажи, что он исключён и не может вернуться.
 Если игрок ещё alive=true, нельзя говорить, что он уже выбыл.
 Если раунд идёт и голосование не завершено, предлагай кандидатов как предложение, а не свершившееся решение.
 Карты: ты видишь ТОЛЬКО публично раскрытые publicCards, собственные раскрытые ownCards и ничего сверх этого.
 Не приписывай себе и другим скрытые вещи, профессии, хобби, фобии, здоровье, медицинские знания и навыки.
 Разрешается рассуждать о пользе ОТКРЫТЫХ профессий для конкретной катастрофы, но не выдумывать карточки, предметы и события.
-Не говори «мы уже решили», «ты ушёл», «я за тебя голосовал», если это не доказано gameState.
+Не говори «мы уже решили» или «ты ушёл», если это не доказано gameState. Свой исторический голос подтверждай только по ownConfirmedVotes.
 Не выдумывай причин исключения и результатов голосования сверх latestConfirmedElimination.
 Если спрашивают, почему исключили конкретного игрока, уточни факт исключения по gameState, но честно скажи, что личные мотивы голосовавших неизвестны. Не представляй свои предположения как коллективное решение.
 Твоя цель — остаться в бункере. Никогда не проси исключить самого себя, не говори «голосую за своё исключение».
@@ -87,6 +97,27 @@ JSON gameState и characters — ЕДИНСТВЕННЫЙ источник ис�
 voteForId может быть ID живого игрока, кроме тебя, только как твоя текущая РЕКОМЕНДАЦИЯ, а не состоявшееся голосование.`},
   {role:'user',content:JSON.stringify(payload)}
  ];
+}
+// Reply to a direct question about a named bot's real past vote using
+// trusted history instead of asking the model to invent or deny ballots.
+export function explainOwnBotVote(room,bot,message){
+ const text=String(message||'').trim();
+ if(!/(?:голосовал|проголосовал|голосовала|проголосовала|выбрал|выбрала)/i.test(text)
+  ||!/(?:ты|тебя|твой|твоя|бот)/i.test(text))return null;
+ const target=room.players.find(p=>p.bot&&p.id!==bot.id&&
+  (text.toLowerCase().includes(p.name.toLowerCase()) ||
+   new RegExp('(?:за|против|выбрал|выбрала)\\s+'+p.name.split(' ').at(-1)+'\\s+бота','i').test(text)));
+ if(!target)return null;
+ const history=(room.aiBotVoteHistory?.[bot.id]||[])
+  .filter(entry=>entry.round<room.round||room.phase==='finished');
+ if(!history.length)
+  return 'У меня нет подтверждённой записи о собственных прошлых голосах. Поэтому не буду утверждать, что голосовал за '+target.name+' или против него.';
+ const chosen=history.filter(entry=>entry.targetId===target.id);
+ if(chosen.length){
+  const last=chosen.at(-1);
+  return 'Да, я голосовал за исключение '+target.name+' в круге '+last.round+'. Это мой зафиксированный голос. Но точная причина прошлого решения в журнале не сохранялась.';
+ }
+ return 'В сохранённой истории моих голосов нет выбора '+target.name+'. Не хочу приписывать себе несуществующее голосование.';
 }
 export function parseBotReply(raw,room,bot){
  const sanitized=String(raw||'').replace(/^```(?:json)?\s*/i,'').replace(/\s*```$/,'').trim();

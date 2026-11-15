@@ -4,7 +4,7 @@ import { readFileSync, existsSync, statSync, createReadStream } from 'node:fs';
 import { createRoomStore } from './room-storage.js';
 import { createCloudRoomBackup } from './cloud-room-backup.js';
 import { createGigaChat } from './gigachat-client.js';
-import { buildBotPrompt, parseBotReply, aiFallback, validateBotClaim, isRepetitiveBotReply } from './ai-bot.js';
+import { buildBotPrompt, parseBotReply, aiFallback, validateBotClaim, isRepetitiveBotReply, explainOwnBotVote } from './ai-bot.js';
 import { fileURLToPath } from 'node:url';
 import { join as pathJoin } from 'node:path';
 import { randomInt, randomBytes } from 'node:crypto';
@@ -254,7 +254,10 @@ export const server=http.createServer(async(req,res)=>{
    save();
    try{
     let result=null;
-    if(gigaChat.enabled){
+    const confirmedVoteAnswer=message?explainOwnBotVote(room,bot,message):null;
+    if(confirmedVoteAnswer){
+     result={reply:confirmedVoteAnswer,voteForId:null};
+    }else if(gigaChat.enabled){
      try{
       const raw=await gigaChat.generate(buildBotPrompt(room,bot,message));
       result=parseBotReply(raw,room,bot);
@@ -267,8 +270,8 @@ export const server=http.createServer(async(req,res)=>{
     }
     if(room.gameNumber!==oldGame || room.round!==oldRound || !room.aiMode || room.phase==='finished')
      return send(409,{error:'Игровая ситуация изменилась. Попробуйте ещё раз.'});
-    if(result)delete room.aiProviderStatus;
-    else if(!gigaChat.enabled)room.aiProviderStatus='GIGACHAT_AUTH_KEY не найден в окружении Render.';
+    if(result&&gigaChat.enabled)delete room.aiProviderStatus;
+    else if(!gigaChat.enabled&&!confirmedVoteAnswer)room.aiProviderStatus='GIGACHAT_AUTH_KEY не найден в окружении Render.';
     const answer=result?.reply||aiFallback(bot,room);
     room.aiChat??=[];
     if(message)room.aiChat.push({name:me.name,text:message.slice(0,240),round:room.round});

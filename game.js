@@ -118,6 +118,15 @@ function botSpecialMove(room,bot){
  try{applySpecial(room,bot,selected?{targetId:selected.id}:{});return true;}
  catch(e){if(/Не удалось безопасно перетасовать|Нужны хотя бы|В колоде нет другой|Недостаточно|не получил|несовместим/.test(e.message))return false;throw e;}
 }
+// Record only each bot's own actual ballot for later self-explanation.
+// It is kept server-side and never exposed to other players or bots.
+function recordBotBallot(room,bot,targetId){
+ if(!room.aiMode||!bot.bot)return;
+ room.aiBotVoteHistory??={};
+ const history=room.aiBotVoteHistory[bot.id]??=[];
+ history.push({round:room.round,targetId,revote:Boolean(room.revoteCandidates)});
+ room.aiBotVoteHistory[bot.id]=history.slice(-12);
+}
 export function act(room, p, action, value) {
  if (action === 'next_game') {
   check(room.phase === 'finished' && room.host === p.id, 'Следующую партию готовит ведущий после завершения игры.');
@@ -207,12 +216,14 @@ export function act(room, p, action, value) {
   check(!Object.hasOwn(room.votes,p.id), 'Ваш голос уже принят.');
   check(eligible.includes(value) && p.id!==value, room.revoteCandidates ? 'В переголосовании доступны только участники с равным числом голосов. За себя голосовать нельзя.' : 'Нельзя голосовать за себя. Выберите другого игрока в бункере.');
   room.votes[p.id] = value;
+  recordBotBallot(room,p,value);
   if (room.testMode && room.players.filter(x => !x.bot).every(x => Object.hasOwn(room.votes,x.id))) {
    const candidates = voteCandidates(room);
    for (const bot of room.players.filter(x => x.bot && !Object.hasOwn(room.votes,x.id))) {
     const aiChoice=room.aiVotePlans?.[bot.id];
     room.votes[bot.id]=aiChoice&&candidates.includes(aiChoice)&&aiChoice!==bot.id
      ?aiChoice:chooseBotVote(room,bot,candidates);
+    recordBotBallot(room,bot,room.votes[bot.id]);
    }
   }
   if (Object.keys(room.votes).length === room.players.length) finishVote(room);
@@ -395,7 +406,7 @@ export function advanceRoom(room,now=Date.now()){
  return changed;
 }
 export function view(room, me) {
- const { players, votes, rps, aiVotePlans, aiChatLocks, lastActivityAt, privateSpecialHistory, dealHistory, ...rest } = room;
+ const { players, votes, rps, aiVotePlans, aiBotVoteHistory, aiChatLocks, lastActivityAt, privateSpecialHistory, dealHistory, ...rest } = room;
  const ownSpecialChanges=(privateSpecialHistory||[]).flatMap(event=>event.results.filter(r=>r.playerId===me.id).map(r=>({eventId:event.id,before:r.before,after:r.after})));
  return { ...rest, rps:rps?{candidates:rps.candidates,round:rps.round,deadline:rps.deadline,submitted:rps.candidates.filter(id=>Object.hasOwn(rps.choices,id)),myChoice:rps.choices[me.id]||null,lastResult:rps.lastResult||null}:null, specialPrivateResults:ownSpecialChanges, categories, me: me.id, recoveryCode: me.recoveryCode, specialAvailable: Boolean(specialCard(me.cards.special)) && !me.specialUsed, hasVoted: Object.hasOwn(votes,me.id), votedFor: votes[me.id] || null, voteCount: Object.keys(votes).length,
   pendingBotVotes: players.filter(p => p.bot && !Object.hasOwn(votes,p.id)).length,

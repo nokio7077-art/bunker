@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {player,createRoom,join,act,view} from '../game.js';
-import {buildBotPrompt,parseBotReply,aiFallback,validateBotClaim,isRepetitiveBotReply} from '../ai-bot.js';
+import {buildBotPrompt,parseBotReply,aiFallback,validateBotClaim,isRepetitiveBotReply,explainOwnBotVote} from '../ai-bot.js';
 
 test('AI test mode opt-in preserves all normal test controls',()=>{
  const host=player('Ведущий'),room=createRoom('432987',host);
@@ -171,4 +171,44 @@ test('reject near-identical repetition by same bot, not independent bot opinions
  assert.equal(isRepetitiveBotReply(room,bot,reply+'!'),true);
  assert.equal(isRepetitiveBotReply(room,other,reply),false);
  assert.equal(isRepetitiveBotReply(room,bot,'Надо обсудить запасы еды.'),false);
+});
+
+test('bot vote memory is private and records the bot\'s actual ballot',()=>{
+ const host=player('Ольга'),room=createRoom('918273',host);
+ act(room,host,'start_ai_test');
+ const bot=room.players.find(p=>p.bot),target=room.players.find(p=>p.bot&&p.id!==bot.id);
+ // A confirmed earlier ballot cannot be changed by text in a chat.
+ room.aiBotVoteHistory={[bot.id]:[{round:1,targetId:target.id,revote:false}]};
+ room.round=2;
+ const answer=explainOwnBotVote(room,bot,'Почему ты проголосовал за '+target.name+'?');
+ assert.ok(answer.includes('Да, я голосовал'));
+ assert.ok(answer.includes(target.name));
+ assert.ok(answer.includes('точная причина'));
+ const prompt=JSON.parse(buildBotPrompt(room,bot,'')[1].content);
+ assert.equal(prompt.ownConfirmedVotes[0].targetName,target.name);
+ const other=room.players.find(p=>p.bot&&p.id!==bot.id&&p.id!==target.id);
+ assert.deepEqual(JSON.parse(buildBotPrompt(room,other,'')[1].content).ownConfirmedVotes,[]);
+ assert.ok(!('aiBotVoteHistory' in view(room,host)));
+});
+test('without a recorded vote a bot does not falsely deny its own choices',()=>{
+ const host=player('Ольга'),room=createRoom('918273',host);
+ act(room,host,'start_ai_test');
+ const bot=room.players.find(p=>p.bot),target=room.players.find(p=>p.bot&&p.id!==bot.id);
+ const answer=explainOwnBotVote(room,bot,'Почему ты проголосовал за '+target.name+'?');
+ assert.ok(answer.includes('нет подтверждённой записи'));
+ assert.ok(answer.includes('не буду утверждать'));
+ assert.equal(explainOwnBotVote(room,bot,'Как мы будем распределять еду?'),null);
+});
+
+test('a bot action records the true ballot without leaking it to other players',()=>{
+ const host=player('Ольга'),room=createRoom('918273',host);
+ act(room,host,'start_ai_test');
+ const bot=room.players.find(p=>p.bot),target=room.players.find(p=>p.bot&&p.id!==bot.id);
+ room.phase='vote';room.votes={};
+ act(room,bot,'vote',target.id);
+ assert.equal(room.aiBotVoteHistory[bot.id][0].targetId,target.id);
+ assert.equal(room.aiBotVoteHistory[bot.id][0].round,1);
+ assert.ok(!JSON.stringify(view(room,host)).includes('aiBotVoteHistory'));
+ const prompt=JSON.parse(buildBotPrompt(room,bot,'')[1].content);
+ assert.deepEqual(prompt.ownConfirmedVotes,[],'pending vote must remain private until ballot resolves');
 });
