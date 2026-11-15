@@ -21,7 +21,7 @@ export function rememberBotEndorsements(room,bot,result){
     '|'+target+'.{0,45}(?:стоит\\s+оставить|нужн[аоы]?\\s+нам|необходим[аоы]?\\s+нам)','i');
   const directPraise=new RegExp(target+'.{0,40}(?:полезн|важн|ценн|незаменим)','i');
   const praiseMatch=answer.match(directPraise);
-  if(phrase.test(answer)||praiseMatch&&!/(?:^|\\s)не\\s/i.test(praiseMatch[0]))explicit.add(p.id);
+  if(phrase.test(answer)||praiseMatch&&!/(?:^|\\s)не\\s|бесполезн/i.test(praiseMatch[0]))explicit.add(p.id);
  }
  room.aiBotEndorsements??={};
  const endorsements=room.aiBotEndorsements[bot.id]??={};
