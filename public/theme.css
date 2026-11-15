@@ -3005,3 +3005,36 @@ body,button,input,select,textarea,.landing-shell,.game,#rules,#special-dialog{
  #suefa-notice .suefa-choice .suefa-icon{width:min(23vw,82px);height:min(23vw,82px)}
  #suefa-notice .suefa-selected-card .suefa-icon{width:100px;height:100px}
 }
+
+/* Duel reveal is a synchronized public result, never a live peek at votes. */
+#suefa-reveal.special-notice{
+ position:fixed;inset:0;margin:auto;width:min(680px,calc(100vw - 24px));
+ max-height:calc(100dvh - 36px);overflow-y:auto;box-sizing:border-box;
+ padding:clamp(18px,3vw,30px);z-index:105;
+ border:2px solid #c6db84;border-radius:9px;
+ background:linear-gradient(145deg,#172719,#08140c);
+ box-shadow:0 0 0 5px #30422a,0 20px 80px #000b;
+ color:#eff5da;font-family:var(--bunker-ui,Arial,sans-serif);
+}
+#suefa-reveal::backdrop{background:rgba(0,8,3,.85);backdrop-filter:blur(5px)}
+#suefa-reveal h2{font-size:clamp(21px,4.5vw,30px);margin:0 0 16px;color:#eef8c9}
+#suefa-reveal .suefa-reveal-players{
+ display:grid;grid-template-columns:repeat(auto-fit,minmax(126px,1fr));
+ gap:10px;list-style:none;margin:12px 0 20px;padding:0;
+}
+#suefa-reveal .suefa-reveal-player{
+ display:flex;flex-direction:column;align-items:center;gap:7px;
+ padding:12px 8px;min-width:0;list-style:none;text-align:center;
+ border:1px solid #5c7844;background:#1e311e;
+}
+#suefa-reveal .suefa-reveal-player.is-loser{border-color:#b8785c;background:#35251d}
+#suefa-reveal .suefa-reveal-player strong{font-size:14px;overflow-wrap:anywhere}
+#suefa-reveal .suefa-reveal-player .suefa-icon{width:96px;height:96px;object-fit:contain;image-rendering:pixelated}
+#suefa-reveal .suefa-reveal-player small{font-weight:800;color:#d1ea95}
+#suefa-reveal .suefa-reveal-player.is-loser small{color:#ffbaa0}
+#suefa-reveal .suefa-reveal-summary{margin-bottom:16px;line-height:1.5}
+#suefa-reveal .special-notice-ok{width:100%;min-height:48px}
+@media(max-width:420px){
+ #suefa-reveal .suefa-reveal-players{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+ #suefa-reveal .suefa-reveal-player .suefa-icon{width:76px;height:76px}
+}
