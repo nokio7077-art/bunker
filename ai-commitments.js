@@ -16,7 +16,9 @@ export function rememberBotEndorsements(room,bot,result){
   // Only strong, directly expressed support counts as a commitment.
   const phrase=new RegExp('(?:оставить|сохранить|поддерживаю|защищаю)\\s+(?:в\\s+бункере\\s+)?'+target+
     '|'+target+'.{0,45}(?:стоит\\s+оставить|нужн[аоы]?\\s+нам|необходим[аоы]?\\s+нам)','i');
-  if(phrase.test(answer))explicit.add(p.id);
+  const directPraise=new RegExp(target+'.{0,40}(?:полезн|важн|ценн|незаменим)','i');
+  const praiseMatch=answer.match(directPraise);
+  if(phrase.test(answer)||praiseMatch&&!/(?:^|\\s)не\\s/i.test(praiseMatch[0]))explicit.add(p.id);
  }
  room.aiBotEndorsements??={};
  const endorsements=room.aiBotEndorsements[bot.id]??={};
