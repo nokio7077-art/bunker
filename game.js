@@ -76,7 +76,7 @@ function botSpecialMove(room,bot){
  const targets=room.players.filter(p=>{
   if(card.revealedOnly&&!p.revealed.includes(key))return false;
   if(card.effect==='reveal')return Boolean(p.cards[key])&&!p.revealed.includes(key);
-  if(card.effect==='discard')return Boolean(p.cards[key]);
+  if(card.effect==='discard')return Boolean(p.cards[key])&&(p.id===bot.id||p.revealed.includes(key));
   if(card.effect==='swap')return p.id!==bot.id&&Object.hasOwn(p.cards,key)&&p.cards[key]!==bot.cards[key]&&
    (p.cards[key]===null||eligibleCard(key,p.cards[key],bot.cards.biology,room.disaster))&&
    (bot.cards[key]===null||eligibleCard(key,bot.cards[key],p.cards.biology,room.disaster));
@@ -120,15 +120,11 @@ export function act(room, p, action, value) {
   commitStart(room,participants,prepared,true);
   room.log.push('Тестовая партия: ведущий запускает ходы ботов, их голоса поступают автоматически после голосов всех людей.');
  } else if (action === 'bot_step') {
+  // Backwards-compatible action for older clients; bots now act automatically
+  // as soon as a human passes the turn to them.
   check(room.testMode && room.host === p.id && room.phase === 'turn', 'Управление ботами доступно ведущему в тестовой партии.');
-  const bot = room.players.find(x => x.id === room.turn);
-  check(bot?.bot && bot.alive, 'Сейчас ход живого участника, а не бота.');
-  if (!room.opened) {
-   const remaining = Object.keys(bot.cards).filter(k => bot.cards[k] && !bot.revealed.includes(k));
-   if (remaining.length) act(room, bot, 'reveal', room.round === 1 ? 'profession' : pick(remaining));
-  }
-  if (!bot.specialUsed) botSpecialMove(room,bot);
-  act(room, bot, 'next');
+  check(room.players.find(x=>x.id===room.turn)?.bot,'Бот уже завершил ход автоматически.');
+  runBotTurns(room);
  } else if (action === 'start_revote') {
   check(room.phase === 'tie_discussion' && room.host === p.id, 'Начать переголосование может ведущий после ничьей.');
   beginRevote(room);
@@ -156,6 +152,7 @@ export function act(room, p, action, value) {
   check(room.phase === 'turn' && room.turn === p.id, 'Передать слово может только текущий игрок.');
   check(room.opened || !Object.keys(p.cards).some(k => p.cards[k] && !p.revealed.includes(k)), 'Сначала откройте карточку.');
   nextTurn(room);
+  runBotTurns(room);
  } else if (action === 'vote') {
   check(room.phase === 'vote', 'Голосование ещё не началось.');
   const eligible=voteCandidates(room);
@@ -180,6 +177,32 @@ function nextTurn(room,now=Date.now()){
  if(pos<alive.length-1){room.turn=alive[pos+1].id;room.opened=false;room.turnDeadline=now+TURN_TIMEOUT_MS;}
  else if(room.round>=room.firstVote){room.phase='vote';room.votes={};delete room.turnDeadline;room.voteDeadline=now+VOTE_TIMEOUT_MS;room.log.push(`Круг ${room.round}: начинается голосование.`);}
  else newRound(room,now);
+}
+// Complete consecutive bot turns in one server-side operation. Each bot reveals
+// its regular card, optionally applies its special, then passes on to the next
+// participant. Publish newly revealed cards as a top-of-screen summary.
+function runBotTurns(room,now=Date.now()){
+ const reveals=[];
+ let limit=room.players.length+1;
+ while(room.testMode&&room.phase==='turn'&&limit-->0){
+  const bot=room.players.find(p=>p.id===room.turn);
+  if(!bot?.bot||!bot.alive)break;
+  if(!room.opened){
+   const available=Object.keys(bot.cards).filter(k=>bot.cards[k]&&!bot.revealed.includes(k));
+   const key=room.round===1&&available.includes('profession')?'profession':available.length?pick(available):null;
+   if(key){
+    bot.revealed.push(key);room.opened=true;
+    room.lastReveal={playerId:bot.id,category:key,round:room.round};
+    reveals.push({playerId:bot.id,category:key});
+    room.log.push(`${bot.name} открывает: ${categories[key]}.`);
+   }
+  }
+  if(!bot.specialUsed)botSpecialMove(room,bot);
+  nextTurn(room,now);
+ }
+ if(reveals.length){
+  room.botReveals={round:room.round,items:reveals};
+ }
 }
 function voteCandidates(room){
  const eligible=room.players.filter(p=>p.alive).map(p=>p.id);
@@ -210,7 +233,7 @@ function finishVote(room,now=Date.now()){
  room.log.push(`${loser.name} покидает бункер (${max} голосов)${candidates.length>1?'. После повторной ничьей решение принято жребием':''}.`);
  delete room.revoteCandidates;delete room.discussionDeadline;
  if(room.players.filter(x=>x.alive).length<=room.capacity){room.phase='finished';room.turn=null;delete room.turnDeadline;delete room.voteDeadline;room.log.push('Состав убежища определён.');}
- else newRound(room,now);
+ else {newRound(room,now);runBotTurns(room,now);}
 }
 // Mutates only when a deadline expires or an inactive host needs replacement.
 // Called by the server's periodic scheduler and before processing incoming actions.
@@ -226,7 +249,7 @@ export function advanceRoom(room,now=Date.now()){
     if(key){p.revealed.push(key);room.opened=true;room.lastReveal={playerId:p.id,category:key,round:room.round};room.log.push(`Время вышло: ${p.name} автоматически открывает ${categories[key]}.`);}
    }
    room.log.push(`Время хода ${p?.name||'участника'} истекло. Слово передано автоматически.`);
-   nextTurn(room,now);changed=true;
+   nextTurn(room,now);runBotTurns(room,now);changed=true;
   }
  }else if(room.phase==='tie_discussion'){
   if(!room.discussionDeadline){room.discussionDeadline=now+TIE_DISCUSSION_MS;changed=true;}
