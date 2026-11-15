@@ -106,3 +106,16 @@ test('temporary cloud outage does not block local actions',async()=>{
  assert.equal(attempts,2);
  assert.equal(warnings.length,2);
 });
+
+test('cloud can restore an active suefa phase and submitted private moves',async()=>{
+ const dir=await mkdtemp(join(tmpdir(),'bunker-suefa-cloud-'));
+ try{
+  const duel={...room(3),phase:'rps',
+   rps:{candidates:['a','b'],choices:{a:'paper'},round:2,deadline:Date.now()+90000}};
+  const cloud=createCloudRoomBackup({env,logger:{warn:()=>{},info:()=>{}},
+   fetchImpl:async()=>response([{snapshot:[['123456',duel]],saved_at:Date.now()}])});
+  const restored=await cloud.restore(new Map(),dir);
+  assert.equal(restored.get('123456').phase,'rps');
+  assert.equal(restored.get('123456').rps.choices.a,'paper');
+ }finally{await rm(dir,{recursive:true,force:true});}
+});

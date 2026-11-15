@@ -39,7 +39,7 @@ export function createCloudRoomBackup({env=process.env,fetchImpl=fetch,now=()=>D
    // with a corrupted/incorrect cloud snapshot.
    for(const [code,room] of recovered){
     if(!/^[0-9]{6}$/.test(code)||room?.code!==code||!Array.isArray(room.players)||
-       !['lobby','turn','vote','tie_discussion','finished'].includes(room.phase))
+       !['lobby','turn','vote','tie_discussion','rps','finished'].includes(room.phase))
      throw new Error('Invalid cloud room data');
    }
    logger.info('Recovered '+recovered.size+' rooms from Supabase checkpoint.');
