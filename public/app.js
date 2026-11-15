@@ -52,6 +52,7 @@ let session;try{session=JSON.parse(localStorage.getItem('bunker-session'));}catc
 let restoringSession=Boolean(session?.code&&session?.token);
 let state, busy=false, last='', mode='create', toastTimer, specialDraft=null;
 let refreshInFlight=false, actionEpoch=0;
+let nextRefreshAt=0, refreshFailures=0, connectionInterrupted=false;
 let inviteOpen=false, inviteOrigin=null, inviteMdnsOrigin=null;
 const inviteCode=new URLSearchParams(location.search).get('join');
 const prefillCode=/^\d{6}$/.test(inviteCode||'')?inviteCode:'';
@@ -134,7 +135,24 @@ function syncLandingMotion(){
 document.addEventListener('visibilitychange',syncLandingMotion);
 reducedMotion.addEventListener('change',e=>{if(e.matches){motionPaused=true;syncLandingMotion();}});
 function toast(message){document.querySelector('#toast').textContent=message;clearTimeout(toastTimer);toastTimer=setTimeout(()=>document.querySelector('#toast').textContent='',5500);}
-async function api(path,body){const sent=Date.now();const r=await fetch(path,{method:body?'POST':'GET',headers:{'Content-Type':'application/json',...(session?{Authorization:`Bearer ${session.token}`}:{})},body:body?JSON.stringify(body):undefined});const received=Date.now(),serverNow=Number(r.headers.get('X-Server-Time'));if(Number.isFinite(serverNow)&&serverNow>0)serverClockOffsetMs=serverNow-(sent+received)/2;const data=await r.json();if(!r.ok){if(r.status===401 || r.status===404 && session){localStorage.removeItem('bunker-session');session=null;state=null;render();}throw new Error(data.error);}return data;}
+async function api(path,body){
+ // Keep the credentials attached to THIS request. A delayed 401 from an old
+ // poll must never invalidate a newly recovered session.
+ const requestedSession=session;
+ const sent=Date.now();
+ const r=await fetch(path,{method:body?'POST':'GET',headers:{'Content-Type':'application/json',...(requestedSession?{Authorization:`Bearer ${requestedSession.token}`}:{})},body:body?JSON.stringify(body):undefined});
+ const received=Date.now(),serverNow=Number(r.headers.get('X-Server-Time'));
+ if(Number.isFinite(serverNow)&&serverNow>0)serverClockOffsetMs=serverNow-(sent+received)/2;
+ const data=await r.json();
+ if(!r.ok){
+  if((r.status===401||r.status===404&&requestedSession)&&requestedSession&&
+     session?.code===requestedSession.code&&session?.token===requestedSession.token){
+   localStorage.removeItem('bunker-session');session=null;state=null;last='';render();
+  }
+  throw new Error(data.error||'Ошибка сервера.');
+ }
+ return data;
+}
 const brand=`<a class="brand" href="/" aria-label="Бункер — главная"><span class="brand-mark">Б</span>БУНКЕР<span class="edition">ONLINE / 01</span></a>`;
 const header=()=>`<header class="site-header ${state?'game-header':''}">${brand}${!state?`<span class="header-emblem" aria-hidden="true">${bunkerBadge}<img class="header-emblem-art" src="/images/ui/bunker-header.webp" alt="" width="360" height="120" decoding="async" onerror="this.hidden=true"></span>`:''}<div class="header-right"><span class="signal"></span><span>${state?'СЕАНС АКТИВЕН':'СВЯЗЬ УСТАНОВЛЕНА'}</span><button class="text-btn primary rules-button" data-action="rules">Правила →</button>${state?'<button class="text-btn" data-action="exit">Выйти</button>':''}</div></header>`;
 const rules="<dialog id=\"rules\" class=\"survival-rules\" aria-labelledby=\"rules-heading\"><div class=\"survival-rules-inner\"><div class=\"rules-masthead\"><span class=\"eyebrow\">ПРОТОКОЛ ВЫЖИВАНИЯ / 01</span><button type=\"button\" class=\"close text-btn\" data-action=\"close\" aria-label=\"Закрыть правила\">✕</button></div><div class=\"rules-heading\"><h2 id=\"rules-heading\">Докажите свою пользу.</h2><p>В комнате 5–16 игроков. Ведущий запускает игру, каждый получает 9 личных карточек, включая отдельную фобию и особое условие. Катастрофа и бункер общие для всех.</p></div><div class=\"rules-steps-label\">ОСНОВНОЙ ПРОТОКОЛ · 5 ШАГОВ</div><ol class=\"rules-steps\"><li>Первый круг: откройте профессию и расскажите, чем полезны группе. Нажмите «Передать слово».</li><li>Каждый следующий круг: откройте одну оставшуюся карточку и обсудите её.</li><li>Первое голосование: 5 игроков — круг 4, 6 — круг 3, 7 — круг 2, 8–16 — круг 1. Затем голосуйте после каждого круга.</li><li>Все участники, включая изгнанных, голосуют за другого живого игрока. Голосовать за себя нельзя. Нажатие на кнопку «Исключить» сразу отправляет голос. Голос нельзя изменить. При равенстве решает случайный жребий.</li><li>В бункере остаётся половина первоначального состава с округлением вниз: 5 → 2, 6 → 3, 7 → 3, 8 → 4.</li></ol><section class=\"rules-details\"><h3>Дополнительные правила</h3><section class=\"rules-bot-mode\"><h4>Тестовая партия с ботами</h4><p>Для проверки без компании создайте комнату и нажмите «Тестовая игра с ботами». Комната заполнится до пяти участников.</p><p>Свой ход и голос выполняйте как обычно. Каждый бот открывает карточку при получении слова. Для перехода к следующему боту нажмите «Передать слово боту» ещё раз. Боты голосуют случайно и автоматически после всех людей. Правила кругов и изгнания сохраняются.</p></section><p>Характер даёт повод для отыгрыша и спора о решениях. Голос выбираете вы; обсуждайте поступки персонажей и соблюдайте очередь.</p><p>Особое условие — одноразовое действие: сброс, обмен, перетасовка открытых карт или случайная замена из колоды. Нажмите «Применить условие» в свой ход, пока вы в бункере. Действие раскрывает само условие и не заменяет обычное раскрытие карточки; его также можно сначала раскрыть, а применить позже. Целью может стать любой участник, включая изгнанного. Сброс оставляет публичный пустой слот; при обмене и замене открытость слотов сохраняется. Замену случайно выбирает игра из подходящих карточек; возможны совпадения с чужими карточками. Фобии и интересные факты — повод для обсуждения, без принудительных голосов. Когда все карты раскрыты или сброшены, продолжайте обсуждать и передавать слово.</p><p>Играйте за одним столом: каждый открывает сайт на своём телефоне. Обсуждайте карточки вслух. На каждый ход даётся 3 минуты 16 секунд, на голосование — 2 минуты. По истечении времени ход продвигается автоматически; непроголосовавшие воздерживаются. Ведущий может передать роль другому игроку, а если ведущий неактивен более 3 минут, роль переходит активному участнику. Сессия автоматически сохраняется в браузере. При очистке данных браузера доступ к ней может потеряться.</p></section><div class=\"rules-end\"><span>УБЕЖИЩЕ / ИНСТРУКЦИЯ ЗАВЕРШЕНА</span><button class=\"primary\" type=\"button\" data-action=\"close\">ПОНЯТНО</button></div></div></dialog>";
@@ -394,17 +412,27 @@ else if(!tieNotice&&notice&&!notice.open)notice.showModal();renderedTurn=state?.
  }
 }}
 async function refresh(){
- if(!session||busy||refreshInFlight||document.hidden)return;
+ if(!session||busy||refreshInFlight||document.hidden||Date.now()<nextRefreshAt)return;
  refreshInFlight=true;
  const requestedSession=session, requestedEpoch=actionEpoch;
  try{
   const data=await api(`/api/rooms/${requestedSession.code}`);
   // A request started before a local action must never overwrite its newer result.
   if(busy||requestedEpoch!==actionEpoch||session!==requestedSession)return;
+  refreshFailures=0;nextRefreshAt=0;
+  if(connectionInterrupted){connectionInterrupted=false;toast('Соединение восстановлено.');}
   const serial=JSON.stringify(data);
   if(serial!==last||restoringSession){state=data;prepareDisasterArtwork(state?.disaster);prepareBunkerArtwork(state?.bunker);last=serial;restoringSession=false;render();}
- }catch(e){if(session===requestedSession&&!busy)toast(e.message);}
- finally{refreshInFlight=false;if(restoringSession){restoringSession=false;render();}}
+ }catch(e){
+  if(session===requestedSession&&!busy){
+   // Invalid credentials are handled by api(). Only transient failures retry.
+   if(session){
+    refreshFailures=Math.min(refreshFailures+1,5);
+    nextRefreshAt=Date.now()+Math.min(10000,1000*2**refreshFailures);
+    if(!connectionInterrupted){connectionInterrupted=true;toast('Связь потеряна. Повторяем подключение автоматически.');}
+   }
+  }
+ }finally{refreshInFlight=false;if(restoringSession){restoringSession=false;render();}}
 }
 app.addEventListener('submit',async e=>{if(e.target.id!=='entry')return;e.preventDefault();if(busy)return;busy=true;actionEpoch++;const btn=e.target.querySelector('button[type=submit]');btn.disabled=true;const data=new FormData(e.target);try{session=await api(mode==='create'?'/api/rooms':`/api/rooms/${data.get('code')}/join`,{name:data.get('name')});localStorage.setItem('bunker-session',JSON.stringify(session));last='';}catch(e){toast(e.message);}finally{busy=false;btn.disabled=false;await refresh();}});
 app.addEventListener('click',async e=>{const btn=e.target.closest('button');if(!btn||btn.disabled)return;
@@ -464,4 +492,4 @@ app.addEventListener('error',e=>{
  const original=disasterImageFor(state?.disaster)?.src;if(original&&!e.target.dataset.originalFallback){e.target.dataset.originalFallback='true';e.target.src=original;return;}
  failedDisasterImages.add(disasterImageFor(state?.disaster)?.src||e.target.getAttribute('src'));render();toast('Не удалось загрузить изображение. Показан текст карточки.');
 },true);
-render();refresh();setInterval(refresh,800);setInterval(updateTimers,250);document.addEventListener('visibilitychange',()=>{if(!document.hidden){updateTimers();refresh();}});
+render();refresh();setInterval(refresh,800);setInterval(updateTimers,250);document.addEventListener('visibilitychange',()=>{if(!document.hidden){nextRefreshAt=0;updateTimers();refresh();}});
