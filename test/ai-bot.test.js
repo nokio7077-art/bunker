@@ -31,7 +31,10 @@ test('prompt never contains hidden cards, tokens or recovery codes',()=>{
  const prompt=JSON.stringify(buildBotPrompt(room,bot,'Привет!'));
  assert.ok(prompt.includes(other.cards.profession));
  assert.ok(!prompt.includes(other.cards.health));
- assert.ok(prompt.includes(bot.cards.profession),'a character may know its own cards');
+ assert.ok(!prompt.includes(bot.cards.profession),'a bot cannot disclose its own unopened cards');
+ bot.revealed.push('profession');
+ const publicPrompt=JSON.stringify(buildBotPrompt(room,bot,'Привет!'));
+ assert.ok(publicPrompt.includes(bot.cards.profession),'a bot can discuss its opened cards');
  assert.ok(!prompt.includes(host.token));
  assert.ok(!prompt.includes(bot.token));
  assert.ok(!prompt.includes(host.recoveryCode));
@@ -52,8 +55,32 @@ test('offline replies give concrete character-specific arguments without repeati
  act(room,host,'start_ai_test');
  const bot=room.players.find(p=>p.bot);
  bot.cards.profession='Инженер';
+ const secretText=aiFallback(bot,room);
+ assert.ok(!secretText.includes('Инженер'),'offline fallback must not leak unrevealed profession');
+ bot.revealed.push('profession');
  const text=aiFallback(bot,room);
  assert.ok(text.includes('Инженер'));
  assert.ok(!text.startsWith(bot.name+':'));
  assert.ok(text.length<=220);
+});
+
+test('every hidden bot card is absent from LLM prompt and fallback speech',()=>{
+ const host=player('Ведущий'),room=createRoom('432987',host);
+ act(room,host,'start_ai_test');
+ const bot=room.players.find(p=>p.bot);
+ for(const [key,value] of Object.entries(bot.cards)){
+  if(key==='special')continue;
+  bot.cards[key]='UNREVEALED_'+key.toUpperCase();
+ }
+ bot.revealed=[];
+ const prompt=JSON.stringify(buildBotPrompt(room,bot,'Почему тебе можно доверять?'));
+ const fallback=aiFallback(bot,room);
+ for(const [key,value] of Object.entries(bot.cards)){
+  if(key==='special')continue;
+  assert.equal(prompt.includes(value),false,key+' leaked in LLM context');
+  assert.equal(fallback.includes(value),false,key+' leaked in fallback');
+ }
+ bot.revealed.push('profession');
+ assert.ok(JSON.stringify(buildBotPrompt(room,bot,'')).includes(bot.cards.profession));
+ assert.ok(!JSON.stringify(buildBotPrompt(room,bot,'')).includes(bot.cards.luggage));
 });
