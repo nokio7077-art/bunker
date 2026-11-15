@@ -10,7 +10,7 @@ function validate(data){
  for(const entry of data){
   if(!Array.isArray(entry)||entry.length!==2)throw new Error('Некорректная запись комнаты.');
   const [code,room]=entry;
-  if(typeof code!=='string'||!/^\\d{6}$/.test(code)||seen.has(code)||
+  if(typeof code!=='string'||!/^[0-9]{6}$/.test(code)||seen.has(code)||
     !room||typeof room!=='object'||room.code!==code||
     !Array.isArray(room.players)||!room.players.length||
     !['lobby','turn','vote','tie_discussion','finished'].includes(room.phase))
