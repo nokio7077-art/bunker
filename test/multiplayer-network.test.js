@@ -95,7 +95,7 @@ test('network multiplayer: five clients, polling, disconnect, recover and subseq
   assert.equal(restored.data.players.length,5);
   assert.equal(restored.data.round,2);
   assert.equal((await req(roomPath,undefined,players[2].token)).status,200);
-  players[4]=recovered;
+  players[4]=recovered.data;
 
   // Finish every turn of the next three rounds. Each client polls the same
   // authoritative state; room capacity and cast must remain stable.
