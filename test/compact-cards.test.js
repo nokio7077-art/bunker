@@ -97,7 +97,7 @@ test('waiting-room bot option precedes the survivor gathering banner',()=>{
  const end=html.indexOf('function render()',start);
  const room=html.slice(start,end);
  assert.ok(room.indexOf('${collapsibleWorld()}${testPanel}<section class="banner">')>=0);
- assert.ok(!room.includes('</section>`:''}${testPanel}<div class="game-columns">'));
+ assert.ok(room.indexOf('${testPanel}<div class="game-columns">')<0);
 });
 test('speaker panel hides special conditions and folds card descriptions',()=>{
  const script=readFileSync(new URL('../public/app.js',import.meta.url),'utf8');
