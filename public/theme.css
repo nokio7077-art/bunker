@@ -2843,63 +2843,47 @@ body,button,input,select,textarea,.landing-shell,.game,#rules,#special-dialog{
 .survival-rules .rules-bot-mode h4{font-size:16px;color:#dff5a7;margin:0 0 8px}
 .survival-rules .rules-bot-mode p{margin:9px 0 0}
 
-/* Keep every two-column dossier header at a uniform height.
-   Profession previously wrapped its status to a second line, making
-   the value-area chevron look detached from its characteristic. */
+/* Mobile dossier layout — single authoritative rule set.
+   Keep status in the TOP row even when a category name wraps. */
 @media(max-width:760px){
  .game .dossier-file-list>.dossier-tile>.card .dossier-card-top{
-  width:100%;height:42px;min-height:42px;max-height:42px;
-  box-sizing:border-box;flex:0 0 42px;
-  display:grid;grid-template-columns:minmax(0,1fr) auto;
-  align-items:center;gap:3px;padding:4px 5px;
+  position:relative;display:grid;
+  grid-template-columns:minmax(0,1fr) max-content;
+  grid-template-rows:auto;
+  align-items:start;justify-content:stretch;
+  width:100%;height:auto;min-height:56px;max-height:none;
+  flex:0 0 auto;box-sizing:border-box;
+  column-gap:4px;padding:7px 6px;
  }
  .game .dossier-file-list>.dossier-tile>.card .dossier-card-top .card-label{
-  display:flex;align-items:center;gap:3px;min-width:0;
-  font-size:clamp(9px,2.45vw,11px);line-height:1.13;
-  letter-spacing:-.025em;overflow-wrap:normal;
+  grid-column:1;grid-row:1;
+  display:flex;flex-direction:row;align-items:flex-start;
+  min-width:0;max-width:100%;gap:4px;
+  font-family:var(--bunker-reading,'Onest',sans-serif);
+  font-size:clamp(11px,2.85vw,14px);line-height:1.15;font-weight:750;
+  letter-spacing:0;white-space:normal;overflow:visible;
+  overflow-wrap:anywhere;text-align:left;
  }
  .game .dossier-file-list>.dossier-tile>.card img.dossier-category-icon{
-  flex:0 0 19px;width:19px;height:19px;min-width:19px;max-width:19px;min-height:19px;max-height:19px;
+  flex:0 0 19px;width:19px;height:19px;
+  min-width:19px;min-height:19px;max-width:19px;max-height:19px;
  }
  .game .dossier-file-list>.dossier-tile>.card .dossier-card-status{
-  margin:0;justify-self:end;align-self:center;
-  padding:3px 2px;min-width:0;white-space:nowrap;
-  font-size:clamp(7px,1.9vw,9px);line-height:1.1;letter-spacing:0;
+  position:static;inset:auto;grid-column:2;grid-row:1;
+  justify-self:end;align-self:start;display:block;
+  flex:none;margin:0;min-width:0;max-width:none;
+  padding:3px 4px;box-sizing:border-box;
+  font-size:clamp(9px,2.2vw,11px);line-height:1.1;
+  letter-spacing:0;white-space:nowrap;overflow-wrap:normal;
  }
  .game .dossier-file-list>.dossier-tile .card-detail>summary,
  .game .dossier-file-list>.dossier-tile .card-detail[open]>summary{
-  top:49px;right:5px;
+  top:64px;right:5px;
  }
- .game .dossier-file-list>.dossier-tile.is-special>.card .dossier-card-top{
-  height:auto;max-height:none;min-height:42px;flex-basis:auto;
- }
-}
-
-/* Mobile dossier labels: the previous grid inherited absolute-positioned
-   status badges; put category and status in two contained rows instead. */
-@media(max-width:760px){
- .game .dossier-file-list>.dossier-tile>.card .dossier-card-top{
-  position:relative;box-sizing:border-box;
-  display:flex;flex-direction:column;align-items:stretch;justify-content:center;
-  width:100%;height:62px;min-height:62px;max-height:62px;
-  flex:0 0 62px;gap:4px;padding:5px 7px;
- }
- .game .dossier-file-list>.dossier-tile>.card .dossier-card-top .card-label{
-  display:flex;align-items:center;gap:5px;
-  min-width:0;max-width:100%;font-size:clamp(10px,2.55vw,12px);
-  line-height:1.2;white-space:normal;overflow-wrap:anywhere;
- }
- .game .dossier-file-list>.dossier-tile>.card .dossier-card-status{
-  position:static;top:auto;right:auto;left:auto;bottom:auto;
-  display:inline-block;align-self:flex-end;flex:0 0 auto;
-  min-width:0;max-width:100%;margin:0;
-  padding:3px 5px;box-sizing:border-box;
-  font-size:clamp(8px,2vw,10px);line-height:1;
-  letter-spacing:0;white-space:nowrap;
- }
- .game .dossier-file-list>.dossier-tile .card-detail>summary,
- .game .dossier-file-list>.dossier-tile .card-detail[open]>summary{
-  top:70px;right:5px;
+ .game .dossier-file-list .dossier-card-content strong.dossier-value-long{
+  font-size:clamp(11px,2.9vw,13px);
+  line-height:1.3;letter-spacing:-.035em;
+  word-break:normal;hyphens:auto;overflow-wrap:break-word;
  }
  .game .dossier-file-list>.dossier-tile>.card .reveal-hint{
   display:flex;flex-direction:row;align-items:center;justify-content:center;
@@ -2910,89 +2894,17 @@ body,button,input,select,textarea,.landing-shell,.game,#rules,#special-dialog{
  .game .dossier-file-list>.dossier-tile>.card .reveal-hint>span{display:inline;white-space:nowrap}
  .game .dossier-file-list>.dossier-tile>.card .reveal-hint-arrow{flex:0 0 auto;font-size:13px}
  .game .dossier-file-list>.dossier-tile.is-special>.card .dossier-card-top{
-  height:auto;min-height:62px;max-height:none;flex-basis:auto;
- }
-}
-
-/* Mobile dossier: shorten the two-line headings without stretching the
-   status, and reduce only exceptionally long characteristic values. */
-@media(max-width:760px){
- .game .dossier-file-list>.dossier-tile>.card .dossier-card-top{
-  height:53px;min-height:53px;max-height:53px;flex-basis:53px;
-  justify-content:center;gap:2px;padding:4px 7px;
- }
- .game .dossier-file-list>.dossier-tile .card-detail>summary,
- .game .dossier-file-list>.dossier-tile .card-detail[open]>summary{top:61px}
- .game .dossier-file-list .dossier-card-content strong.dossier-value-long{
-  font-size:clamp(11px,2.9vw,13px);
-  line-height:1.3;letter-spacing:-.035em;
-  word-break:normal;hyphens:auto;overflow-wrap:break-word;
- }
- .game .dossier-file-list>.dossier-tile.is-special>.card .dossier-card-top{
-  height:auto;max-height:none;min-height:53px;flex-basis:auto;
- }
-}
-
-/* One-row mobile dossier headings: category + badge, without overflow. */
-@media(max-width:760px){
- .game .dossier-file-list>.dossier-tile>.card .dossier-card-top{
-  position:relative;display:grid;
-  grid-template-columns:minmax(0,1fr) max-content;
-  grid-template-rows:1fr;
-  align-items:center;justify-content:stretch;
-  gap:3px;width:100%;height:43px;min-height:43px;max-height:43px;
-  flex:0 0 43px;padding:4px 5px;box-sizing:border-box;
- }
- .game .dossier-file-list>.dossier-tile>.card .dossier-card-top .card-label{
-  display:flex;flex-direction:row;align-items:center;
-  gap:3px;min-width:0;max-width:100%;
-  font-size:clamp(11px,2.75vw,14px);line-height:1.1;
-  letter-spacing:-.045em;white-space:nowrap;
-  overflow:hidden;text-overflow:clip;
- }
- .game .dossier-file-list>.dossier-tile>.card img.dossier-category-icon{
-  flex:0 0 18px;width:18px;height:18px;
-  min-width:18px;max-width:18px;min-height:18px;max-height:18px;
- }
- .game .dossier-file-list>.dossier-tile>.card .dossier-card-status{
-  position:static;inset:auto;display:block;
-  grid-column:2;grid-row:1;align-self:center;justify-self:end;
-  margin:0;min-width:0;max-width:none;padding:3px 2px;
-  box-sizing:border-box;flex:none;white-space:nowrap;
-  font-size:clamp(9px,2.2vw,11px);line-height:1;letter-spacing:-.04em;
- }
- .game .dossier-file-list>.dossier-tile .card-detail>summary,
- .game .dossier-file-list>.dossier-tile .card-detail[open]>summary{
-  top:51px;right:5px;
- }
- .game .dossier-file-list>.dossier-tile.is-special>.card .dossier-card-top{
-  height:auto;max-height:none;min-height:43px;flex-basis:auto;
+  height:auto;min-height:56px;max-height:none;flex-basis:auto;
  }
 }
 @media(max-width:390px){
- .game .dossier-file-list>.dossier-tile>.card .dossier-card-top{gap:2px;padding:3px 4px}
- .game .dossier-file-list>.dossier-tile>.card .dossier-card-top .card-label{gap:2px;font-size:11px}
- .game .dossier-file-list>.dossier-tile>.card img.dossier-category-icon{
-  flex-basis:16px;width:16px;height:16px;min-width:16px;max-width:16px;min-height:16px;max-height:16px;
- }
- .game .dossier-file-list>.dossier-tile>.card .dossier-card-status{font-size:9px;padding:2px 1px}
-}
-
-/* Restore readable mobile typography. Never truncate category names. */
-@media(max-width:760px){
  .game .dossier-file-list>.dossier-tile>.card .dossier-card-top{
-  display:flex;flex-direction:column;align-items:stretch;justify-content:center;
-  height:auto;min-height:54px;max-height:none;flex:0 0 auto;
-  gap:3px;padding:5px 7px;
+  column-gap:2px;padding:6px 4px;
  }
  .game .dossier-file-list>.dossier-tile>.card .dossier-card-top .card-label{
-  font-size:clamp(11px,2.9vw,14px);letter-spacing:0;line-height:1.15;
-  max-width:100%;white-space:normal;overflow:visible;overflow-wrap:normal;
+  gap:3px;font-size:11px;
  }
  .game .dossier-file-list>.dossier-tile>.card .dossier-card-status{
-  align-self:flex-end;font-size:clamp(10px,2.4vw,12px);
-  padding:3px 5px;letter-spacing:0;
+  padding:3px 2px;font-size:9px;
  }
- .game .dossier-file-list>.dossier-tile .card-detail>summary,
- .game .dossier-file-list>.dossier-tile .card-detail[open]>summary{top:62px}
 }
