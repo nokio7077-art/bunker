@@ -26,7 +26,7 @@ test('own card shows category and value, but hides description behind an explici
  assert.match(html,/Инженер/);
  assert.match(html,/Профессия/);
  assert.match(html,/<details class="card-detail"/);
- assert.match(html,/<summary aria-label="Подробности: Профессия"[^>]*><span aria-hidden="true" class="detail-chevron"><\/span><\/summary>/);
+ assert.match(html,/<summary aria-label="Подробности: Профессия"[^>]*><svg class="detail-chevron"[^>]*><path[^>]*\/><\/svg><\/summary>/);
  assert.match(html,/Большое описание профессии/);
  assert.doesNotMatch(html,/>Подробнее</);
  assert.ok(html.indexOf('</button>')<html.indexOf('<details class="card-detail"'),'the arrow disclosure is separate from the card action');
@@ -41,7 +41,7 @@ test('special card retains its action button and separate description disclosure
 test('public spotlight card hides only optional description and retains public value',()=>{
  const html=context.publicCard(player,'profession');
  assert.match(html,/Инженер/);
- assert.match(html,/<summary aria-label="Подробности: Профессия"[^>]*><span aria-hidden="true" class="detail-chevron"><\/span><\/summary>/);
+ assert.match(html,/<summary aria-label="Подробности: Профессия"[^>]*><svg class="detail-chevron"[^>]*><path[^>]*\/><\/svg><\/summary>/);
  assert.match(html,/Большое описание профессии/);
  const plain=context.publicCard({...player,descriptions:{}},'health');
  assert.doesNotMatch(plain,/<details/);
@@ -69,5 +69,13 @@ test('disclosure chevron is frameless and aligned alongside the characteristic v
  assert.match(latest,/border:0;border-radius:0;box-shadow:none;background:transparent/);
  assert.match(latest,/\.game \.compact-public-card \.card-detail>summary\{top:34px/);
  assert.match(latest,/\.game \.dossier-file-list \.dossier-card-content\{padding-right:35px/);
- assert.match(latest,/border-right:2px solid currentColor;border-bottom:2px solid currentColor/);
+ assert.match(styles,/\.game \.card-detail>summary \.detail-chevron\{[^}]*width:21px;height:21px/);
+});
+
+test('active player appears in the lower dossier only; bot explanation belongs in rules',()=>{
+ assert.doesNotMatch(source,/\$\{turnSpotlight\}/);
+ assert.doesNotMatch(source,/ТЕСТОВАЯ ПАРТИЯ · С БОТАМИ/);
+ assert.match(source,/rules-bot-mode/);
+ assert.match(source,/Для перехода к следующему боту нажмите/);
+ assert.match(source,/id="active-dossier"/);
 });

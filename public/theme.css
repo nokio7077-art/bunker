@@ -2829,3 +2829,16 @@ body,button,input,select,textarea,.landing-shell,.game,#rules,#special-dialog{
 /* Confine the video and poster to the illustrated main area so they
    cannot visibly spill under the opaque footer when the viewport is tall. */
 .landing-shell>.landing{overflow:clip}
+
+/* Single active-player panel: the existing lower dossier remains the only one. */
+.game .card-detail>summary .detail-chevron{
+ display:block;width:21px;height:21px;
+ border:0;box-sizing:border-box;
+ transform:none;transition:transform .15s ease;
+ flex:0 0 auto;pointer-events:none;
+}
+.game .card-detail[open]>summary .detail-chevron{transform:rotate(180deg)}
+@media(prefers-reduced-motion:reduce){.game .card-detail>summary .detail-chevron{transition:none}}
+.survival-rules .rules-bot-mode{margin:16px 0;padding:15px 18px;border:1px solid #6f8d4c;background:#102318}
+.survival-rules .rules-bot-mode h4{font-size:16px;color:#dff5a7;margin:0 0 8px}
+.survival-rules .rules-bot-mode p{margin:9px 0 0}
