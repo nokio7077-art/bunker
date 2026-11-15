@@ -370,3 +370,35 @@ test('bot special cannot discard another player hidden card during manual bot ha
 });
 
 
+
+test('two consecutive company games prioritize cards not previously dealt',()=>{
+ const r=setup(5),host=r.players[0];act(r,host,'start');
+ const initial=Object.fromEntries(Object.keys(decks).map(k=>[k,new Set(r.players.map(p=>p.cards[k]))]));
+ const originalDisaster=r.disaster.id,originalBunker=r.bunker.id;
+ r.phase='finished';act(r,host,'next_game');act(r,r.players[0],'start');
+ for(const [key,seen] of Object.entries(initial)){
+  const next=r.players.map(p=>p.cards[key]);
+  assert.equal(new Set(next).size,next.length,key+' unique inside game');
+  assert.ok(next.every(card=>!seen.has(card)),key+' no repeats while deck has enough');
+ }
+ assert.notEqual(r.disaster.id,originalDisaster);
+ assert.notEqual(r.bunker.id,originalBunker);
+ assert.equal(r.dealHistory.profession.length,10);
+});
+test('deal history survives room serialization without leaking through player views',()=>{
+ const r=setup(5);act(r,r.players[0],'start');
+ const restored=structuredClone(r);
+ assert.equal(view(restored,restored.players[0]).dealHistory,undefined);
+ restored.phase='finished';act(restored,restored.players[0],'next_game');
+ assert.ok(restored.dealHistory.profession.length>=5);
+ act(restored,restored.players[0],'start');
+ assert.ok(restored.dealHistory.profession.length>=10);
+});
+test('short decks can be reused after exhaustion without blocking games',()=>{
+ const r=setup(16),host=r.players[0];act(r,host,'start');
+ const previous=new Set(r.players.map(p=>p.cards.special));
+ r.phase='finished';act(r,host,'next_game');
+ assert.doesNotThrow(()=>act(r,r.players[0],'start'));
+ assert.equal(new Set(r.players.map(p=>p.cards.special)).size,16);
+ assert.ok(r.players.some(p=>previous.has(p.cards.special)));
+});
