@@ -118,7 +118,7 @@ test('a solo host can complete a full test game, even after expulsion',()=>{
    if(r.turn===host.id){
     act(r,host,'reveal',Object.keys(categories).find(k=>!host.revealed.includes(k)));
     act(r,host,'next');
-   }else assert.fail('Bot turns should be completed automatically.');
+   }else act(r,host,'bot_step');
   }else if(!forcedExpulsion){
    for(const p of r.players.filter(p=>p.bot))act(r,p,'vote',host.id);
    act(r,host,'vote',r.players.find(p=>p.bot&&p.alive).id);
@@ -323,41 +323,50 @@ test('atomic deals are complete and unique for all 5–16 player counts',()=>{
  }
 });
 
-test('passing the turn automatically reveals all consecutive bots and returns to a human',()=>{
+test('bot receives one revealed card on handoff and stays active until host presses next',()=>{
  const r=setup(2),[host,guest]=r.players;act(r,host,'start_test');
  const bot=r.players[2];bot.cards.special='Сброс здоровья';
- // Open only the target that the bot may legally discard.
  guest.revealed.push('health');
  act(r,host,'reveal','profession');act(r,host,'next');
  assert.equal(r.turn,guest.id);
- assert.equal(r.players[2].revealed.length,0,'bot must wait until its turn');
+ assert.equal(bot.revealed.length,0,'a bot waits for its own turn');
  act(r,guest,'reveal','profession');act(r,guest,'next');
+ assert.equal(r.turn,bot.id,'exactly the first bot gets the word');
  assert.equal(r.phase,'turn');
- assert.equal(r.turn,host.id,'all bots should have acted before the new round');
+ assert.equal(r.round,1);
+ assert.ok(bot.revealed.includes('profession'));
+ assert.equal(r.lastReveal.playerId,bot.id);
+ assert.equal(r.lastReveal.category,'profession');
+ assert.equal(r.botReveals,undefined,'batch result is not needed');
+ assert.equal(bot.specialUsed,true,'bot can use a valid special on its turn');
+ const firstView=view(r,host);
+ assert.equal(firstView.turn,bot.id);
+ assert.equal(firstView.players.find(p=>p.id===bot.id).cards.profession,bot.cards.profession);
+ assert.equal(r.players[3].revealed.length,0,'the next bot must not reveal early');
+ act(r,host,'bot_step');
+ assert.equal(r.turn,r.players[3].id);
+ assert.equal(r.lastReveal.playerId,r.players[3].id);
+ assert.ok(r.players[3].revealed.includes('profession'));
+ assert.equal(r.players[4].revealed.length,0,'only one bot advances per click');
+ act(r,host,'bot_step');
+ assert.equal(r.turn,r.players[4].id);
+ assert.equal(r.lastReveal.playerId,r.players[4].id);
+ act(r,host,'bot_step');
  assert.equal(r.round,2);
- assert.equal(r.botReveals.items.length,3);
- assert.ok(r.botReveals.items.every(x=>r.players.find(p=>p.id===x.playerId)?.bot));
- assert.equal(bot.specialUsed,true);
- assert.ok(r.specialEvents.some(event=>event.actor===bot.name));
- const observed=view(r,host);
- for(const item of observed.botReveals.items){
-  const actor=observed.players.find(p=>p.id===item.playerId);
-  assert.ok(actor.revealed.includes(item.category));
-  assert.ok(Object.hasOwn(actor.cards,item.category));
- }
- assert.throws(()=>act(r,host,'bot_step'),/Бот уже завершил ход автоматически|Сейчас ход/);
- act(r,host,'reveal','health');
- assert.equal(r.botReveals,undefined,'old bot summary must disappear after a new human reveal');
+ assert.equal(r.turn,host.id);
+ assert.throws(()=>act(r,host,'bot_step'),/Сейчас ход живого участника/);
 });
 
-test('automatic bot turns never discard hidden cards of other players',()=>{
+test('bot special cannot discard another player hidden card during manual bot handoff',()=>{
  const r=setup(2),[host,guest]=r.players;act(r,host,'start_test');
  for(const bot of r.players.filter(p=>p.bot))bot.cards.special='Сброс здоровья';
  act(r,host,'reveal','profession');act(r,host,'next');
  act(r,guest,'reveal','profession');act(r,guest,'next');
- assert.ok(r.botReveals.items.length===3);
- assert.ok(r.players.some(p=>p.bot&&p.specialUsed),'at least a bot can use self-discard when no opponents are revealed');
+ assert.equal(r.turn,r.players[2].id);
+ assert.equal(r.lastReveal.playerId,r.turn);
+ for(let n=0;n<2;n++){act(r,host,'bot_step');assert.equal(r.lastReveal.playerId,r.turn);}
  assert.ok(!host.revealed.includes('health')&&!guest.revealed.includes('health'));
  assert.ok(host.cards.health&&guest.cards.health);
 });
+
 
