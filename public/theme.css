@@ -2578,7 +2578,7 @@ body,button,input,select,textarea,.landing-shell,.game,#rules,#special-dialog{
 .bunker-intro .bunker-card-heading{top:11.1%;left:5%;width:90%;height:7.1%;padding:0 2%;display:flex;align-items:center;justify-content:center;text-align:center;overflow:hidden;}
 .bunker-intro .bunker-card-heading strong{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;max-width:100%;font-family:BunkerDisplay,monospace;font-size:clamp(12px,4.8cqw,29px);line-height:1.13;font-weight:400;letter-spacing:-.025em;overflow-wrap:anywhere;}
 .bunker-intro .bunker-card-type{top:20%;left:18%;width:64%;height:2.8%;display:flex;align-items:center;justify-content:center;text-align:center;overflow:hidden;font-family:monospace;font-weight:700;line-height:1.05;font-size:clamp(8px,2.75cqw,17px);overflow-wrap:anywhere;}
-.bunker-intro .bunker-card-stats{top:48%;left:3.2%;width:93.6%;height:7.9%;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1.1%;}
+.bunker-intro .bunker-card-stats{top:48.7%;left:3.2%;width:93.6%;height:7.9%;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1.1%;}
 .bunker-intro .bunker-card-stat{display:flex;justify-content:center;align-items:flex-end;min-width:0;padding:0 2% 4%;text-align:center;overflow:hidden;}
 .bunker-intro .bunker-card-stat strong{font-family:monospace;font-weight:900;font-size:clamp(9px,3.1cqw,19px);color:#efff00;letter-spacing:-.03em;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .bunker-intro .bunker-card-contents{top:58.6%;left:4.8%;width:90.4%;height:35.2%;padding:1.0% 2%;overflow:hidden;display:flex;flex-direction:column;}

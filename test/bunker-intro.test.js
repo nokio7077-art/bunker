@@ -26,7 +26,7 @@ test('only the exact uploaded blank card is used, optimized and served safely',(
  assert.match(server,/binaryAssets\.set\('\/images\/bunkers\/bunker-blank-layout\.webp'/);
  assert.match(css,/background:url\('\/images\/bunkers\/bunker-blank-layout\.webp'\)/);
  assert.match(css,/aspect-ratio:982\/1602/);
- assert.match(html,/bunker-scroll-v15/);
+ assert.match(html,/bunker-stats-v16/);
  assert.ok(!app.slice(start,end).includes('bunkerVariant('));
 });
 
