@@ -482,7 +482,7 @@ function room(){const me=state.players.find(p=>p.id===state.me), current=state.p
  `<button type="button" class="secondary ai-bot-speak" data-action="ai-speak">🎙 Дать слово ${escape(current.name)}</button>`:''}
  ${state.aiProviderStatus?`<p class="ai-provider-warning" role="status">⚠ ИИ не подключился: ${escape(state.aiProviderStatus)} Сейчас работают запасные игровые ответы.</p>`:''}
  <div class="ai-chat-history" role="log" aria-label="Сообщения участников">
- ${(state.aiChat||[]).length?state.aiChat.slice(-20).map(entry=>`<p class="${entry.bot?'ai-bot-message':''}"><strong>${escape(entry.name)}:</strong> ${escape(entry.text)}</p>`).join(''):'<p class="ai-chat-empty">Сообщений пока нет. Спроси ИИ-бота, почему он должен выжить.</p>'}</div>
+ ${(state.aiChat||[]).length?state.aiChat.map(entry=>`<p class="${entry.bot?'ai-bot-message':''}"><strong>${escape(entry.name)}:</strong> ${escape(entry.text)}</p>`).join(''):'<p class="ai-chat-empty">Сообщений пока нет. Спроси ИИ-бота, почему он должен выжить.</p>'}</div>
  ${state.phase!=='finished'?`<div class="ai-chat-controls">
  <select id="ai-chat-target" aria-label="Выбрать ИИ-бота">${state.players.filter(p=>p.bot&&p.alive).map(p=>`<option value="${escape(p.id)}">${escape(p.name)} · ${escape(p.aiPersonality||'ИИ-бот')}</option>`).join('')}</select>
  <input id="ai-chat-message" type="text" maxlength="240" placeholder="Почему тебя стоит оставить?" aria-label="Сообщение ИИ-боту">

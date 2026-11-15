@@ -62,7 +62,7 @@ function startAutoBotSpeech(room){
     room.aiChat??=[];
     room.aiChat.push({name:bot.name,text:reply,bot:true,botId:bot.id,
      round:room.round,turn:room.turn,auto:true,source:result?'ai':'fallback'});
-    room.aiChat=room.aiChat.slice(-32);
+    // Retain the whole chat for this game. The AI prompt separately reads only recent messages.
     if(result?.voteForId) {
      room.aiVotePlans??={};room.aiVotePlans[bot.id]=result.voteForId;
     }
@@ -277,7 +277,7 @@ export const server=http.createServer(async(req,res)=>{
     if(message)room.aiChat.push({name:me.name,text:message.slice(0,240),round:room.round});
     room.aiChat.push({name:bot.name,text:answer,bot:true,botId:bot.id,
      round:room.round,turn:room.turn,auto:!message,source:result?'ai':'fallback'});
-    room.aiChat=room.aiChat.slice(-32);
+    // Retain the whole chat for this game. The AI prompt separately reads only recent messages.
     if(result?.voteForId){
      room.aiVotePlans??={};
      room.aiVotePlans[bot.id]=result.voteForId;
