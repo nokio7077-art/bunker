@@ -247,6 +247,12 @@ function finishVote(room,now=Date.now()){
  const max=Math.max(0,...Object.values(scores));
  const candidates=max===0?voteCandidates(room):Object.keys(scores).filter(k=>scores[k]===max);
  const abstained=room.players.length-Object.keys(room.votes).length;
+ // Nobody voted in the ordinary ballot: retain the existing timeout draw.
+ // Su-e-fa is reserved for a repeated tie after an actual first ballot.
+ if(max===0&&!room.revoteCandidates){
+  eliminate(room,pick(candidates),0,false,scores,abstained,now);
+  return;
+ }
  // First tie is resolved by discussion followed by a fresh, restricted ballot.
  if(candidates.length>1&&!room.revoteCandidates&&max>0){
   room.phase='tie_discussion';room.revoteCandidates=candidates;room.votes={};
