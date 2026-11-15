@@ -165,7 +165,6 @@ function bunkerIntro(){
  const name=legacy?b[0]:b.name||'Бункер';
  const description=legacy?b[1]:b.description||'';
  const equipment=Array.isArray(b.equipment)?b.equipment:[];
- const threats=Array.isArray(b.threats)?b.threats:[];
  const resource=b.resources||{};
  const stats=[
   {label:'Мест',value:b.capacity??state.capacity??'—'},
@@ -184,20 +183,20 @@ function bunkerIntro(){
   b.resource_basis||'',...(b.scenario_notes||[])
  ].filter(Boolean);
  const list=items=>items.length?`<ul>${items.map(item=>`<li>${escape(item)}</li>`).join('')}</ul>`:'<p>Нет сведений</p>';
+ const longestEquipment=equipment.reduce((max,item)=>Math.max(max,String(item).length),0);
+ const contentsDensity=equipment.length>=9||longestEquipment>95?'dense':equipment.length>=6||longestEquipment>55?'compact':'regular';
  return `<main id="bunker-intro" class="bunker-intro disaster-intro--art" aria-labelledby="bunker-title">
  <h1 class="sr-only" id="bunker-title" tabindex="-1">${escape(name)}</h1>
  <div class="bunker-card-stage"><article class="bunker-card-panel" aria-label="Карточка убежища: ${escape(name)}">
  <div class="bunker-card-heading"><strong>${escape(name)}</strong></div>
  <div class="bunker-card-type">${escape(legacy?'Убежище':b.type||'Убежище')}</div>
  <div class="bunker-card-stats">${stats.map(item=>`<div class="bunker-card-stat" title="${escape(item.label)}: ${escape(item.value)}"><strong>${escape(item.value)}</strong></div>`).join('')}</div>
- <section class="bunker-card-contents" aria-label="Что есть в бункере">
+ <section class="bunker-card-contents bunker-card-contents--${contentsDensity}" aria-label="Что есть в бункере">
  <h2>ВНУТРИ БУНКЕРА</h2>
- <div class="bunker-card-content-list" role="region" aria-label="Оснащение бункера, список прокручивается" tabindex="0">${equipment.length?list(equipment):`<p>${escape(description||'Сведения об оборудовании отсутствуют.')}</p>`}</div>
+ <div class="bunker-card-content-list" role="region" aria-label="Полное оснащение бункера; при необходимости прокрутите список" tabindex="0">${equipment.length?list(equipment):`<p>${escape(description||'Сведения об оборудовании отсутствуют.')}</p>`}</div>
  </section></article></div>
- <details class="bunker-intro-details"><summary>Все сведения и угрозы <span aria-hidden="true">⌄</span></summary>
- <div class="bunker-full-info"><section><h2>Описание и ресурсы</h2>${detailedInfo.map(line=>`<p>${escape(line)}</p>`).join('')}</section>
- <section><h2>Полное оснащение</h2>${list(equipment)}</section>
- <section><h2>Угрозы и ограничения</h2>${list(threats)}</section></div></details>
+ <details class="bunker-intro-details"><summary>Описание и запасы <span aria-hidden="true">⌄</span></summary>
+ <div class="bunker-full-info"><section><h2>Описание и ресурсы</h2>${detailedInfo.map(line=>`<p>${escape(line)}</p>`).join('')}</section></div></details>
  <div class="intro-footer bunker-intro-footer"><div class="intro-art-tools"><span>ДОСЬЕ УБЕЖИЩА · ${escape(state.code)}</span></div>
  <button class="primary intro-next" data-action="bunker-continue"><span>Го!лучше так чем в подвале умирать</span><span aria-hidden="true">→</span></button></div>
  </main>`;
