@@ -26,8 +26,10 @@ test('own card shows category and value, but hides description behind an explici
  assert.match(html,/Инженер/);
  assert.match(html,/Профессия/);
  assert.match(html,/<details class="card-detail"/);
- assert.match(html,/<summary>Подробнее<\/summary>/);
+ assert.match(html,/<summary aria-label="Подробности: Профессия"[^>]*><span aria-hidden="true">⌄<\/span><\/summary>/);
  assert.match(html,/Большое описание профессии/);
+ assert.doesNotMatch(html,/>Подробнее</);
+ assert.ok(html.indexOf('</button>')<html.indexOf('<details class="card-detail"'),'the arrow disclosure is separate from the card action');
  assert.ok(html.includes('</button><details class="card-detail"'));
 });
 test('special card retains its action button and separate description disclosure',()=>{
@@ -39,7 +41,7 @@ test('special card retains its action button and separate description disclosure
 test('public spotlight card hides only optional description and retains public value',()=>{
  const html=context.publicCard(player,'profession');
  assert.match(html,/Инженер/);
- assert.match(html,/<summary>Подробнее<\/summary>/);
+ assert.match(html,/<summary aria-label="Подробности: Профессия"[^>]*><span aria-hidden="true">⌄<\/span><\/summary>/);
  assert.match(html,/Большое описание профессии/);
  const plain=context.publicCard({...player,descriptions:{}},'health');
  assert.doesNotMatch(plain,/<details/);
@@ -50,4 +52,14 @@ test('mobile CSS has two columns for own, spotlight and other player cards',()=>
  assert.match(styles,/details\.public-dossier \.public-cards\{grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
  assert.match(source,/const openDetails=new Set\(/);
  assert.match(source,/node\.open=openDetails\.has\(node\.dataset\.detailKey\)/);
+});
+
+test('compact disclosure chevron is positioned beside category, not in a full height bar',()=>{
+ assert.match(styles,/\.game \.card-detail>summary,[^}]*position:absolute/);
+ assert.match(styles,/\.game \.card-detail>summary::after,[^}]*content:none/);
+ assert.match(styles,/\.game \.compact-public-card \.compact-category\{padding-right:37px/);
+ assert.match(styles,/\.game \.dossier-file-list \.dossier-card-top\{padding-right:37px/);
+ const html=context.publicCard(player,'profession');
+ assert.match(html,/<summary aria-label="Подробности: Профессия"/);
+ assert.doesNotMatch(html,/Подробнее/);
 });
