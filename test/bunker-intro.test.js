@@ -37,7 +37,7 @@ test('the live room capacity and actual JSON measurements populate the four artw
  for(const v of [state.bunker.area_sqm+' м²',state.bunker.depth_m+' м',state.bunker.food_days+' сут.'])
   assert.ok(card.includes(escape(v)),v);
  assert.equal((card.match(/class="bunker-card-stat"/g)||[]).length,4);
- assert.match(card,/class="bunker-card-contents"/);
+ assert.match(card,/class="bunker-card-contents bunker-card-contents--(?:regular|compact|dense)"/);
  assert.match(card,/data-action="bunker-continue"/);
  assert.match(card,/Го!лучше так чем в подвале умирать/);
 });
