@@ -72,7 +72,7 @@ export function chooseBotSpecialTarget(room,bot,card,targets,random=randomInt){
   const theirCard=p.revealed.includes(category)?scoreCharacteristic(category,p.cards[category],hazard):0;
   if(card.effect==='reveal')return p.id===bot.id?-4:2+theirPublic;
   if(card.effect==='discard')return p.id===bot.id?-own:theirCard+theirPublic*.2;
-  if(card.effect==='swap')return scoreCharacteristic(category,p.cards[category],hazard)-own+(p.id===bot.id?-10:0);
+  if(card.effect==='swap')return theirCard-own+(p.revealed.includes(category)?1:0);
   return 0;
  },random);
 }
