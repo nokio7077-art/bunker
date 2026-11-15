@@ -20,11 +20,16 @@ export function incompatibilities(disaster, bunker) {
  return reasons;
 }
 
-export function chooseWorld(capacity, random = randomInt) {
- const disaster = disasters[random(disasters.length)];
- const compatible = bunkers.filter(b => incompatibilities(disaster,b).length === 0);
- if (!compatible.length) throw new Error('Для катастрофы нет совместимого убежища.');
- const bunker = structuredClone(compatible[random(compatible.length)]);
+export function chooseWorld(capacity, random = randomInt, history = {}) {
+ const available=disasters.filter(d=>bunkers.some(b=>incompatibilities(d,b).length===0));
+ const unseenDisasters=available.filter(d=>!(history.disasters||[]).includes(d.id));
+ const choices=unseenDisasters.length?unseenDisasters:available;
+ if(!choices.length)throw new Error('Для катастрофы нет совместимого убежища.');
+ const disaster=choices[random(choices.length)];
+ const compatible=bunkers.filter(b=>incompatibilities(disaster,b).length===0);
+ const unseenBunkers=compatible.filter(b=>!(history.bunkers||[]).includes(b.id));
+ const bunkerChoices=unseenBunkers.length?unseenBunkers:compatible;
+ const bunker=structuredClone(bunkerChoices[random(bunkerChoices.length)]);
  bunker.capacity = capacity;
  bunker.scenario_notes = [
   `Ресурсы рассчитаны на ${capacity} мест для финальной группы.`,
