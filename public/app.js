@@ -320,8 +320,8 @@ function rpsDialog(){
  if(state?.phase!=='rps'||!state.rps)return '';
  const duel=state.rps,eligible=duel.candidates.includes(state.me),sent=duel.submitted.includes(state.me);
  const participantNames=duel.candidates.map(id=>state.players.find(p=>p.id===id)?.name).filter(Boolean);
- const icons={rock:'✊',scissors:'✌',paper:'✋'};
  const labels={rock:'Камень',scissors:'Ножницы',paper:'Бумага'};
+ const moveImage=move=>`<img class="suefa-icon" src="/images/ui/suefa-${move}.png" alt="" width="72" height="72" decoding="async">`;
  const result=duel.lastResult;
  const previous=result?`<p class="suefa-last">${result.draw?'Ничья! Играем ещё раз.':'Часть участников выиграла. Оставшиеся играют дальше.'}</p>`:'';
  return `<dialog id="suefa-notice" class="special-notice suefa-notice" aria-labelledby="suefa-title">
@@ -330,8 +330,9 @@ function rpsDialog(){
  <p>Камень побеждает ножницы, ножницы — бумагу, бумага — камень. Проигравшие продолжают, пока один участник не покинет бункер.</p>
  <p><strong>Играют:</strong> ${participantNames.map(escape).join(', ')}</p>
  ${previous}
- ${eligible&&!sent?`<div class="suefa-options">${['rock','scissors','paper'].map(move=>`<button type="button" class="suefa-choice" data-action="rps_move" data-move="${move}"><span aria-hidden="true">${icons[move]}</span><strong>${labels[move]}</strong></button>`).join('')}</div>`:
- `<p class="suefa-wait">${eligible?'Ваш выбор принят. Ждём остальных участников.':'Ожидаем решения участников су-е-фа.'}</p>`}
+ ${eligible&&!sent?`<div class="suefa-options">${['rock','scissors','paper'].map(move=>`<button type="button" class="suefa-choice" data-action="rps_move" data-move="${move}">${moveImage(move)}<strong>${labels[move]}</strong></button>`).join('')}</div>`:
+ `<div class="suefa-selected">${eligible&&duel.myChoice?`<div class="suefa-selected-card">${moveImage(duel.myChoice)}<strong>${labels[duel.myChoice]}</strong></div>`:''}
+ <p class="suefa-wait">${eligible?'Ваш выбор принят. Ждём остальных участников.':'Ожидаем решения участников су-е-фа.'}</p></div>`}
  <p class="suefa-submitted">Готовы: ${duel.submitted.length} / ${duel.candidates.length}. Выборы других игроков скрыты до завершения раунда.</p>
  <div class="phase-timer"><span>До автоматического выбора</span><strong data-deadline="${duel.deadline}">${fmtTime(duel.deadline)}</strong></div>
  </dialog>`;
@@ -525,8 +526,19 @@ app.addEventListener('click',async e=>{const btn=e.target.closest('button');if(!
  if(action==='copy'){try{await navigator.clipboard.writeText(state.code);toast('Код комнаты скопирован');}catch{toast('Код комнаты: '+state.code);}return;}
  if(action==='expulsion-close'){dismissExpulsionNotice();return;}if(action==='tie-notice-close'){dismissTieNotice();render();return;}if(action==='notice-close'){dismissSpecialNotice();render();return;} if(action==='special-close'){specialDraft=null;render();return;}
  if(action==='special-open'){if(busy)return;busy=true;try{specialDraft={...await api(`/api/rooms/${session.code}/special`),targetId:''};render();}catch(e){toast(e.message);}finally{busy=false;}return;}
- if((!action&&!btn.dataset.card&&!btn.dataset.vote)||busy)return;busy=true;actionEpoch++;btn.disabled=true;
- try{state=await api(`/api/rooms/${session.code}/action`,{action:btn.dataset.vote?'vote':btn.dataset.card?'reveal':action,value:action==='rps_move'?btn.dataset.move:action==='use_special'?{targetId:specialDraft?.targetId}:action==='transfer_host'?document.querySelector('#host-target')?.value:btn.dataset.vote||btn.dataset.card});prepareDisasterArtwork(state?.disaster);prepareBunkerArtwork(state?.bunker);last=JSON.stringify(state);if(action==='use_special'){specialDraft=null;}if(action==='next_game'){replayEnding=false;replayDisasterKey=null;renderedTurn=null;}render();}catch(e){toast(e.message);btn.disabled=false;}finally{busy=false;}
+ if((!action&&!btn.dataset.card&&!btn.dataset.vote)||busy)return;
+ // Hide unselected gestures immediately; the server's response will render
+ // the same choice from the private rps.myChoice field. On error refresh restores.
+ if(action==='rps_move'&&state?.phase==='rps'){
+  const options=btn.closest('.suefa-options');
+  if(options){
+   for(const other of options.querySelectorAll('.suefa-choice'))
+    if(other!==btn)other.remove();
+   options.classList.add('suefa-options-selected');
+  }
+ }
+ busy=true;actionEpoch++;btn.disabled=true;
+ try{state=await api(`/api/rooms/${session.code}/action`,{action:btn.dataset.vote?'vote':btn.dataset.card?'reveal':action,value:action==='rps_move'?btn.dataset.move:action==='use_special'?{targetId:specialDraft?.targetId}:action==='transfer_host'?document.querySelector('#host-target')?.value:btn.dataset.vote||btn.dataset.card});prepareDisasterArtwork(state?.disaster);prepareBunkerArtwork(state?.bunker);last=JSON.stringify(state);if(action==='use_special'){specialDraft=null;}if(action==='next_game'){replayEnding=false;replayDisasterKey=null;renderedTurn=null;}render();}catch(e){toast(e.message);btn.disabled=false;if(action==='rps_move')render();}finally{busy=false;}
 });
 app.addEventListener('cancel',e=>{if(e.target.id==='special-dialog')specialDraft=null;if(e.target.id==='special-notice')dismissSpecialNotice();if(e.target.id==='tie-notice')dismissTieNotice();if(e.target.id==='expulsion-notice')dismissExpulsionNotice();},true);
 app.addEventListener('change',e=>{
