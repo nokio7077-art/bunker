@@ -2665,3 +2665,39 @@ body,button,input,select,textarea,.landing-shell,.game,#rules,#special-dialog{
   font-size:clamp(10px,2.6cqw,13px);line-height:1.43;
  }
 }
+
+/* Tiny inline disclosure arrows replace the large Подробнее bars in all dossiers. */
+.game .dossier-file-list>.dossier-tile,
+.game .compact-public-card{position:relative}
+.game .card-detail{border:0;background:transparent;min-width:0;overflow:visible;position:static}
+.game .card-detail>summary,
+.game .card-detail[open]>summary{
+ position:absolute;z-index:4;right:5px;top:5px;
+ width:32px;height:32px;min-height:32px;
+ padding:0;margin:0;display:grid;place-items:center;
+ box-sizing:border-box;border:1px solid #6f8f4b;border-radius:4px;
+ background:#17321d;color:#d2f6a2;cursor:pointer;
+ list-style:none;user-select:none;
+}
+.game .card-detail>summary::-webkit-details-marker{display:none}
+.game .card-detail>summary::after,
+.game .card-detail[open]>summary::after{content:none}
+.game .card-detail>summary>span{display:block;font-family:monospace;font-size:20px;line-height:1;transform:translateY(-2px);transition:transform .15s ease}
+.game .card-detail[open]>summary>span{transform:rotate(180deg) translateY(2px)}
+.game .card-detail>summary:hover{background:#23492b}
+.game .card-detail>summary:focus-visible{outline:2px solid #d7f6a5;outline-offset:2px}
+.game .card-detail>p{border:1px solid #486846;border-top:0;background:#102318;margin:0;padding:9px 10px 11px;font-size:12px;line-height:1.45;white-space:normal;overflow-wrap:anywhere}
+.game .dossier-file-list>.dossier-tile>.card{padding-right:34px}
+.game .dossier-file-list>.dossier-tile .card-detail>p{margin-top:0}
+.game .compact-public-card .compact-category{padding-right:37px;min-height:25px}
+.game .compact-public-card .card-detail{margin-top:0}
+@media(max-width:760px){
+ .game .dossier-file-list>.dossier-tile>.card{padding-right:0}
+ .game .dossier-file-list .dossier-card-top{padding-right:37px}
+ .game .dossier-file-list .dossier-card-status{margin-right:0}
+ .game .card-detail>summary{right:5px;top:5px;width:28px;height:28px;min-height:28px}
+ .game .card-detail>summary>span{font-size:18px}
+ .game .compact-public-card .compact-category{padding-right:31px}
+ .game .card-detail>p{padding:8px;font-size:12px}
+}
+@media(prefers-reduced-motion:reduce){.game .card-detail>summary>span{transition:none}}
