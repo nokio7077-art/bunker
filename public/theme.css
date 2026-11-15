@@ -2739,3 +2739,11 @@ body,button,input,select,textarea,.landing-shell,.game,#rules,#special-dialog{
  .game .bot-reveal-summary{padding:10px 11px;margin-bottom:10px}
  .game .bot-reveal-items{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
+
+/* Keep the old scrollable equipment list, slightly farther from the left art frame. */
+.bunker-intro .bunker-card-content-list{
+ padding-left:9.5%;
+}
+@media(max-width:480px){
+ .bunker-intro .bunker-card-content-list{padding-left:9.5%}
+}
