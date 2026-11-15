@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { chooseBotVote, chooseBotReveal, chooseBotSpecialTarget, publicSurvivalScore } from '../bot-ai.js';
+import { chooseBotVote, chooseBotReveal, chooseBotSpecialTarget, publicSurvivalScore, teamSkillContribution } from '../bot-ai.js';
 
 const random=()=>3;
 const room={disaster:{hazard:'airborne'},round:2,players:[
@@ -54,4 +54,53 @@ test('special swap target scores do not inspect a closed opponent card',()=>{
  const after=chooseBotSpecialTarget(local,bot,{effect:'swap',category:'health'},[hidden,visible],random).id;
  assert.equal(before,after);
  assert.equal(after,'visible');
+});
+
+test('bot protects the only engineer when two doctors already cover pandemic care',()=>{
+ const people=[
+  {id:'bot',alive:true,cards:{profession:'Вирусолог'},revealed:['profession'],bot:true},
+  {id:'medic2',alive:true,cards:{profession:'Вирусолог'},revealed:['profession']},
+  {id:'engineer',alive:true,cards:{profession:'Инженер'},revealed:['profession']}
+ ];
+ const group={disaster:{hazard:'airborne'},bunker:{equipment:['Дизель-генератор']},players:people};
+ assert.ok(teamSkillContribution(group,people[2],people[0])>teamSkillContribution(group,people[1],people[0]));
+ assert.equal(chooseBotVote(group,people[0],['medic2','engineer'],random),'medic2');
+});
+test('single doctor is more valuable than another engineer during pandemic',()=>{
+ const people=[
+  {id:'bot',alive:true,cards:{profession:'Инженер'},revealed:['profession'],bot:true},
+  {id:'engineer2',alive:true,cards:{profession:'Электрик'},revealed:['profession']},
+  {id:'doctor',alive:true,cards:{profession:'Вирусолог'},revealed:['profession']}
+ ];
+ const group={disaster:{hazard:'airborne'},bunker:{equipment:['Дизель-генератор']},players:people};
+ assert.equal(chooseBotVote(group,people[0],['engineer2','doctor'],random),'engineer2');
+});
+test('hidden profession of another player cannot alter team skill valuation or vote',()=>{
+ const people=[
+  {id:'bot',alive:true,cards:{profession:'Инженер'},revealed:['profession'],bot:true},
+  {id:'hidden',alive:true,cards:{profession:'Вирусолог'},revealed:[]},
+  {id:'known',alive:true,cards:{profession:'Вирусолог'},revealed:['profession']}
+ ];
+ const group={disaster:{hazard:'airborne'},players:people};
+ const before=teamSkillContribution(group,people[2],people[0]);
+ const voteBefore=chooseBotVote(group,people[0],['hidden','known'],random);
+ people[1].cards.profession='Инженер';
+ assert.equal(teamSkillContribution(group,people[2],people[0]),before);
+ assert.equal(chooseBotVote(group,people[0],['hidden','known'],random),voteBefore);
+});
+test('excluded players do not provide team skill coverage',()=>{
+ const people=[
+  {id:'bot',alive:true,cards:{profession:'Инженер'},revealed:['profession'],bot:true},
+  {id:'excludedDoctor',alive:false,cards:{profession:'Вирусолог'},revealed:['profession']},
+  {id:'remainingDoctor',alive:true,cards:{profession:'Вирусолог'},revealed:['profession']}
+ ];
+ const group={disaster:{hazard:'airborne'},players:people};
+ assert.equal(teamSkillContribution(group,people[2],people[0]),7);
+});
+test('bot favors disclosing a skill missing from the team',()=>{
+ const bot={id:'bot',alive:true,cards:{profession:'Инженер',health:'Здоров'},revealed:[]};
+ const group={round:2,disaster:{hazard:'blackout'},bunker:{equipment:['Генератор']},players:[
+  bot,{id:'cook',alive:true,cards:{profession:'Повар'},revealed:['profession']}
+ ]};
+ assert.equal(chooseBotReveal(group,bot,['profession','health'],random),'profession');
 });
