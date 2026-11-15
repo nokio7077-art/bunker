@@ -103,3 +103,18 @@ test('SIGKILL during an active match leaves the last acknowledged action recover
   assert.equal(file[0][1].players.length,5);
  }finally{await kill();await rm(dir,{recursive:true,force:true});}
 });
+
+test('a pending su-e-fa round survives local checkpoint restart',async()=>{
+ const dir=await mkdtemp(join(tmpdir(),'bunker-suefa-store-'));
+ try{
+  const store=createRoomStore(dir);
+  const r={code:'123456',phase:'rps',players:[
+   {id:'one',alive:true},{id:'two',alive:true}
+  ],rps:{candidates:['one','two'],choices:{one:'rock'},round:2,deadline:Date.now()+90000}};
+  store.save(new Map([['123456',r]]));
+  const restored=store.load().get('123456');
+  assert.equal(restored.phase,'rps');
+  assert.equal(restored.rps.round,2);
+  assert.deepEqual(restored.rps.choices,{one:'rock'});
+ }finally{await rm(dir,{recursive:true,force:true});}
+});
