@@ -145,11 +145,11 @@ function landing(){return `<div class="landing-shell">${header()}<main class="la
  
  
  </section><section class="entry-panel" aria-labelledby="entry-title">
- <div class="eyebrow entry-kicker">${uiIcon('radiation')} ДОПУСК В УБЕЖИЩЕ</div><h2 id="entry-title">Вы среди выживших?</h2><p>Соберите друзей. Остальное решит игра.</p>
+ <div class="eyebrow entry-kicker">ДОПУСК В УБЕЖИЩЕ</div><h2 id="entry-title">Вы среди выживших?</h2><p>Соберите друзей. Остальное решит игра.</p>
  <div class="tabs" aria-label="Способ входа"><button class="${mode==='create'?'active':''}" data-mode="create" aria-pressed="${mode==='create'}">Создать</button><button class="${mode==='join'?'active':''}" data-mode="join" aria-pressed="${mode==='join'}">Войти</button></div>
  <form id="entry"><label for="name">Ваше имя</label><input id="name" name="name" placeholder="Введите имя…" minlength="2" maxlength="24" required autocomplete="nickname">${mode!=='create'?'<label for="code">Код комнаты</label><input id="code" name="code" placeholder="000000" pattern="[0-9]{6}" maxlength="6" inputmode="numeric" value="${prefillCode}" required>':''}<button class="primary full" type="submit">${mode==='create'?'Создать убежище':'Войти в убежище'} <span aria-hidden="true">→</span></button></form>
  ${localStorage.getItem('bunker-session')?'<button class="secondary full resume-button" data-action="resume">Вернуться в сохранённую комнату <span aria-hidden="true">→</span></button>':''}
- <div class="entry-note"><span aria-hidden="true">${uiIcon('person')}</span><p>Регистрация не требуется.<br>Просто создайте комнату и пригласите друзей.</p></div>
+ <div class="entry-note"><p>Регистрация не требуется.<br>Просто создайте комнату и пригласите друзей.</p></div>
  <ol class="protocol"><li><b>01 /</b><span>ПОЛУЧИТЕ<br>РОЛЬ</span></li><li><b>02 /</b><span>УБЕДИТЕ<br>ГРУППУ</span></li><li><b>03 /</b><span>ОСТАНЬТЕСЬ<br>ВНУТРИ</span></li></ol>
  </section></main><footer class="landing-footer apocalypse-footer" aria-label="Контакты и символы апокалипсиса"><div class="footer-layout"><div class="footer-symbols footer-symbols-left" aria-hidden="true"><span class="apocalypse-symbol">☢︎</span><span class="apocalypse-symbol">☣︎</span></div><div class="footer-contact"><span class="footer-contact-label">СВЯЗЬ С УБЕЖИЩЕМ</span><a href="mailto:post.apocalypse.box@gmail.com">post.apocalypse.box@gmail.com</a></div><div class="footer-symbols footer-symbols-right" aria-hidden="true"><span class="apocalypse-symbol">⚠︎</span><span class="apocalypse-symbol">⛔︎</span></div></div></footer></div>${rules}`;}
 function bunkerIntroKey(){return `bunker-shelter-intro:${state.code}:${state.me}:${state.gameNumber||1}`;}
