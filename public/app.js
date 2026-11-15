@@ -196,8 +196,9 @@ function bunkerIntro(){
  <div class="bunker-card-heading"><strong>${escape(name)}</strong></div>
  <div class="bunker-card-type">${escape(legacy?'Убежище':b.type||'Убежище')}</div>
  <div class="bunker-card-stats">${stats.map(item=>`<div class="bunker-card-stat" title="${escape(item.label)}: ${escape(item.value)}"><strong>${escape(item.value)}</strong></div>`).join('')}</div>
- <section class="bunker-card-contents" aria-label="Что есть в бункере" tabindex="0">
- <h2>ВНУТРИ БУНКЕРА</h2>${equipment.length?list(equipment):`<p>${escape(description||'Сведения об оборудовании отсутствуют.')}</p>`}
+ <section class="bunker-card-contents" aria-label="Что есть в бункере">
+ <h2>ВНУТРИ БУНКЕРА</h2>
+ <div class="bunker-card-content-list" role="region" aria-label="Оснащение бункера, список прокручивается" tabindex="0">${equipment.length?list(equipment):`<p>${escape(description||'Сведения об оборудовании отсутствуют.')}</p>`}</div>
  </section></article></div>
  <details class="bunker-intro-details"><summary>Все сведения и угрозы <span aria-hidden="true">⌄</span></summary>
  <div class="bunker-full-info"><section><h2>Описание и ресурсы</h2>${detailedInfo.map(line=>`<p>${escape(line)}</p>`).join('')}</section>
