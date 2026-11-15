@@ -29,6 +29,8 @@ function safeAiError(error){
  const code=String(error?.cause?.code||error?.code||'');
  if(/CERT|SELF_SIGNED|UNABLE_TO_VERIFY|TLS/i.test(code))
   return 'Ошибка TLS-сертификата GigaChat на Render. Нужен доверенный сертификат, не отключение проверки.';
+ if(/сертификат Минцифры|корневой сертификат GigaChat|НУЦ Минцифры/.test(String(error?.message||'')))
+  return 'Сертификат Минцифры не загрузился или не прошёл проверку. Проверь доступность gu-st.ru из Render.';
  if(error?.name==='AbortError')return 'Время ответа GigaChat истекло.';
  return 'Нет ответа от GigaChat. Проверь Render Logs и настройки API.';
 }
