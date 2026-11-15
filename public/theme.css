@@ -2909,17 +2909,17 @@ body,button,input,select,textarea,.landing-shell,.game,#rules,#special-dialog{
  }
 }
 
-/* Desktop entrance art: frame from the LEFT like mobile so the bunker
-   doorway and goat skull are not pushed out by the full-width composition.
-   The poster and video must have identical geometry to avoid a jump. */
+/* Desktop: fit the entire entrance frame inside the hero area.
+   The previous 115% zoom and width-based video clipped the lower artwork. */
 @media(min-width:861px){
  .landing-shell .landing::before{
-  background-size:115% auto;
-  background-position:left top;
+  background-size:contain;
+  background-position:center top;
+  background-repeat:no-repeat;
  }
  .landing-shell .landing-video{
   left:0;top:0;right:auto;bottom:auto;
-  width:115%;max-width:none;height:auto;
-  object-fit:cover;object-position:left top;
+  width:100%;max-width:none;height:100%;
+  object-fit:contain;object-position:center top;
  }
 }
