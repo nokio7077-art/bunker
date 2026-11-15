@@ -2701,3 +2701,41 @@ body,button,input,select,textarea,.landing-shell,.game,#rules,#special-dialog{
  .game .card-detail>p{padding:8px;font-size:12px}
 }
 @media(prefers-reduced-motion:reduce){.game .card-detail>summary>span{transition:none}}
+
+/* Dossier disclosures sit beside each characteristic VALUE, not its heading.
+   CSS-drawn chevron is consistent across phone fonts; no outline or frame. */
+.game .dossier-file-list>.dossier-tile,.game .compact-public-card{position:relative}
+.game .card-detail>summary,.game .card-detail[open]>summary{
+ right:5px;top:48px;width:30px;height:30px;min-height:30px;
+ border:0;border-radius:0;box-shadow:none;background:transparent;
+ color:#c9ee92;padding:0;margin:0;
+}
+.game .card-detail>summary:hover,.game .card-detail[open]>summary:hover{background:transparent;color:#eaffb2}
+.game .card-detail>summary .detail-chevron{
+ display:block;width:10px;height:10px;
+ border-right:2px solid currentColor;border-bottom:2px solid currentColor;
+ transform:rotate(45deg) translate(-2px,-2px);transition:transform .15s ease;
+}
+.game .card-detail[open]>summary .detail-chevron{transform:rotate(225deg) translate(-2px,-2px)}
+.game .dossier-file-list>.dossier-tile>.card{padding-right:0}
+.game .dossier-file-list .dossier-card-top{padding-right:7px}
+.game .dossier-file-list .dossier-card-content{padding-right:35px}
+.game .compact-public-card .compact-category{padding-right:0;min-height:0}
+.game .compact-public-card>strong{padding-right:26px}
+.game .compact-public-card .card-detail>summary{top:34px;right:4px}
+.game .card-detail>p{border-top:1px solid #486846}
+.game .bot-reveal-summary{border:2px solid #9bc462;background:#10281a;padding:12px 14px;margin:0 0 12px;display:grid;gap:9px}
+.game .bot-reveal-heading{color:#e5f9a9;font-size:12px;letter-spacing:.07em}
+.game .bot-reveal-items{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:7px}
+.game .bot-reveal-items p{margin:0;background:#1b3620;border-left:3px solid #b3e671;padding:8px 10px;display:grid;gap:3px;overflow-wrap:anywhere}
+.game .bot-reveal-items span{font-size:11px;color:#cbe9ab}
+.game .bot-reveal-items b{font-size:13px;color:#f3ffda}
+@media(max-width:760px){
+ .game .card-detail>summary,.game .card-detail[open]>summary{right:4px;top:41px;width:28px;height:28px;min-height:28px}
+ .game .dossier-file-list .dossier-card-top{padding-right:7px}
+ .game .dossier-file-list .dossier-card-content{padding-right:34px}
+ .game .compact-public-card .card-detail>summary{top:31px}
+ .game .compact-public-card .compact-category{padding-right:0}
+ .game .bot-reveal-summary{padding:10px 11px;margin-bottom:10px}
+ .game .bot-reveal-items{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
