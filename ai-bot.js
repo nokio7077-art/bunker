@@ -116,12 +116,12 @@ export function explainOwnBotVote(room,bot,message){
  if(!asksAboutOwnBallot&&!followup)return null;
  const last=history.at(-1);
  if(!history.length)
-  return 'У меня нет сохранённой записи о моих завершённых голосованиях. Поэтому я не могу достоверно назвать свой выбор или объяснить его причины.';
+  return 'У меня нет подтверждённой записи о собственных прошлых голосах. Поэтому не буду утверждать, что голосовал за кого-либо, и не могу достоверно объяснить причины.';
  if(named&&asksAboutOwnBallot){
   const chosen=history.filter(entry=>entry.targetId===named.id);
   if(!chosen.length)return 'В истории моих подтверждённых голосов нет выбора '+named.name+'. Я не стану утверждать, что голосовал за этого игрока.';
   const found=chosen.at(-1);
-  return 'Да, я голосовал за исключение '+named.name+' в круге '+found.round+(found.revote?' на переголосовании':'')+'. Причина моего тогдашнего выбора не записывалась, поэтому могу лишь оценить его сейчас.';
+  return 'Да, я голосовал за исключение '+named.name+' в круге '+found.round+(found.revote?' на переголосовании':'')+'. Но точная причина прошлого решения в журнале не сохранялась, поэтому могу лишь оценить его сейчас.';
  }
  if(asksWhy||followup){
   const target=room.players.find(p=>p.id===last.targetId);
