@@ -26,7 +26,10 @@ test('only the exact uploaded blank card is used, optimized and served safely',(
  assert.match(server,/binaryAssets\.set\('\/images\/bunkers\/bunker-blank-layout\.webp'/);
  assert.match(css,/background:url\('\/images\/bunkers\/bunker-blank-layout\.webp'\)/);
  assert.match(css,/aspect-ratio:982\/1602/);
- assert.match(html,/bot-handoff-v19/);
+ const versions=[...html.matchAll(/(?:style|game-pixel|theme)\.css\?v=([^"']+)|app\.js\?v=([^"']+)/g)].map(match=>match[1]||match[2]);
+ assert.equal(versions.length,4,'all CSS and JS assets must be cache-versioned');
+ assert.ok(versions.every(version=>/^\d{8}-[a-z0-9-]+-v\d+$/.test(version)),'asset versions use a dated build identifier');
+ assert.equal(new Set(versions).size,1,'all client assets should use the same cache version');
  assert.ok(!app.slice(start,end).includes('bunkerVariant('));
 });
 
