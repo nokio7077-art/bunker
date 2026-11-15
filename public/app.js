@@ -232,7 +232,7 @@ function handCard(me,mine,k,label){
  const body=`<span class="dossier-card-top"><span class="dossier-card-index">${number}</span><span class="card-label">${dossierIcon(k)}${escape(label)}</span><small class="dossier-card-status">${status}</small></span><span class="dossier-card-content"><strong>${empty?'Карточка сброшена':escape(me.cards[k])}</strong></span>`;
  const details=cardDetails(me.id,k,me.descriptions?.[k]);
  if(k==='special')return `<div class="dossier-tile is-special"><article class="card special-card ${open?'revealed':''}">${body}<p class="special-note">${me.specialUsed?'Действие уже применено.':state.specialAvailable?'Можно применить один раз в свой ход или во время обсуждения ничьей.':'Сюжетная карта из старой партии. Для карт действий начните новую игру.'}</p>${can?'<button class="secondary" data-card="special">Раскрыть без применения</button>':''}${state.specialAvailable?`<button class="primary" data-action="special-open" ${(mine||state.phase==='tie_discussion')&&me.alive?'':'disabled'}>Применить условие →</button>`:''}</article>${details}</div>`;
- return `<div class="dossier-tile"><button class="card ${open?'revealed':''} ${can?'available':''}" data-card="${k}" ${can?'':'disabled'}>${body}${can?'<span class="reveal-hint">Раскрыть карточку →</span>':''}</button>${details}</div>`;
+ return `<div class="dossier-tile"><button class="card ${open?'revealed':''} ${can?'available':''}" data-card="${k}" ${can?'':'disabled'}>${body}${can?'<span class="reveal-hint"><span>Раскрыть карточку</span><span class="reveal-hint-arrow" aria-hidden="true">→</span></span>':''}</button>${details}</div>`;
 }
 function worldPanels(){
  if(!state.disaster)return '';
