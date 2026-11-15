@@ -4,7 +4,8 @@ import { readFileSync, existsSync, statSync, createReadStream } from 'node:fs';
 import { createRoomStore } from './room-storage.js';
 import { createCloudRoomBackup } from './cloud-room-backup.js';
 import { createGigaChat } from './gigachat-client.js';
-import { buildBotPrompt, parseBotReply, aiFallback, validateBotClaim, isRepetitiveBotReply, explainOwnBotVote, explainFixedGameRule } from './ai-bot.js';
+import { buildBotPrompt, parseBotReply, aiFallback, validateBotClaim, isRepetitiveBotReply, explainOwnBotVote, explainFixedGameRule, answerBunkerFacts } from './ai-bot.js';
+import {rememberBotEndorsements,rememberBotVoteReason} from './ai-commitments.js';
 import { fileURLToPath } from 'node:url';
 import { join as pathJoin } from 'node:path';
 import { randomInt, randomBytes } from 'node:crypto';
@@ -58,6 +59,7 @@ function startAutoBotSpeech(room){
   finally{
    if(room.gameNumber===before.gameNumber&&room.round===before.round&&
     room.turn===before.turn&&room.phase==='turn'&&room.aiMode){
+    if(result){rememberBotEndorsements(room,bot,result);rememberBotVoteReason(room,bot,result);}
     const reply=result?.reply||aiFallback(bot,room);
     room.aiChat??=[];
     room.aiChat.push({name:bot.name,text:reply,bot:true,botId:bot.id,
@@ -254,7 +256,7 @@ export const server=http.createServer(async(req,res)=>{
    save();
    try{
     let result=null;
-    const confirmedVoteAnswer=message?(explainFixedGameRule(room,message)||explainOwnBotVote(room,bot,message)):null;
+    const confirmedVoteAnswer=message?(explainFixedGameRule(room,message)||explainOwnBotVote(room,bot,message)||answerBunkerFacts(room,message)):null;
     if(confirmedVoteAnswer){
      result={reply:confirmedVoteAnswer,voteForId:null};
     }else if(gigaChat.enabled){
@@ -272,6 +274,7 @@ export const server=http.createServer(async(req,res)=>{
      return send(409,{error:'Игровая ситуация изменилась. Попробуйте ещё раз.'});
     if(result&&gigaChat.enabled)delete room.aiProviderStatus;
     else if(!gigaChat.enabled&&!confirmedVoteAnswer)room.aiProviderStatus='GIGACHAT_AUTH_KEY не найден в окружении Render.';
+    if(result){rememberBotEndorsements(room,bot,result);rememberBotVoteReason(room,bot,result);}
     const answer=result?.reply||aiFallback(bot,room);
     room.aiChat??=[];
     if(message)room.aiChat.push({name:me.name,text:message.slice(0,240),round:room.round});
