@@ -42,7 +42,7 @@ test('the live room capacity and actual JSON measurements populate the four artw
  assert.match(card,/Го!лучше так чем в подвале умирать/);
 });
 
-test('every one of the 81 real JSON bunkers keeps all equipment on the card and detailed resources below',()=>{
+test('all 81 bunker inventories remain complete on the introductory card',()=>{
  assert.equal(bunkers.length,81);
  for(const bunker of bunkers){
   const copy=structuredClone(bunker);
@@ -56,10 +56,7 @@ test('every one of the 81 real JSON bunkers keeps all equipment on the card and 
   for(const item of bunker.equipment){
    assert.ok(pane.includes(escape(item)),bunker.name+' missing equipment '+item);
   }
-  const details=card.slice(card.indexOf('<details class="bunker-intro-details">'));
-  for(const item of Object.values(bunker.resources)){
-   assert.ok(details.includes(escape(item)),bunker.name+' missing details '+item);
-  }
+  assert.ok(!card.includes('<details class="bunker-intro-details">'));
   assert.match(card,/class="bunker-card-content-list" role="region"/);
   assert.ok(!card.includes('<h2>Угрозы и ограничения</h2>'),'No threats in bunker presentation');
   assert.match(card,/tabindex="0"/);
@@ -94,14 +91,14 @@ test('user-derived content is safely escaped rather than interpreted as HTML',()
  state.bunker.name=saved;
 });
 
-test('artwork text regions are independent, bounded and complete information remains below',()=>{
+test('artwork text regions are bounded; extra metadata stays out of introduction',()=>{
  for(const name of ['bunker-card-heading','bunker-card-type','bunker-card-stats','bunker-card-contents'])
   assert.ok(css.includes('.bunker-intro .'+name),'region '+name+' is explicitly styled');
  assert.match(css,/\.bunker-intro \.bunker-card-heading,[^}]*position:absolute/);
  assert.match(css,/\.bunker-intro \.bunker-card-contents\{[^}]*overflow:hidden/);
  assert.match(css,/\.bunker-intro \.bunker-card-content-list\{[^}]*overflow-y:auto/);
  assert.match(css,/\.bunker-intro \.bunker-card-heading strong\{[^}]*-webkit-line-clamp:2/);
- assert.match(context.bunkerIntro(),/Описание и запасы/);
+ assert.doesNotMatch(context.bunkerIntro(),/Описание и запасы|Все сведения и угрозы/);
  assert.match(css,/\.bunker-intro \.bunker-card-content-list\{[^}]*overflow-y:auto/);
 });
 
@@ -119,9 +116,19 @@ test('full equipment list stays visible in card markup even for long inventories
  const area=card.slice(card.indexOf('<section class="bunker-card-contents'),card.indexOf('</section></article>'));
  for(const item of state.bunker.equipment)assert.ok(area.includes(escape(item)),item);
  assert.match(area,/bunker-card-contents--dense/);
- assert.match(card,/Описание и запасы/);
+ assert.doesNotMatch(card,/Описание и запасы/);
  assert.ok(!card.includes('Тайная угроза'));
  assert.ok(!card.includes('Угрозы и ограничения'));
  assert.match(css,/\.bunker-intro \.bunker-card-contents--dense \.bunker-card-content-list li/);
  state.bunker=original;
+});
+
+test('subtitle is lowered, inventory inset from left decoration and scroll is restored',()=>{
+ const latest=css.slice(css.lastIndexOf('/* Final bunker-card polish:'));
+ assert.match(latest,/\.bunker-intro \.bunker-card-type\{[^}]*top:21%/);
+ assert.match(latest,/\.bunker-intro \.bunker-card-content-list\{[^}]*padding:7px 5% 12px 7\.5%/);
+ assert.match(latest,/overflow-y:auto/);
+ assert.match(latest,/font-family:'IBM Plex Mono',monospace/);
+ assert.ok(!context.bunkerIntro().includes('bunker-intro-details'));
+ assert.match(app,/class="world-details"/);
 });
