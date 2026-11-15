@@ -379,7 +379,6 @@ else if(!tieNotice&&notice&&!notice.open)notice.showModal();renderedTurn=state?.
  const summary=newlyRevealedBot?document.querySelector('.turn-spotlight'):null;
  if(summary){
   window.scrollTo({top:Math.max(0,summary.getBoundingClientRect().top+window.scrollY-80),left:0,behavior:'instant'});
- }
  }else{
   const anchored=anchorId&&document.querySelector(`[data-player-id="${CSS.escape(anchorId)}"]`);
   const offset=anchored&&anchorTop!=null?anchored.getBoundingClientRect().top-anchorTop:0;
