@@ -44,7 +44,9 @@ test('new biology is dealt to real players and bots, stays private until reveale
   const age = Number.parseInt(parts[1]); assert.ok(age >= 15 && age <= 105);
  }
  assert.equal(view(room,guest).players[0].cards.biology, undefined);
- for (const p of room.players) { act(room,p,'reveal','profession'); act(room,p,'next'); }
+ for (const p of [host,guest]) { act(room,p,'reveal','profession'); act(room,p,'next'); }
+ assert.equal(room.botReveals.items.length,3);
+ assert.equal(room.turn,host.id);
  act(room,host,'reveal','biology');
  assert.equal(view(room,guest).players[0].cards.biology, host.cards.biology);
  assert.equal(view(room,host).players[1].cards.biology, undefined);
