@@ -100,24 +100,54 @@ voteForId может быть ID живого игрока, кроме тебя,
 }
 // Reply to a direct question about a named bot's real past vote using
 // trusted history instead of asking the model to invent or deny ballots.
+// Past ballot facts come from the game engine, never from conversational
+// memory. Own ballots can be discussed only after the round has resolved.
 export function explainOwnBotVote(room,bot,message){
- const text=String(message||'').trim();
- if(!/(?:голосовал|проголосовал|голосовала|проголосовала|выбрал|выбрала)/i.test(text)
-  ||!/(?:ты|тебя|твой|твоя|бот)/i.test(text))return null;
- const target=room.players.find(p=>p.bot&&p.id!==bot.id&&
-  (text.toLowerCase().includes(p.name.toLowerCase()) ||
-   new RegExp('(?:за|против|выбрал|выбрала)\\s+'+p.name.split(' ').at(-1)+'\\s+бота','i').test(text)));
- if(!target)return null;
+ const text=String(message||'').trim().toLowerCase();
  const history=(room.aiBotVoteHistory?.[bot.id]||[])
   .filter(entry=>entry.round<room.round||room.phase==='finished');
+ const names=room.players.filter(p=>p.id!==bot.id);
+ const named=names.find(p=>text.includes(p.name.toLowerCase())||
+  (p.bot&&new RegExp('(?:^|[^а-яё])'+p.name.toLowerCase().replace('бот ','бот\\s*')+'(?:$|[^а-яё0-9])','i').test(text)));
+ const asksBallot=/(?:голосовал|голосовала|голосовали|проголосовал|проголосовала|голос|выбрал|выбрала|выбирал|выбирала)/.test(text);
+ const asksWhy=/(?:почему|зачем|объясни|причин)/.test(text);
+ const followup=asksWhy&&/(?:этого|именно|так|такой|этот|это|поступил|выбор)/.test(text);
+ const asksAboutOwnBallot=asksBallot&&/(?:ты|твой|твоя|тебе|тобой|сам|свой|свои)/.test(text);
+ if(!asksAboutOwnBallot&&!followup)return null;
+ const last=history.at(-1);
  if(!history.length)
-  return 'У меня нет подтверждённой записи о собственных прошлых голосах. Поэтому не буду утверждать, что голосовал за '+target.name+' или против него.';
- const chosen=history.filter(entry=>entry.targetId===target.id);
- if(chosen.length){
-  const last=chosen.at(-1);
-  return 'Да, я голосовал за исключение '+target.name+' в круге '+last.round+'. Это мой зафиксированный голос. Но точная причина прошлого решения в журнале не сохранялась.';
+  return 'У меня нет подтверждённой записи о собственных прошлых голосах. Поэтому не буду утверждать, что голосовал за кого-либо, и не могу достоверно объяснить причины.';
+ if(named&&asksAboutOwnBallot){
+  const chosen=history.filter(entry=>entry.targetId===named.id);
+  if(!chosen.length)return 'В истории моих подтверждённых голосов нет выбора '+named.name+'. Я не стану утверждать, что голосовал за этого игрока.';
+  const found=chosen.at(-1);
+  return 'Да, я голосовал за исключение '+named.name+' в круге '+found.round+(found.revote?' на переголосовании':'')+'. Но точная причина прошлого решения в журнале не сохранялась, поэтому могу лишь оценить его сейчас.';
  }
- return 'В сохранённой истории моих голосов нет выбора '+target.name+'. Не хочу приписывать себе несуществующее голосование.';
+ if(asksWhy||followup){
+  const target=room.players.find(p=>p.id===last.targetId);
+  return 'Мой последний подтверждённый голос был за исключение '+(target?.name||'участника')+' в круге '+last.round+'. Точную причину того решения мы не сохраняли; не буду её придумывать задним числом.';
+ }
+ const selected=/(?:в прошлом круге|в предыдущем круге|прошл(?:ом|ый) раунд)/.test(text)
+  ?history.filter(entry=>entry.round===room.round-1):history;
+ const relevant=selected.length?selected:history;
+ const short=relevant.slice(-3).map(entry=>{
+  const target=room.players.find(p=>p.id===entry.targetId);
+  return 'круг '+entry.round+(entry.revote?' (переголосование)':'')+' — '+(target?.name||'участник');
+ });
+ return 'Мои подтверждённые голоса: '+short.join('; ')+'. Это фактические действия, а не предположения.';
+}
+export function explainFixedGameRule(room,message){
+ const text=String(message||'').toLowerCase();
+ if(/(?:можно|можем|возможно|получится|разрешено|как).{0,70}(?:вернуть|возврат|возвращ|восстановить).{0,65}(?:исключ|изгнан|выгнан|участник|игрок)|(?:исключ|изгнан|выгнан).{0,60}(?:вернуть|возвращ)/i.test(text))
+  return 'Нет. По правилам этой партии исключённые участники не возвращаются. Их статус определяется результатом официального голосования.';
+ const target=(room.players||[]).find(p=>p.bot&&
+  (text.includes(p.name.toLowerCase())||
+   text.includes(p.name.toLowerCase().replace('бот ','бота '))));
+ if(target&&/(?:исключил|исключили|выгнал|выгнали|выбыл|выбыла|жив|в живых)/.test(text)&&
+   /(?:правда|это так|действительно|точно|ли |утверждаю)/.test(text))
+  return target.alive?target.name+' ещё участвует в игре. По официальному состоянию комнаты его не исключали.':
+   target.name+' уже исключён. Это подтверждено игровым состоянием.';
+ return null;
 }
 export function parseBotReply(raw,room,bot){
  const sanitized=String(raw||'').replace(/^```(?:json)?\s*/i,'').replace(/\s*```$/,'').trim();
