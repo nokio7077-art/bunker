@@ -12,7 +12,7 @@ export function rememberBotEndorsements(room,bot,result){
  for(const p of room.players||[]){
   if(p.id===bot.id||!p.alive)continue;
   const name=p.name.toLowerCase();
-  const target=name.replace(/[.*+?^$()|[\]{}\\]/g,'\\$&');
+  const target=name.replace(/[^а-яёa-z0-9 ]/gi,'');
   // Only strong, directly expressed support counts as a commitment.
   const phrase=new RegExp('(?:оставить|сохранить|поддерживаю|защищаю)\\s+(?:в\\s+бункере\\s+)?'+target+
     '|'+target+'.{0,45}(?:стоит\\s+оставить|нужн[аоы]?\\s+нам|необходим[аоы]?\\s+нам)','i');
