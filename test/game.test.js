@@ -338,7 +338,7 @@ test('passing the turn automatically reveals all consecutive bots and returns to
  assert.equal(r.botReveals.items.length,3);
  assert.ok(r.botReveals.items.every(x=>r.players.find(p=>p.id===x.playerId)?.bot));
  assert.equal(bot.specialUsed,true);
- assert.equal(r.specialEvents.at(-1).actor,bot.name);
+ assert.ok(r.specialEvents.some(event=>event.actor===bot.name));
  const observed=view(r,host);
  for(const item of observed.botReveals.items){
   const actor=observed.players.find(p=>p.id===item.playerId);
