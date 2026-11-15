@@ -75,21 +75,37 @@ test('a tied first ballot enters discussion and only tied candidates can be chos
  assert.equal(r.revoteCandidates,undefined);
 });
 
-test('a second tie ends with a draw restricted to the original tied players',()=>{
- for(let trial=0;trial<25;trial++){
-  const r=setup(8);act(r,r.players[0],'start');
-  for(const p of r.players){act(r,p,'reveal','profession');act(r,p,'next');}
-  const [first,second]=r.players;
-  r.players.forEach((p,i)=>act(r,p,'vote',i<2?r.players[1-i].id:r.players[i%2].id));
-  act(r,first,'start_revote');
-  r.players.forEach((p,i)=>act(r,p,'vote',i<2?r.players[1-i].id:r.players[i%2].id));
-  assert.ok([first.id,second.id].includes(r.lastVote.eliminated));
-  assert.equal(r.lastVote.tie,true);
-  assert.equal(r.lastVote.revote,true);
-  assert.equal(r.players.filter(p=>!p.alive).length,1);
- }
+test('repeat vote tie triggers private su-e-fa until a clear loser emerges',()=>{
+ const r=setup(8);act(r,r.players[0],'start');
+ for(const p of r.players){act(r,p,'reveal','profession');act(r,p,'next');}
+ const [first,second,observer]=r.players;
+ for(const [i,p] of r.players.entries())act(r,p,'vote',i<2?r.players[1-i].id:r.players[i%2].id);
+ act(r,first,'start_revote');
+ for(const [i,p] of r.players.entries())act(r,p,'vote',i<2?r.players[1-i].id:r.players[i%2].id);
+ assert.equal(r.phase,'rps');
+ assert.deepEqual(new Set(r.rps.candidates),new Set([first.id,second.id]));
+ assert.equal(r.players.filter(p=>!p.alive).length,0);
+ assert.throws(()=>act(r,observer,'rps_move','rock'),/только кандидаты/);
+ assert.throws(()=>act(r,first,'rps_move','banana'),/камень/);
+ act(r,first,'rps_move','rock');
+ assert.equal(view(r,second).rps.myChoice,null);
+ assert.equal(view(r,observer).rps.myChoice,null);
+ assert.equal(view(r,first).rps.myChoice,'rock');
+ assert.equal(JSON.stringify(view(r,second)).includes('"rock"'),false,'opponent move is private');
+ assert.throws(()=>act(r,first,'rps_move','paper'),/уже сделали/);
+ act(r,second,'rps_move','rock');
+ assert.equal(r.phase,'rps');
+ assert.equal(r.rps.round,2,'identical gestures repeat');
+ act(r,first,'rps_move','rock');
+ act(r,second,'rps_move','scissors');
+ assert.equal(r.phase,'turn');
+ assert.equal(r.lastVote.eliminated,second.id);
+ assert.equal(r.eliminationNotice.name,second.name);
+ assert.equal(r.eliminationNotice.votes,4);
+ assert.equal(r.eliminationNotice.viaRps,true);
+ assert.equal(r.players.filter(p=>!p.alive).length,1);
+ assert.equal(r.rps,undefined);
 });
-
 test('tie discussion expires automatically and revote timeout cannot deadlock',()=>{
  const r=setup(8);act(r,r.players[0],'start');
  for(const p of r.players){act(r,p,'reveal','profession');act(r,p,'next');}
@@ -100,8 +116,13 @@ test('tie discussion expires automatically and revote timeout cannot deadlock',(
  assert.equal(r.phase,'vote');
  assert.ok(r.voteDeadline>deadline);
  assert.equal(advanceRoom(r,r.voteDeadline+1),true);
- assert.equal(r.players.filter(p=>!p.alive).length,1);
+ assert.equal(r.phase,'rps');
  assert.equal(r.lastVote.abstained,8);
+ assert.equal(r.players.filter(p=>!p.alive).length,0);
+ const [first,second]=r.rps.candidates.map(id=>r.players.find(p=>p.id===id));
+ act(r,first,'rps_move','rock');
+ act(r,second,'rps_move','scissors');
+ assert.equal(r.players.filter(p=>!p.alive).length,1);
  assert.equal(r.lastVote.revote,true);
 });
 test('a solo host can complete a full test game, even after expulsion',()=>{
@@ -119,6 +140,8 @@ test('a solo host can complete a full test game, even after expulsion',()=>{
     act(r,host,'reveal',Object.keys(categories).find(k=>!host.revealed.includes(k)));
     act(r,host,'next');
    }else act(r,host,'bot_step');
+  }else if(r.phase==='rps'){
+   for(const [i,id] of r.rps.candidates.entries())if(!Object.hasOwn(r.rps.choices,id))act(r,r.players.find(p=>p.id===id),'rps_move',i===0?'rock':'scissors');
   }else if(!forcedExpulsion){
    for(const p of r.players.filter(p=>p.bot))act(r,p,'vote',host.id);
    act(r,host,'vote',r.players.find(p=>p.bot&&p.alive).id);
@@ -162,6 +185,7 @@ test('one human vote completes a solo test ballot with no bot action',()=>{
   act(r,host,'start_revote');
   act(r,host,'vote',r.revoteCandidates.find(id=>id!==host.id));
  }
+ if(r.phase==='rps')for(const [i,id] of r.rps.candidates.entries())act(r,r.players.find(p=>p.id===id),'rps_move',i===0?'rock':'scissors');
  assert.equal(r.phase,'turn');assert.equal(r.players.filter(p=>p.alive).length,4);
  assert.equal(Object.values(r.lastVote.scores).reduce((a,b)=>a+b,0),5);
 });
