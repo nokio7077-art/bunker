@@ -49,3 +49,28 @@ test('after selecting, only the chosen image remains visible',()=>{
   assert.ok(html.includes('Ваш выбор принят'));
  }
 });
+
+test('completed suefa round shows every chosen pixel hand and result',()=>{
+ const start=app.indexOf('function suefaRevealDialog(){');
+ const end=app.indexOf('function rpsDialog(){',start);
+ assert.ok(start>=0&&end>start);
+ const section=app.slice(start,end);
+ const state={
+  code:'123456',me:'a',gameNumber:1,
+  players:[{id:'a',name:'Аня'},{id:'b',name:'Борис'}],
+  rpsReveal:{id:'1:1',round:1,candidates:['a','b'],
+   moves:{a:'paper',b:'rock'},draw:false,losers:['b']}
+ };
+ const localStorage={getItem:()=>null};
+ const html=vm.runInNewContext(section+'\nsuefaRevealDialog()',{
+  state,localStorage,escape:v=>String(v)
+ });
+ assert.ok(html.includes('Аня'));
+ assert.ok(html.includes('Борис'));
+ assert.ok(html.includes('/images/ui/suefa-paper.png'));
+ assert.ok(html.includes('/images/ui/suefa-rock.png'));
+ assert.ok(html.includes('Победил'));
+ assert.ok(html.includes('Проиграл'));
+ assert.ok(html.includes('data-action="suefa-reveal-close"'));
+ assert.ok(app.includes('if(suefaReveal&&!suefaReveal.open)suefaReveal.showModal()'));
+});
