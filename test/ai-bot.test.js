@@ -31,7 +31,7 @@ test('prompt never contains hidden cards, tokens or recovery codes',()=>{
  const prompt=JSON.stringify(buildBotPrompt(room,bot,'Привет!'));
  assert.ok(prompt.includes(other.cards.profession));
  assert.ok(!prompt.includes(other.cards.health));
- assert.ok(!prompt.includes(bot.cards.profession));
+ assert.ok(prompt.includes(bot.cards.profession),'a character may know its own cards');
  assert.ok(!prompt.includes(host.token));
  assert.ok(!prompt.includes(bot.token));
  assert.ok(!prompt.includes(host.recoveryCode));
@@ -45,4 +45,15 @@ test('AI vote suggestions accept only live other players, fall back if not valid
  assert.equal(parseBotReply(JSON.stringify({reply:'Ой',voteForId:bot.id}),room,bot).voteForId,null);
  assert.equal(parseBotReply('{"reply":"Защищаю команду"}',room,bot).voteForId,null);
  assert.ok(aiFallback(bot).includes(bot.name));
+});
+
+test('offline replies give concrete character-specific arguments without repeating the name',()=>{
+ const host=player('Ведущий'),room=createRoom('111222',host);
+ act(room,host,'start_ai_test');
+ const bot=room.players.find(p=>p.bot);
+ bot.cards.profession='Инженер';
+ const text=aiFallback(bot,room);
+ assert.ok(text.includes('Инженер'));
+ assert.ok(!text.startsWith(bot.name+':'));
+ assert.ok(text.length<=220);
 });
