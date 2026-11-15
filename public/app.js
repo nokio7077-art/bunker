@@ -217,7 +217,7 @@ function specialDialog(){
 function dossierIcon(category){const key=/^(profession|health|luggage|phobia|hobby|biology|personality|interesting|special)$/.test(category)?category:'interesting';return `<img class="dossier-category-icon" src="/images/ui/dossier-${key}.svg?v=archive-v23" alt="" aria-hidden="true" width="56" height="56" loading="lazy" decoding="async">`;}
 function cardDetails(id,key,description){
  if(!description)return '';
- return `<details class="card-detail" data-detail-key="${escape(id)}:${escape(key)}"><summary>Подробнее</summary><p>${escape(description)}</p></details>`;
+ return `<details class="card-detail" data-detail-key="${escape(id)}:${escape(key)}"><summary aria-label="Подробности: ${escape(state.categories[key]||key)}" title="Показать или скрыть описание"><span aria-hidden="true">⌄</span></summary><p>${escape(description)}</p></details>`;
 }
 function publicCard(player,key){
  const value=player.cards[key];
