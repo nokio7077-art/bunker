@@ -1,4 +1,5 @@
 import {randomUUID} from 'node:crypto';
+import {verifiedGigaChatRequest} from './gigachat-tls.js';
 
 // GigaChat personal Freemium: one concurrent generation; all credentials
 // remain strictly server-side. Never disable TLS certificate verification.
@@ -11,7 +12,10 @@ export function createGigaChat({env=process.env,fetchImpl=fetch,now=Date.now,log
  async function request(url,options,timeoutMs=10000){
   const ctrl=new AbortController();
   const timer=setTimeout(()=>ctrl.abort(),timeoutMs);
-  try{return await fetchImpl(url,{...options,signal:ctrl.signal,redirect:'error'});}
+  try{
+   const requestOptions={...options,signal:ctrl.signal,redirect:'error'};
+   return await (fetchImpl===globalThis.fetch?verifiedGigaChatRequest(url,requestOptions):fetchImpl(url,requestOptions));
+  }
   finally{clearTimeout(timer);}
  }
  async function token(){
