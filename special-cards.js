@@ -1,5 +1,5 @@
 // Special cards are one-use actions. Names are saved in the same format as other cards.
-const discard = (id, name, category, label) => ({ id, name, effect: 'discard', category, description: `Сбросьте карточку «${label}» у любого участника, включая себя. Она останется пустой до замены или обмена.` });
+const discard = (id, name, category, label) => ({ id, name, effect: 'discard', category, description: `Сбросьте свою карточку «${label}» или открытую карточку другого участника. Чужую закрытую карточку сбросить нельзя. Слот останется пустым до замены или обмена.` });
 const redraw = (id, name, category, label) => ({ id, name, effect: 'redraw', category, description: `Замените свою карточку «${label}» случайной другой из колоды. Результат выбирает игра. Открытая карточка останется открытой.` });
 const swap = (id, name, category, label) => ({ id, name, effect: 'swap', category, description: `Обменяйтесь карточками «${label}» с выбранным участником. Открытость слотов сохраняется; можно обменять и пустой слот.` });
 const reveal = (id, name, category, label) => ({ id, name, effect: 'reveal', category, description: `Раскройте любую закрытую карточку «${label}» выбранного участника — даже если это не его ход.` });

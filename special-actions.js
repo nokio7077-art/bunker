@@ -27,6 +27,7 @@ export function applySpecial(room, player, value = {}) {
   if(card.revealedOnly)check(target.revealed.includes(key), 'Это условие действует только на открытые карточки.');
  }
  if (card.effect === 'discard') {
+  check(target.id===player.id||target.revealed.includes(key), 'Нельзя сбросить закрытую карточку другого игрока.');
   check(target.cards[key], 'Эта карточка уже сброшена или отсутствует.');
   changes = [[target, null]];
  } else if (card.effect === 'reveal') {

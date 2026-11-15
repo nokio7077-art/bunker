@@ -14,16 +14,17 @@ const unchanged=(room,operation)=>{const before=structuredClone(room);assert.thr
 
 test('discard is public without leaking the former value, one-use, and not a normal reveal',()=>{
  const {room,host,guest}=setup('Сброс здоровья'), previous=guest.cards.health;
+ guest.revealed.push('health');
  act(room,host,'use_special',{targetId:guest.id});
  assert.equal(guest.cards.health,null);assert.ok(guest.revealed.includes('health'));
  assert.equal(room.opened,false);assert.equal(host.specialUsed,true);
  assert.deepEqual(Object.keys(view(room,host).players[1].cards),['health']);
- assert.ok(!room.log.join(' ').includes(previous));
+ assert.ok(room.log.join(' ').includes(previous),'already revealed opponent card may be mentioned publicly');
  assert.equal(view(room,guest).players[0].cards.special,'Сброс здоровья');
  unchanged(room,()=>act(room,host,'use_special',{targetId:host.id}));
  unchanged(room,()=>act(room,host,'next'));
  act(room,host,'reveal','profession');act(room,host,'next');
- act(room,guest,'reveal','profession');assert.equal(room.opened,true);
+ assert.ok(guest.revealed.includes('profession'),'bot automatically reveals profession before handing off');
 });
 
 test('invalid targets, phases, turn owners and empty slots never consume an action',()=>{
@@ -112,11 +113,16 @@ test('open-only shuffle affects just opened nonempty cards, including expelled p
  }
 });
 
-test('unrestricted discard and swap can select unrevealed cards',()=>{
+test('discard rejects closed opponent cards but permits own closed cards and revealed opponents',()=>{
  const discarded=setup('Сброс здоровья');
  assert.equal(discarded.guest.revealed.includes('health'),false);
+ unchanged(discarded.room,()=>act(discarded.room,discarded.host,'use_special',{targetId:discarded.guest.id}));
+ discarded.guest.revealed.push('health');
  act(discarded.room,discarded.host,'use_special',{targetId:discarded.guest.id});
  assert.equal(discarded.guest.cards.health,null);
+ const own=setup('Сброс фобии');
+ act(own.room,own.host,'use_special',{targetId:own.host.id});
+ assert.equal(own.host.cards.phobia,null);
  const swapped=setup('Обмен багажом');
  const before=[swapped.host.cards.luggage,swapped.guest.cards.luggage];
  act(swapped.room,swapped.host,'use_special',{targetId:swapped.guest.id});
@@ -137,6 +143,7 @@ test('all 18 special cards execute and persist through serialization',()=>{
   const {room,host,guest}=setup(card.name);let value={};
   const previous=host.cards[card.category];
   if(['discard','swap','reveal'].includes(card.effect))value.targetId=guest.id;
+  if(card.effect==='discard')guest.revealed.push(card.category);
   if(card.effect==='shuffle'){host.revealed.push(card.category);guest.revealed.push(card.category);}
   act(room,host,'use_special',value);
   if(card.effect==='redraw')assert.notEqual(host.cards[card.category],previous);
@@ -175,14 +182,14 @@ test('special results show before and after for open cards and persist for every
  const saved=JSON.parse(JSON.stringify(room));assert.deepEqual(view(saved,saved.players[1]).specialEvents,[event]);
 });
 test('public event snapshots never disclose hidden values, including closed-to-closed swaps and discarded cards',()=>{
- for(const special of ['Обмен багажом','Новое здоровье','Сброс здоровья']){
+ for(const special of ['Обмен багажом','Новое здоровье']){
   const {room,host,guest}=setup(special),key=special==='Обмен багажом'?'luggage':'health';
   const hidden=[host.cards[key],guest.cards[key]];act(room,host,'use_special',{targetId:guest.id});hidden.push(host.cards[key],guest.cards[key]);
   const publicText=JSON.stringify({events:view(room,guest).specialEvents,log:room.log});
   for(const name of hidden.filter(Boolean))assert.ok(!publicText.includes(name),name);
   const event=room.specialEvents.at(-1);assert.equal(event.category,special==='Обмен багажом'?'Багаж':'Здоровье');
   assert.ok(event.results.every(r=>r.before==='Закрытая карточка'));
-  assert.ok(event.results.every(r=>r.after===(special==='Сброс здоровья'?'Карточка сброшена':'Новая закрытая карточка')));
+  assert.ok(event.results.every(r=>r.after==='Новая закрытая карточка'));
  }
 });
 test('shuffle results list all open recipients and report unchanged outcomes honestly',()=>{
@@ -225,14 +232,15 @@ test('each special action gets a unique public event id and private before/after
  assert.equal(JSON.stringify(hostView.specialEvents).includes(previousGuest),false);
 });
 
-test('discard of hidden card provides exact previous value only to its owner',()=>{
+test('discarding a hidden card is permitted only on oneself and remains private',()=>{
  const {room,host,guest}=setup('Сброс здоровья');
- const discarded=guest.cards.health;
- act(room,host,'use_special',{targetId:guest.id});
+ const discarded=host.cards.health;
+ unchanged(room,()=>act(room,host,'use_special',{targetId:guest.id}));
+ act(room,host,'use_special',{targetId:host.id});
  const event=room.specialEvents.at(-1);
- assert.deepEqual(view(room,guest).specialPrivateResults,[{eventId:event.id,before:discarded,after:null}]);
- assert.deepEqual(view(room,host).specialPrivateResults,[]);
- assert.equal(JSON.stringify(view(room,host)).includes(discarded),false);
+ assert.deepEqual(view(room,host).specialPrivateResults,[{eventId:event.id,before:discarded,after:null}]);
+ assert.deepEqual(view(room,guest).specialPrivateResults,[]);
+ assert.equal(JSON.stringify(view(room,guest)).includes(discarded),false);
 });
 
 test('publicly revealed card and the player private event remain consistent',()=>{
@@ -258,6 +266,7 @@ test('during tie discussion all surviving players can use their own unused speci
  assert.throws(()=>act(room,guest,'reveal','profession'),/Сейчас ход другого игрока/);
  assert.throws(()=>act(room,guest,'vote',host.id),/Голосование ещё не началось/);
  const previous=host.cards.personality;
+ host.revealed.push('personality');
  act(room,guest,'use_special',{targetId:host.id});
  assert.equal(host.cards.personality,null);
  assert.equal(room.phase,'tie_discussion');
@@ -269,7 +278,10 @@ test('during tie discussion all surviving players can use their own unused speci
  // Players expelled earlier may still vote, but cannot use specials in discussion.
  const out=room.players[2];out.alive=false;
  unchanged(room,()=>act(room,out,'use_special',{targetId:host.id}));
- // The host may use their own remaining special in the same discussion.
+ // The host may use their own remaining special in the same discussion;
+ // a hidden card belonging to another player still cannot be discarded.
+ unchanged(room,()=>act(room,host,'use_special',{targetId:guest.id}));
+ guest.revealed.push('health');
  act(room,host,'use_special',{targetId:guest.id});
  assert.equal(room.specialEvents.length,2);
 });

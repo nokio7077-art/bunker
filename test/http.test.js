@@ -73,9 +73,11 @@ test('HTTP sessions, private cards, registered artwork, caching and durable rest
   assert.equal(demo.status,200);assert.equal(demo.data.testMode,true);
   assert.equal(demo.data.players.filter(p=>p.bot).length,4);
   await request(soloPath+'/action',{action:'reveal',value:'profession'},solo.token);
-  await request(soloPath+'/action',{action:'next'},solo.token);
-  demo=await request(soloPath+'/action',{action:'bot_step'},solo.token);
-  assert.equal(demo.status,200);assert.equal(demo.data.players[1].revealed[0],'profession');
+  demo=await request(soloPath+'/action',{action:'next'},solo.token);
+  assert.equal(demo.status,200);
+  assert.equal(demo.data.players[1].revealed[0],'profession');
+  assert.equal(demo.data.botReveals.items.length,4);
+  assert.equal(demo.data.phase,'turn');
   // A test bot may also reveal its own one-use special, so visible cards
   // must match its public revealed categories without leaking closed cards.
   assert.deepEqual(Object.keys(demo.data.players[1].cards).sort(),[...demo.data.players[1].revealed].sort());

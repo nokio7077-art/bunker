@@ -118,7 +118,7 @@ test('a solo host can complete a full test game, even after expulsion',()=>{
    if(r.turn===host.id){
     act(r,host,'reveal',Object.keys(categories).find(k=>!host.revealed.includes(k)));
     act(r,host,'next');
-   }else act(r,host,'bot_step');
+   }else assert.fail('Bot turns should be completed automatically.');
   }else if(!forcedExpulsion){
    for(const p of r.players.filter(p=>p.bot))act(r,p,'vote',host.id);
    act(r,host,'vote',r.players.find(p=>p.bot&&p.alive).id);
@@ -323,32 +323,41 @@ test('atomic deals are complete and unique for all 5–16 player counts',()=>{
  }
 });
 
-test('bot step applies an eligible special, records event and last public reveal',()=>{
- const r=setup(1),host=r.players[0];act(r,host,'start_test');
+test('passing the turn automatically reveals all consecutive bots and returns to a human',()=>{
+ const r=setup(2),[host,guest]=r.players;act(r,host,'start_test');
+ const bot=r.players[2];bot.cards.special='Сброс здоровья';
+ // Open only the target that the bot may legally discard.
+ guest.revealed.push('health');
  act(r,host,'reveal','profession');act(r,host,'next');
- const bot=r.players.find(p=>p.id===r.turn);
- bot.cards.special='Сброс здоровья';
- const target=r.players.find(p=>p.id!==bot.id);
- const beforeCount=r.specialEvents?.length||0;
- act(r,host,'bot_step');
+ assert.equal(r.turn,guest.id);
+ assert.equal(r.players[2].revealed.length,0,'bot must wait until its turn');
+ act(r,guest,'reveal','profession');act(r,guest,'next');
+ assert.equal(r.phase,'turn');
+ assert.equal(r.turn,host.id,'all bots should have acted before the new round');
+ assert.equal(r.round,2);
+ assert.equal(r.botReveals.items.length,3);
+ assert.ok(r.botReveals.items.every(x=>r.players.find(p=>p.id===x.playerId)?.bot));
  assert.equal(bot.specialUsed,true);
- assert.equal(r.specialEvents.length,beforeCount+1);
- assert.equal(r.specialEvents.at(-1).actor,bot.name);
- assert.ok(r.specialEvents.at(-1).results.some(item=>item.playerId));
- assert.equal(r.lastReveal.playerId,bot.id);
- assert.equal(r.lastReveal.category,'profession');
- assert.equal(view(r,host).players.find(p=>p.id===bot.id).cards.special,'Сброс здоровья');
- assert.equal(view(r,host).lastReveal.playerId,bot.id);
- assert.ok(target);
+ assert.ok(r.specialEvents.some(event=>event.actor===bot.name));
+ const observed=view(r,host);
+ for(const item of observed.botReveals.items){
+  const actor=observed.players.find(p=>p.id===item.playerId);
+  assert.ok(actor.revealed.includes(item.category));
+  assert.ok(Object.hasOwn(actor.cards,item.category));
+ }
+ assert.throws(()=>act(r,host,'bot_step'),/Бот уже завершил ход автоматически|Сейчас ход/);
+ act(r,host,'reveal','health');
+ assert.equal(r.botReveals,undefined,'old bot summary must disappear after a new human reveal');
 });
 
-test('a bot with unavailable open-only shuffle still completes its normal turn',()=>{
- const r=setup(1),host=r.players[0];act(r,host,'start_test');
+test('automatic bot turns never discard hidden cards of other players',()=>{
+ const r=setup(2),[host,guest]=r.players;act(r,host,'start_test');
+ for(const bot of r.players.filter(p=>p.bot))bot.cards.special='Сброс здоровья';
  act(r,host,'reveal','profession');act(r,host,'next');
- const bot=r.players.find(p=>p.id===r.turn);
- bot.cards.special='Перетасовка открытых хобби';
- act(r,host,'bot_step');
- assert.equal(bot.specialUsed,undefined);
- assert.ok(bot.revealed.includes('profession'));
- assert.equal(r.turn,r.players[2].id);
+ act(r,guest,'reveal','profession');act(r,guest,'next');
+ assert.ok(r.botReveals.items.length===3);
+ assert.ok(r.players.some(p=>p.bot&&p.specialUsed),'at least a bot can use self-discard when no opponents are revealed');
+ assert.ok(!host.revealed.includes('health')&&!guest.revealed.includes('health'));
+ assert.ok(host.cards.health&&guest.cards.health);
 });
+
