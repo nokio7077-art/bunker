@@ -68,6 +68,10 @@ async function body(req) { let text=''; for await (const chunk of req) {text+=ch
 const assets={'/vendor/qrcode.js':['vendor/qrcode.js','text/javascript; charset=utf-8'],'/':['index.html','text/html; charset=utf-8'],'/app.js':['app.js','text/javascript; charset=utf-8'],'/card-images.js':['card-images.js','text/javascript; charset=utf-8'],'/avatar-generator.js':['avatar-generator.js','text/javascript; charset=utf-8'],'/avatar-atlases.js':['avatar-atlases.js','text/javascript; charset=utf-8'],'/style.css':['style.css','text/css; charset=utf-8'],'/theme.css':['theme.css','text/css; charset=utf-8'],'/game-pixel.css':['game-pixel.css','text/css; charset=utf-8'],'/favicon.svg':['favicon.svg','image/svg+xml']};
 // Only registered media and fonts are public; never serve arbitrary repository files.
 const binaryAssets=new Map(Object.values(disasterImages).map(image=>[image.src,{path:pathJoin(root,'public',image.src),type:'image/png'}]));
+for(const move of ['rock','scissors','paper']){
+ const name=`suefa-${move}.png`;
+ binaryAssets.set(`/images/ui/${name}`,{path:pathJoin(root,'public','images','ui',name),type:'image/png',immutable:true});
+}
 for(const gender of ['female','male']){const name=`avatars-${gender}-96.webp`;binaryAssets.set(`/images/ui/${name}`,{path:pathJoin(root,'public','images','ui',name),type:'image/webp',immutable:true});}
 for(const gender of ['female','male']){const name=`avatars-${gender}-92.webp`;binaryAssets.set(`/images/ui/${name}`,{path:pathJoin(root,'public','images','ui',name),type:'image/webp',immutable:true});}
 // Lossless portraits are served in 50-character chunks. Explicitly whitelist each asset.
