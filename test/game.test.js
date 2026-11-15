@@ -326,6 +326,9 @@ test('atomic deals are complete and unique for all 5–16 player counts',()=>{
 test('bot receives one revealed card on handoff and stays active until host presses next',()=>{
  const r=setup(2),[host,guest]=r.players;act(r,host,'start_test');
  const bot=r.players[2];bot.cards.special='Сброс здоровья';
+ // Isolate turn-by-turn reveals: unrelated random bot specials may reveal
+ // other bots' cards before their turns and make this test nondeterministic.
+ for(const laterBot of r.players.slice(3).filter(p=>p.bot))laterBot.specialUsed=true;
  guest.revealed.push('health');
  act(r,host,'reveal','profession');act(r,host,'next');
  assert.equal(r.turn,guest.id);
