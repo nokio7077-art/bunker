@@ -165,23 +165,12 @@ function bunkerIntro(){
  const name=legacy?b[0]:b.name||'Бункер';
  const description=legacy?b[1]:b.description||'';
  const equipment=Array.isArray(b.equipment)?b.equipment:[];
- const resource=b.resources||{};
  const stats=[
   {label:'Мест',value:b.capacity??state.capacity??'—'},
   {label:'Площадь',value:b.area_sqm!=null?`${b.area_sqm} м²`:'—'},
   {label:'Глубина',value:b.depth_m!=null?`${b.depth_m} м`:'—'},
   {label:'Запас еды',value:b.food_days!=null?`${b.food_days} сут.`:'—'}
  ];
- const detailedInfo=[
-  legacy?'Убежище':b.type||'Убежище',description,
-  resource.food?`Еда: ${resource.food}`:'',
-  resource.water?`Вода: ${resource.water}`:'',
-  resource.energy?`Энергия: ${resource.energy}`:'',
-  b.water_days!=null?`Резерв воды: ${b.water_days} сут.`:'',
-  b.energy_days!=null?`Резерв энергии: ${b.energy_days} сут.`:'',
-  b.air_days!=null?`Герметичный воздух: ${b.air_days} сут.`:'',
-  b.resource_basis||'',...(b.scenario_notes||[])
- ].filter(Boolean);
  const list=items=>items.length?`<ul>${items.map(item=>`<li>${escape(item)}</li>`).join('')}</ul>`:'<p>Нет сведений</p>';
  const longestEquipment=equipment.reduce((max,item)=>Math.max(max,String(item).length),0);
  const contentsDensity=equipment.length>=9||longestEquipment>95?'dense':equipment.length>=6||longestEquipment>55?'compact':'regular';
@@ -195,8 +184,6 @@ function bunkerIntro(){
  <h2>ВНУТРИ БУНКЕРА</h2>
  <div class="bunker-card-content-list" role="region" aria-label="Полное оснащение бункера; при необходимости прокрутите список" tabindex="0">${equipment.length?list(equipment):`<p>${escape(description||'Сведения об оборудовании отсутствуют.')}</p>`}</div>
  </section></article></div>
- <details class="bunker-intro-details"><summary>Описание и запасы <span aria-hidden="true">⌄</span></summary>
- <div class="bunker-full-info"><section><h2>Описание и ресурсы</h2>${detailedInfo.map(line=>`<p>${escape(line)}</p>`).join('')}</section></div></details>
  <div class="intro-footer bunker-intro-footer"><div class="intro-art-tools"><span>ДОСЬЕ УБЕЖИЩА · ${escape(state.code)}</span></div>
  <button class="primary intro-next" data-action="bunker-continue"><span>Го!лучше так чем в подвале умирать</span><span aria-hidden="true">→</span></button></div>
  </main>`;
