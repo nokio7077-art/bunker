@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {player,createRoom,join,act,view} from '../game.js';
-import {buildBotPrompt,parseBotReply,aiFallback,validateBotClaim} from '../ai-bot.js';
+import {buildBotPrompt,parseBotReply,aiFallback,validateBotClaim,isRepetitiveBotReply} from '../ai-bot.js';
 
 test('AI test mode opt-in preserves all normal test controls',()=>{
  const host=player('Ведущий'),room=createRoom('432987',host);
@@ -133,4 +133,42 @@ test('AI response truncation never cuts the final word halfway through',()=>{
  const result=parseBotReply(JSON.stringify({reply:long,voteForId:null}),room,bot);
  assert.ok(result.reply.length<=220);
  assert.ok(result.reply.endsWith('…'));
+});
+
+test('never show malformed model JSON as a spoken bot message',()=>{
+ const host=player('Ольга'),room=createRoom('123123',host);
+ act(room,host,'start_ai_test');
+ const bot=room.players.find(p=>p.bot);
+ assert.equal(parseBotReply('{"reply":"Я голосую за исключение',room,bot),null);
+ assert.equal(parseBotReply('```json\n{"reply":"Недописанная',room,bot),null);
+ const valid=parseBotReply('{"reply":"Предлагаю обсудить ситуацию.","voteForId":null}',room,bot);
+ assert.equal(valid.reply,'Предлагаю обсудить ситуацию.');
+});
+test('bots do not announce personal votes or advocate their own expulsion',()=>{
+ const host=player('Ольга'),room=createRoom('123123',host);
+ act(room,host,'start_ai_test');
+ assert.equal(validateBotClaim('Голосую за исключение коневода.',room),false);
+ assert.equal(validateBotClaim('Я за своё исключение.',room),false);
+ assert.equal(validateBotClaim('Поддерживаю исключение себя.',room),false);
+ assert.equal(validateBotClaim('Я бесполезен в нашем бункере.',room),false);
+ assert.equal(validateBotClaim('Предлагаю обсудить полезность коневода.',room),true);
+});
+test('bot does not infer reproductive health from a public occupation',()=>{
+ const host=player('Ольга'),room=createRoom('123123',host);
+ act(room,host,'start_ai_test');
+ assert.equal(validateBotClaim('Коневод здоров для продолжения рода.',room),false);
+ const prompt=buildBotPrompt(room,room.players.find(p=>p.bot),'Как будем население возвращать?')[0].content;
+ assert.match(prompt,/Не делай выводов о поле, здоровье, фертильности/);
+ assert.match(prompt,/Никогда не проси исключить самого себя/);
+});
+test('reject near-identical repetition by same bot, not independent bot opinions',()=>{
+ const host=player('Ольга'),room=createRoom('123123',host);
+ act(room,host,'start_ai_test');
+ const bot=room.players.find(p=>p.bot);
+ const other=room.players.find(p=>p.bot&&p.id!==bot.id);
+ const reply='Нам нужны люди для ремонта систем убежища и поддержания порядка на складе';
+ room.aiChat=[{botId:bot.id,text:reply}];
+ assert.equal(isRepetitiveBotReply(room,bot,reply+'!'),true);
+ assert.equal(isRepetitiveBotReply(room,other,reply),false);
+ assert.equal(isRepetitiveBotReply(room,bot,'Надо обсудить запасы еды.'),false);
 });
