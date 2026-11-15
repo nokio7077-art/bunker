@@ -3038,3 +3038,32 @@ body,button,input,select,textarea,.landing-shell,.game,#rules,#special-dialog{
  #suefa-reveal .suefa-reveal-players{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
  #suefa-reveal .suefa-reveal-player .suefa-icon{width:76px;height:76px}
 }
+
+/* Optional AI companions in solo/test rooms: bunker terminal conversation. */
+.test-panel-actions{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.ai-chat-panel{
+ margin:16px 0;padding:clamp(15px,3vw,24px);
+ background:linear-gradient(135deg,#142518,#0b180d);
+ border:2px solid #637d48;border-radius:7px;
+ box-shadow:0 9px 28px #0004;color:#ebf3d9;
+}
+.ai-chat-heading{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 15px;margin-bottom:13px}
+.ai-chat-heading h3{margin:0;font-size:clamp(18px,4vw,23px);color:#eaf4ca}
+.ai-chat-heading .eyebrow{color:#b4d579}
+.ai-chat-heading small{color:#a8bc9f;font-size:12px}
+.ai-chat-history{display:flex;flex-direction:column;gap:8px;max-height:300px;overflow-y:auto;padding:10px;background:#0d1c10;border:1px solid #405636}
+.ai-chat-history p{margin:0;padding:9px 11px;border-left:3px solid #7b8752;background:#243021;line-height:1.45;overflow-wrap:anywhere}
+.ai-chat-history p.ai-bot-message{border-left-color:#d4e38a;background:#1b351e}
+.ai-chat-history strong{color:#f0f6cf}
+.ai-chat-history p.ai-chat-empty{font-size:13px;color:#b0bfa8;font-style:italic}
+.ai-chat-controls{display:grid;grid-template-columns:minmax(100px,150px) minmax(0,1fr) auto;gap:8px;margin-top:12px}
+.ai-chat-controls select,.ai-chat-controls input{
+ width:100%;min-width:0;min-height:44px;padding:9px;box-sizing:border-box;
+ color:#f0f7dc;background:#101e12;border:1px solid #718456;border-radius:4px;
+}
+.ai-chat-controls button{min-height:44px;white-space:nowrap}
+@media(max-width:600px){
+ .ai-chat-controls{grid-template-columns:minmax(0,1fr) auto}
+ .ai-chat-controls select{grid-column:1/-1}
+ .ai-chat-controls input{grid-column:1}
+}
