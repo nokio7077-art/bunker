@@ -83,7 +83,7 @@ function prepareBunkerArtwork(bunker){
  if(!bunker||bunkerAtlasPreload)return;
  bunkerAtlasPreload=new Image();
  bunkerAtlasPreload.decoding='async';
- bunkerAtlasPreload.src='/images/bunkers/bunker-cards-atlas.webp';
+ bunkerAtlasPreload.src='/images/bunkers/bunker-blank-layout.webp';
 }
 const seenBunkers=new Set();
 let replayBunkerKey=null;
@@ -163,45 +163,48 @@ function bunkerVariant(bunker){
  const id=Number(bunker?.id);
  return Number.isInteger(id)&&id>0?(id-1)%11:0;
 }
+// Render the real bunker JSON as HTML *over* the user's one blank image.
+// Never burn text into artwork: the selected world and room size vary by game.
 function bunkerIntro(){
- const b=state.bunker,legacy=Array.isArray(b),variant=bunkerVariant(b);
- const name=legacy?b[0]:b.name,description=legacy?b[1]:b.description;
+ const b=state.bunker;
+ const legacy=Array.isArray(b);
+ const name=legacy?b[0]:b.name||'Бункер';
+ const description=legacy?b[1]:b.description||'';
  const equipment=Array.isArray(b.equipment)?b.equipment:[];
  const threats=Array.isArray(b.threats)?b.threats:[];
- const rows=[
-  [b.capacity??state.capacity??'—','Мест'],
-  [b.area_sqm!=null?`${b.area_sqm} м²`:'—','Площадь'],
-  [b.depth_m!=null?`${b.depth_m} м`:'—','Глубина'],
-  [b.food_days!=null?`${b.food_days} дн.`:'—','Еда']
+ const resource=b.resources||{};
+ const stats=[
+  {label:'Мест',value:b.capacity??state.capacity??'—'},
+  {label:'Площадь',value:b.area_sqm!=null?`${b.area_sqm} м²`:'—'},
+  {label:'Глубина',value:b.depth_m!=null?`${b.depth_m} м`:'—'},
+  {label:'Запас еды',value:b.food_days!=null?`${b.food_days} сут.`:'—'}
  ];
- const resources=b.resources||{};
- const info=[
+ const detailedInfo=[
   description,
-  resources.food?`Еда: ${resources.food}`:'',
-  resources.water?`Вода: ${resources.water}`:'',
-  resources.energy?`Энергия: ${resources.energy}`:'',
+  resource.food?`Еда: ${resource.food}`:'',
+  resource.water?`Вода: ${resource.water}`:'',
+  resource.energy?`Энергия: ${resource.energy}`:'',
   b.water_days!=null?`Резерв воды: ${b.water_days} сут.`:'',
   b.energy_days!=null?`Резерв энергии: ${b.energy_days} сут.`:'',
   b.air_days!=null?`Герметичный воздух: ${b.air_days} сут.`:'',
   b.resource_basis||'',...(b.scenario_notes||[])
  ].filter(Boolean);
- const cards=rows.map(([value,label])=>`<div class="bunker-card-stat"><strong>${escape(value)}</strong><small>${escape(label)}</small></div>`).join('');
- const brief=(items,limit)=>items.length?items.slice(0,limit).map(item=>`<li>${escape(item)}</li>`).join(''):'<li>Нет сведений</li>';
- const list=items=>items.length?`<ul>${items.map(v=>`<li>${escape(v)}</li>`).join('')}</ul>`:'<p>Нет сведений</p>';
+ const list=items=>items.length?`<ul>${items.map(item=>`<li>${escape(item)}</li>`).join('')}</ul>`:'<p>Нет сведений</p>';
  return `<main id="bunker-intro" class="bunker-intro disaster-intro--art" aria-labelledby="bunker-title">
  <h1 class="sr-only" id="bunker-title" tabindex="-1">${escape(name)}</h1>
- <div class="bunker-card-stage"><article class="bunker-card-panel" style="--bunker-x:${(variant%4)*100/3}%;--bunker-y:${Math.floor(variant/4)*50}%" aria-label="Карточка убежища: ${escape(name)}">
+ <div class="bunker-card-stage"><article class="bunker-card-panel" aria-label="Карточка убежища: ${escape(name)}">
  <div class="bunker-card-heading"><strong>${escape(name)}</strong></div>
- <div class="bunker-card-type">${escape(b.type||'Убежище')}</div>
- <div class="bunker-card-stats">${cards}</div>
- <section class="bunker-card-description" aria-label="Краткое описание"><h2>ОБ УБЕЖИЩЕ</h2><p>${escape(description||'Информация об убежище доступна ниже.')}</p></section>
- <section class="bunker-card-equipment" aria-label="Основное оборудование"><h2>ОБОРУДОВАНИЕ</h2><ul>${brief(equipment,2)}</ul></section>
- <section class="bunker-card-threats" aria-label="Основные угрозы"><h2>УГРОЗЫ</h2><ul>${brief(threats,2)}</ul></section>
- </article></div>
- <details class="bunker-intro-details"><summary>Все сведения о бункере <span aria-hidden="true">⌄</span></summary>
- <div class="bunker-full-info"><section><h2>Описание и запасы</h2>${info.map(line=>`<p>${escape(line)}</p>`).join('')}</section>
- <section><h2>Оборудование</h2>${list(equipment)}</section><section><h2>Угрозы</h2>${list(threats)}</section></div></details>
- <div class="intro-footer bunker-intro-footer"><div class="intro-art-tools"><span>ДОСЬЕ УБЕЖИЩА · ${escape(state.code)}</span></div><button class="primary intro-next" data-action="bunker-continue"><span>Го!лучше так чем в подвале умирать</span><span aria-hidden="true">→</span></button></div>
+ <div class="bunker-card-type">${escape(legacy?'Убежище':b.type||'Убежище')}</div>
+ <div class="bunker-card-stats">${stats.map(item=>`<div class="bunker-card-stat" title="${escape(item.label)}: ${escape(item.value)}"><strong>${escape(item.value)}</strong></div>`).join('')}</div>
+ <section class="bunker-card-contents" aria-label="Что есть в бункере" tabindex="0">
+ <h2>ВНУТРИ БУНКЕРА</h2>${equipment.length?list(equipment):`<p>${escape(description||'Сведения об оборудовании отсутствуют.')}</p>`}
+ </section></article></div>
+ <details class="bunker-intro-details"><summary>Все сведения и угрозы <span aria-hidden="true">⌄</span></summary>
+ <div class="bunker-full-info"><section><h2>Описание и ресурсы</h2>${detailedInfo.map(line=>`<p>${escape(line)}</p>`).join('')}</section>
+ <section><h2>Полное оснащение</h2>${list(equipment)}</section>
+ <section><h2>Угрозы и ограничения</h2>${list(threats)}</section></div></details>
+ <div class="intro-footer bunker-intro-footer"><div class="intro-art-tools"><span>ДОСЬЕ УБЕЖИЩА · ${escape(state.code)}</span></div>
+ <button class="primary intro-next" data-action="bunker-continue"><span>Го!лучше так чем в подвале умирать</span><span aria-hidden="true">→</span></button></div>
  </main>`;
 }
 function disasterIntroKey(){return `bunker-intro:${state.code}:${state.me}${(state.gameNumber||1)>1?':'+state.gameNumber:''}`;}
