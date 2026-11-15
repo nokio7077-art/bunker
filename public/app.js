@@ -491,7 +491,7 @@ function render(){if(restoringSession&&!state){app.innerHTML='<main class="sessi
 // Re-render destroys the chat element every poll. Preserve its reading
 // position, and follow new messages only when the reader is at the bottom.
 const oldChat=document.querySelector('.ai-chat-history');
-const chatWasAtBottom=oldChat?oldChat.scrollHeight-oldChat.clientHeight-oldChat.scrollTop<=48:false;
+const chatWasAtBottom=oldChat?oldChat.scrollHeight-oldChat.clientHeight-oldChat.scrollTop<=48:true;
 const chatPreviousTop=oldChat?.scrollTop??0;
 const chatWasVisible=Boolean(oldChat&&oldChat.getBoundingClientRect().bottom>0&&oldChat.getBoundingClientRect().top<innerHeight);
 const oldChatInput=document.querySelector('#ai-chat-message');
