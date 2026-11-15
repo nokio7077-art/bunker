@@ -78,6 +78,27 @@ export function parseBotReply(raw,room,bot){
  const target=room.players.find(p=>p.id===parsed.voteForId&&p.alive&&p.id!==bot.id);
  return {reply,voteForId:target?.id||null};
 }
+// Last-resort protection from the most disruptive LLM factual mistakes.
+export function validateBotClaim(reply,room){
+ const text=String(reply||'');
+ // Nobody can be resurrected or re-admitted in this game.
+ if(/вернул[аио]сь|вернул[аио]?|возвращен[аы]?|возвращён[аы]?|восстановлен[аы]? в (?:бункер|команд)|принят[аы]? обратно/i.test(text))
+  return false;
+ // There is no public individual ballot history in the room state.
+ if(/(?:я|мы) (?:уже )?проголосовал[аи]? (?:за|против)|я (?:уже )?отдал[а]? голос/i.test(text))
+  return false;
+ if(!room.eliminationNotice&&/(?:мы|вы|нас|его|её|меня) (?:уже )?выгнал[иао]?|(?:мы|его|её|меня) исключил[иа]?/i.test(text))
+  return false;
+ // Even when a bot knows a secret card server-side, it may not announce it.
+ for(const person of room.players||[]){
+  for(const [key,value] of Object.entries(person.cards||{})){
+   if(key==='special'||person.revealed?.includes(key))continue;
+   const secret=String(value??'').trim();
+   if(secret.length>=9&&text.toLowerCase().includes(secret.toLowerCase()))return false;
+  }
+ }
+ return true;
+}
 export function aiFallback(bot,room){
  const profession=bot.revealed?.includes('profession')?String(bot.cards?.profession||''):null;
  const catastrophe=String(Array.isArray(room?.disaster)?room.disaster[0]:room?.disaster?.name||'наша катастрофа');
