@@ -3,6 +3,8 @@ import { getLocalIpv4, startLocalMdns } from './local-network.js';
 import { readFileSync, existsSync, statSync, createReadStream } from 'node:fs';
 import { createRoomStore } from './room-storage.js';
 import { createCloudRoomBackup } from './cloud-room-backup.js';
+import { createGigaChat } from './gigachat-client.js';
+import { buildBotPrompt, parseBotReply, aiFallback } from './ai-bot.js';
 import { fileURLToPath } from 'node:url';
 import { join as pathJoin } from 'node:path';
 import { randomInt, randomBytes } from 'node:crypto';
@@ -15,6 +17,8 @@ const root = fileURLToPath(new URL('.', import.meta.url));
 const dataDir = process.env.DATA_DIR || pathJoin(root,'.data');
 const store=createRoomStore(dataDir);
 const cloudBackup=createCloudRoomBackup();
+const gigaChat=createGigaChat();
+const activeAiChats=new Set();
 const localRooms=store.load();
 // Restore before accepting connections. Never serve a half-restored match.
 const rooms=await cloudBackup.restore(localRooms,dataDir);
@@ -141,7 +145,7 @@ export const server=http.createServer(async(req,res)=>{
    do {code=String(randomInt(100000,1000000));} while(rooms.has(code));
    const room=createRoom(code,p);room.lastActivityAt=Date.now();rooms.set(code,room);save();return send(201,{code,token:p.token,recoveryCode:p.recoveryCode});
   }
-  const match=url.pathname.match(/^\/api\/rooms\/(\d{6})(?:\/(join|action|special|recover))?$/);
+  const match=url.pathname.match(/^\/api\/rooms\/(\d{6})(?:\/(join|action|special|recover|ai-chat))?$/);
   if(!match) return send(404,{error:'Не найдено.'});
   const room=rooms.get(match[1]);if(!room) return send(404,{error:'Комната не найдена. Проверьте код.'});
   if(req.method==='POST' && match[2]==='join') {
@@ -167,6 +171,55 @@ export const server=http.createServer(async(req,res)=>{
   if(changed)save();
   if(req.method==='GET' && !match[2]) return send(200,view(room,me));
   if(req.method==='GET' && match[2]==='special') return send(200,specialOptions(room,me));
+  if(req.method==='POST' && match[2]==='ai-chat') {
+   if(!room.aiMode||!room.testMode)return send(403,{error:'ИИ-боты доступны только в экспериментальной тестовой игре.'});
+   if(me.bot||!['turn','tie_discussion','vote'].includes(room.phase))
+    return send(403,{error:'Сейчас обсуждение с ИИ недоступно.'});
+   if(activeAiChats.has(room.code))return send(429,{error:'ИИ-бот уже отвечает. Подождите предыдущий ответ.'});
+   if((room.aiRequestCount||0)>=30)return send(429,{error:'Достигнут лимит 30 обращений к ИИ за партию. Обычные боты продолжают играть.'});
+   if(Date.now()-(room.aiLastCallAt||0)<2500)return send(429,{error:'Подождите несколько секунд перед следующим обращением к ИИ.'});
+   const payload=await body(req);
+   const message=String(payload.message??'').trim().slice(0,240);
+   const bot=room.players.find(p=>p.id===payload.botId&&p.bot&&p.alive)
+    ||room.players.find(p=>p.id===room.turn&&p.bot&&p.alive)
+    ||room.players.find(p=>p.bot&&p.alive);
+   if(!bot)return send(400,{error:'В бункере не осталось ИИ-ботов.'});
+   if(!message && (room.turn!==bot.id||room.phase!=='turn'))
+    return send(400,{error:'Для обращения к боту напишите сообщение.'});
+   if(!message && room.aiChat?.some(x=>x.botId===bot.id&&x.round===room.round&&x.turn===room.turn&&x.auto))
+    return send(400,{error:'Этот бот уже выступал в текущем ходе.'});
+   activeAiChats.add(room.code);
+   const oldGame=room.gameNumber,oldRound=room.round;
+   room.aiRequestCount=(room.aiRequestCount||0)+1;
+   room.aiLastCallAt=Date.now();
+   save();
+   try{
+    let result=null;
+    if(gigaChat.enabled){
+     try{
+      const raw=await gigaChat.generate(buildBotPrompt(room,bot,message));
+      result=parseBotReply(raw,room,bot);
+     }catch(error){
+      // Never log API credentials or prompts; fail back to existing bots.
+      console.warn('ИИ-бот недоступен, обычная стратегия сохранена:',error?.name||'network error');
+     }
+    }
+    if(room.gameNumber!==oldGame || room.round!==oldRound || !room.aiMode || room.phase==='finished')
+     return send(409,{error:'Игровая ситуация изменилась. Попробуйте ещё раз.'});
+    const answer=result?.reply||aiFallback(bot);
+    room.aiChat??=[];
+    if(message)room.aiChat.push({name:me.name,text:message.slice(0,240),round:room.round});
+    room.aiChat.push({name:bot.name,text:answer,bot:true,botId:bot.id,
+     round:room.round,turn:room.turn,auto:!message});
+    room.aiChat=room.aiChat.slice(-32);
+    if(result?.voteForId){
+     room.aiVotePlans??={};
+     room.aiVotePlans[bot.id]=result.voteForId;
+    }
+    room.lastActivityAt=Date.now();room.updated=Date.now();save();
+    return send(200,view(room,me));
+   }finally{activeAiChats.delete(room.code);}
+  }
   if(req.method==='POST' && match[2]==='action') {
    const b=await body(req);act(room,me,b.action,b.value);
    me.lastSeen=Date.now();room.lastActivityAt=Date.now();save();
