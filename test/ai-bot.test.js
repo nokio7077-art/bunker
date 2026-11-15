@@ -199,3 +199,16 @@ test('without a recorded vote a bot does not falsely deny its own choices',()=>{
  assert.ok(answer.includes('не буду утверждать'));
  assert.equal(explainOwnBotVote(room,bot,'Как мы будем распределять еду?'),null);
 });
+
+test('a bot action records the true ballot without leaking it to other players',()=>{
+ const host=player('Ольга'),room=createRoom('918273',host);
+ act(room,host,'start_ai_test');
+ const bot=room.players.find(p=>p.bot),target=room.players.find(p=>p.bot&&p.id!==bot.id);
+ room.phase='vote';room.votes={};
+ act(room,bot,'vote',target.id);
+ assert.equal(room.aiBotVoteHistory[bot.id][0].targetId,target.id);
+ assert.equal(room.aiBotVoteHistory[bot.id][0].round,1);
+ assert.ok(!JSON.stringify(view(room,host)).includes('aiBotVoteHistory'));
+ const prompt=JSON.parse(buildBotPrompt(room,bot,'')[1].content);
+ assert.deepEqual(prompt.ownConfirmedVotes,[],'pending vote must remain private until ballot resolves');
+});
