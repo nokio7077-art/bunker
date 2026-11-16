@@ -20,7 +20,7 @@ test('GigaChat exchanges a Basic authorization key, caches OAuth token and seria
    return ok({access_token:'TOKEN_TEST',expires_at:Math.floor((clock+1800000)/1000)});
   }
   assert.equal(options.headers.Authorization,'Bearer TOKEN_TEST');
-  assert.equal(JSON.parse(options.body).max_tokens,400);
+  assert.equal(JSON.parse(options.body).max_tokens,650);
   active++;maxActive=Math.max(maxActive,active);
   await new Promise(r=>setTimeout(r,8));
   active--;
