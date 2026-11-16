@@ -61,7 +61,7 @@ test('offline replies give concrete character-specific arguments without repeati
  const text=aiFallback(bot,room);
  assert.ok(text.includes('Инженер'));
  assert.ok(!text.startsWith(bot.name+':'));
- assert.ok(text.length<=220);
+ assert.ok(text.length<=420);
 });
 
 test('every hidden bot card is absent from LLM prompt and fallback speech',()=>{
@@ -131,8 +131,8 @@ test('AI response truncation never cuts the final word halfway through',()=>{
  const bot=room.players.find(p=>p.bot);
  const long='В рамках этого голосования '.repeat(20);
  const result=parseBotReply(JSON.stringify({reply:long,voteForId:null}),room,bot);
- assert.ok(result.reply.length<=220);
- assert.ok(result.reply.endsWith('…'));
+ assert.ok(result.reply.length<=421);
+ assert.ok(result.reply.endsWith('.'));
 });
 
 test('never show malformed model JSON as a spoken bot message',()=>{

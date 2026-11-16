@@ -44,7 +44,7 @@ export function createGigaChat({env=process.env,fetchImpl=fetch,now=Date.now,log
     const bearer=await token();
     const response=await request('https://api.giga.chat/v1/chat/completions',{
      method:'POST',headers:{Authorization:'Bearer '+bearer,Accept:'application/json','Content-Type':'application/json'},
-     body:JSON.stringify({model,messages,temperature:0.8,max_tokens:400,stream:false})
+     body:JSON.stringify({model,messages,temperature:0.65,max_tokens:650,stream:false})
     },14000);
     if(response.status===401&&attempt===0){accessToken=null;expiry=0;continue;}
     if(!response.ok)throw Error('GigaChat generation '+response.status);

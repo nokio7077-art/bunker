@@ -126,7 +126,9 @@ function recordBotBallot(room,bot,targetId){
  room.aiBotVoteHistory??={};
  const history=room.aiBotVoteHistory[bot.id]??=[];
  const stored=room.aiBotVoteReasons?.[bot.id];
- const reason=stored?.targetId===targetId&&stored.round===room.round?stored.reason:null;
+ const target=room.players.find(p=>p.id===targetId);
+const fallbackReason='Выбор сделан автоматическим алгоритмом; отдельная аргументация в тот момент не была сформирована.';
+ const reason=stored?.targetId===targetId&&stored.round===room.round?stored.reason:fallbackReason;
  history.push({round:room.round,targetId,revote:Boolean(room.revoteCandidates),reason});
  room.aiBotVoteHistory[bot.id]=history.slice(-12);
 }

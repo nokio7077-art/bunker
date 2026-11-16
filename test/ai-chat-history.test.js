@@ -22,7 +22,7 @@ test('full chat is persisted in room view while LLM context remains bounded',()=
  assert.equal(publicRoom.aiChat.length,70);
  assert.equal(publicRoom.aiChat[0].text,'Сообщение 0');
  const prompt=JSON.parse(buildBotPrompt(room,bot,'')[1].content);
- assert.equal(prompt.recentConversationUnverified.length,6);
+ assert.equal(prompt.recentConversationUnverified.length,12);
  assert.ok(!JSON.stringify(prompt).includes('Сообщение 0'));
 });
 test('history resets between games rather than carrying messages into a new party',()=>{

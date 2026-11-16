@@ -63,7 +63,7 @@ function startAutoBotSpeech(room){
     const reply=result?.reply||aiFallback(bot,room);
     room.aiChat??=[];
     room.aiChat.push({name:bot.name,text:reply,bot:true,botId:bot.id,
-     round:room.round,turn:room.turn,auto:true,source:result?'ai':'fallback'});
+     round:room.round,turn:room.turn,auto:true,source:result?(result.source==='rules'?'rules':'ai'):'fallback'});
     // Retain the whole chat for this game. The AI prompt separately reads only recent messages.
     if(result?.voteForId) {
      room.aiVotePlans??={};room.aiVotePlans[bot.id]=result.voteForId;
@@ -258,7 +258,7 @@ export const server=http.createServer(async(req,res)=>{
     let result=null;
     const confirmedVoteAnswer=message?(explainFixedGameRule(room,message)||explainOwnBotVote(room,bot,message)||answerBunkerFacts(room,message)):null;
     if(confirmedVoteAnswer){
-     result={reply:confirmedVoteAnswer,voteForId:null};
+     result={reply:confirmedVoteAnswer,voteForId:null,source:'rules'};
     }else if(gigaChat.enabled){
      try{
       const raw=await gigaChat.generate(buildBotPrompt(room,bot,message));
@@ -272,14 +272,14 @@ export const server=http.createServer(async(req,res)=>{
     }
     if(room.gameNumber!==oldGame || room.round!==oldRound || !room.aiMode || room.phase==='finished')
      return send(409,{error:'Игровая ситуация изменилась. Попробуйте ещё раз.'});
-    if(result&&gigaChat.enabled)delete room.aiProviderStatus;
+    if(result&&result.source!=='rules'&&gigaChat.enabled)delete room.aiProviderStatus;
     else if(!gigaChat.enabled&&!confirmedVoteAnswer)room.aiProviderStatus='GIGACHAT_AUTH_KEY не найден в окружении Render.';
     if(result){rememberBotEndorsements(room,bot,result);rememberBotVoteReason(room,bot,result);}
     const answer=result?.reply||aiFallback(bot,room);
     room.aiChat??=[];
-    if(message)room.aiChat.push({name:me.name,text:message.slice(0,240),round:room.round});
+    if(message)room.aiChat.push({name:me.name,text:message.slice(0,240),round:room.round,source:'player'});
     room.aiChat.push({name:bot.name,text:answer,bot:true,botId:bot.id,
-     round:room.round,turn:room.turn,auto:!message,source:result?'ai':'fallback'});
+     round:room.round,turn:room.turn,auto:!message,source:result?(result.source==='rules'?'rules':'ai'):'fallback'});
     // Retain the whole chat for this game. The AI prompt separately reads only recent messages.
     if(result?.voteForId){
      room.aiVotePlans??={};
