@@ -31,7 +31,17 @@ export function answerBunkerFacts(room,message){
  if(!b)return 'В карточке убежища сейчас нет подтверждённого описания запасов. Не буду придумывать оснащение.';
  const days=(n,label)=>Number.isFinite(Number(n))?label+' '+n+' суток. ':'';
  const parts=[];
- if(/(?:вода|воды|питьевая)/.test(text)){
+ const wantsInventory=/(?:запас|ресурс|припас|еда|вод|продукт)/.test(text)&&/(?:оборудован|оснащен|оснащён|предмет|вещ)/.test(text);
+ if(wantsInventory){
+  parts.push('Наш бункер — '+[b.name,b.type].filter(Boolean).join(', ')+'.');
+  if(b.resources?.food)parts.push('Еда: '+b.resources.food+'.');
+  else parts.push(days(b.food_days,'Еды на'));
+  if(b.resources?.water)parts.push('Вода: '+b.resources.water+'.');
+  else parts.push(days(b.water_days,'Питьевой воды на'));
+  if(b.resources?.energy)parts.push('Энергия: '+b.resources.energy+'.');
+  else parts.push(days(b.energy_days,'Энергии на'));
+  if(b.equipment.length)parts.push('Оборудование: '+b.equipment.join(', ')+'.');
+ }else if(/(?:вода|воды|питьевая)/.test(text)){
   if(b.resources?.water)parts.push('Вода: '+b.resources.water);
  }else if(/(?:ед[аыу]|питан|продукт)/.test(text)){
   if(b.resources?.food)parts.push('Еда: '+b.resources.food);
