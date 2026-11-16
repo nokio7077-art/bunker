@@ -127,13 +127,7 @@ function recordBotBallot(room,bot,targetId){
  const history=room.aiBotVoteHistory[bot.id]??=[];
  const stored=room.aiBotVoteReasons?.[bot.id];
  const target=room.players.find(p=>p.id===targetId);
- const publicProfession=target?.revealed?.includes('profession')?String(target.cards?.profession||''):null;
- const energy=Number(room.bunker?.energy_days);
- const fallbackReason=publicProfession
-  ?'Сравнил открытую профессию «'+publicProfession+'» с текущими потребностями убежища и другими кандидатами.'
-  :Number.isFinite(energy)&&energy===0
-   ?'При отсутствии энергоснабжения предпочёл сохранить участников с подтверждёнными практическими навыками.'
-   :'При недостатке подтверждённых сведений выбрал этого кандидата по доступным открытым карточкам.';
+const fallbackReason='Выбор сделан автоматическим алгоритмом; отдельная аргументация в тот момент не была сформирована.';
  const reason=stored?.targetId===targetId&&stored.round===room.round?stored.reason:fallbackReason;
  history.push({round:room.round,targetId,revote:Boolean(room.revoteCandidates),reason});
  room.aiBotVoteHistory[bot.id]=history.slice(-12);
