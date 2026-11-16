@@ -295,7 +295,8 @@ export function aiFallback(bot,room){
  const index=((room?.round||1)+(room?.aiChat?.length||0)+(Number(bot.id?.charCodeAt(0))||0))%options.length;
  const recent=(room?.aiChat||[]).filter(x=>x.botId===bot.id).slice(-3).map(x=>x.text);
  const candidates=[...options, 'Сначала решим наиболее срочную проблему убежища и сверим её с раскрытыми навыками.', 'Не будем выбирать по громкости обещаний: нужны проверяемые действия и конкретная польза.'];
- const chosen=candidates.find((_,i)=>!recent.includes(revealedProfession+candidates[(index+i)%candidates.length]));
+ const chosen=Array.from({length:candidates.length},(_,i)=>candidates[(index+i)%candidates.length])
+  .find(option=>!recent.some(line=>line.startsWith(revealedProfession+option)));
  const text=chosen||candidates[(index+recent.length)%candidates.length];
  const energy=Number(room?.bunker?.energy_days);
  const action=Number.isFinite(energy)&&energy===0?' Электричества на ноль суток: обсудим, что можно сделать без питания.':'';
