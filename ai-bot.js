@@ -172,7 +172,7 @@ voteReason: конкретная короткая причина твоей те
 export function explainPrivateBallotBoundary(room,bot,message,asker){
  const text=String(message||'').trim().toLowerCase();
  if(!/(?:голос|проголос|выбрал|выбрала|выбирал|выбирала)/.test(text))return null;
- const refersToSelf=/(?:за кого\s+я\s+(?:проголос|голос)|(?:мой|мои|моё|моя)\s+голос|я\s+(?:проголос|голосовал|голосовала))/.test(text);
+ const refersToSelf=/(?:за кого\s+я\s*(?:проголос|голос)|(?:мой|мои|моё|моя)\s+голос|я\s*(?:проголос|голосовал|голосовала))/.test(text);
  const asksOther=/(?:за кого|почему|как)\s+(?:голосовал[аи]?|проголосовал[аи]?)\s+(?!ты\b|вы\b)/.test(text);
  if(refersToSelf){
   return 'Я не вижу твоих тайных голосов. Посмотри свой выбор в интерфейсе, если он доступен; чужие бюллетени мне неизвестны.';
