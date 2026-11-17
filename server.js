@@ -4,7 +4,7 @@ import { readFileSync, existsSync, statSync, createReadStream } from 'node:fs';
 import { createRoomStore } from './room-storage.js';
 import { createCloudRoomBackup } from './cloud-room-backup.js';
 import { createGigaChat } from './gigachat-client.js';
-import { buildBotPrompt, parseBotReply, aiFallback, validateBotClaim, isRepetitiveBotReply, explainOwnBotVote, explainFixedGameRule, answerBunkerFacts } from './ai-bot.js';
+import { buildBotPrompt, parseBotReply, aiFallback, validateBotClaim, isRepetitiveBotReply, explainOwnBotVote, explainPrivateBallotBoundary, explainFixedGameRule, answerBunkerFacts } from './ai-bot.js';
 import {rememberBotEndorsements,rememberBotVoteReason} from './ai-commitments.js';
 import { fileURLToPath } from 'node:url';
 import { join as pathJoin } from 'node:path';
@@ -256,7 +256,7 @@ export const server=http.createServer(async(req,res)=>{
    save();
    try{
     let result=null;
-    const confirmedVoteAnswer=message?(explainFixedGameRule(room,message)||explainOwnBotVote(room,bot,message)||answerBunkerFacts(room,message)):null;
+    const confirmedVoteAnswer=message?(explainFixedGameRule(room,message)||explainPrivateBallotBoundary(room,bot,message,me)||explainOwnBotVote(room,bot,message)||answerBunkerFacts(room,message)):null;
     if(confirmedVoteAnswer){
      result={reply:confirmedVoteAnswer,voteForId:null,source:'rules'};
     }else if(gigaChat.enabled){
