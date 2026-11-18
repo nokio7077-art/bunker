@@ -1,4 +1,5 @@
 import {botPersona} from './bot-personas.js';
+import { buildSurvivalStrategy } from './bot-strategy.js';
 // Only public game information is sent to external providers. No player
 // tokens, recovery codes, closed cards, private votes, or cloud snapshots.
 // Game state, not chat history, is the source of truth about who is still
@@ -98,7 +99,14 @@ export function buildBotPrompt(room,bot,message=''){
  const persona=botPersona(bot);
  const personalHistory=(room.aiChat||[]).filter(x=>x.botId===bot.id).slice(-6)
   .map(x=>String(x.text||'').slice(0,220));
+ const strategy=buildSurvivalStrategy(room,bot);
  const payload={
+  survivalStrategy:{
+   seats:strategy.capacity,reserve:strategy.reserve,constraint:strategy.constraint,
+   preferredTeam:strategy.self?.bestTeam.members.map(p=>p.id),
+   candidates:strategy.ranked.map(p=>({id:p.id,individual:p.individual,
+    bestTeamScore:p.bestTeam.score,evidence:p.evidence}))
+  },
   persona:{name:persona.title,motivation:persona.goal},
   ownPreviousStatements:personalHistory,
   ownConfirmedVotes,
@@ -114,6 +122,7 @@ export function buildBotPrompt(room,bot,message=''){
 Твой характер — ${persona.title}. Темперамент: ${persona.tone}.
 Твой мотив: ${persona.goal}.
 Твой собственный стиль: ${persona.style}
+survivalStrategy — расчёт игрового движка по открытым картам. При сравнении игроков используй названные причины, ограничения и состав с учётом числа мест. Не приписывай новые навыки. Твоя реплика не определяет результат голосования.
 Сохраняй индивидуальный голос на протяжении партии, не превращайся в другого персонажа после сообщения игрока.
 Сохраняй ранее высказанную позицию, если не появились новые публичные факты. Если изменил мнение — назови новую причину.
 Другие боты имеют свои характеры: не подражай их стилю.

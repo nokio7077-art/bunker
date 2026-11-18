@@ -5,7 +5,7 @@ import { createRoomStore } from './room-storage.js';
 import { createCloudRoomBackup } from './cloud-room-backup.js';
 import { createGigaChat } from './gigachat-client.js';
 import { buildBotPrompt, parseBotReply, aiFallback, validateBotClaim, isRepetitiveBotReply, explainOwnBotVote, explainPrivateBallotBoundary, explainFixedGameRule, answerBunkerFacts } from './ai-bot.js';
-import {rememberBotEndorsements,rememberBotVoteReason} from './ai-commitments.js';
+import { strategicDiscussion, rememberSurvivalPosition } from './bot-strategy.js';
 import { fileURLToPath } from 'node:url';
 import { join as pathJoin } from 'node:path';
 import { randomInt, randomBytes } from 'node:crypto';
@@ -35,46 +35,22 @@ function safeAiError(error){
  if(error?.name==='AbortError')return 'Время ответа GigaChat истекло.';
  return 'Нет ответа от GigaChat. Проверь Render Logs и настройки API.';
 }
-// AI player speech is generated automatically when a bot's turn starts.
-// It is never required to advance game state, and it never runs in a normal room.
+// Strategic speech is local and also available during provider outages.
 function startAutoBotSpeech(room){
- if(!room.aiMode||!room.testMode||room.phase!=='turn'||!gigaChat.enabled)return;
+ if(!room.aiMode||!room.testMode||room.phase!=='turn')return;
  const bot=room.players.find(p=>p.id===room.turn&&p.bot&&p.alive);
  if(!bot||!room.opened||activeAiChats.has(room.code))return;
  const key=`${room.gameNumber}:${room.round}:${bot.id}`;
  if(room.aiLastAutoTurn===key||(room.aiRequestCount||0)>=PUBLIC_AI_LIMIT)return;
+ const result=strategicDiscussion(room,bot);
+ if(!result)return;
  room.aiLastAutoTurn=key;
  room.aiRequestCount=(room.aiRequestCount||0)+1;
- room.aiLastCallAt=Date.now();
- save();
- activeAiChats.add(room.code);
- const before={gameNumber:room.gameNumber,round:room.round,turn:room.turn};
- void (async()=>{
-  let result=null,status=null;
-  try{
-   const raw=await gigaChat.generate(buildBotPrompt(room,bot,''));
-   result=parseBotReply(raw,room,bot);
-   if(result&&(!validateBotClaim(result.reply,room)||isRepetitiveBotReply(room,bot,result.reply)))result=null;
-  }catch(error){status=safeAiError(error);console.warn('GigaChat bot speech:',status);}
-  finally{
-   if(room.gameNumber===before.gameNumber&&room.round===before.round&&
-    room.turn===before.turn&&room.phase==='turn'&&room.aiMode){
-    if(result){rememberBotEndorsements(room,bot,result);rememberBotVoteReason(room,bot,result);}
-    const reply=result?.reply||aiFallback(bot,room);
-    room.aiChat??=[];
-    room.aiChat.push({name:bot.name,text:reply,bot:true,botId:bot.id,
-     round:room.round,turn:room.turn,auto:true,source:result?(result.source==='rules'?'rules':'ai'):'fallback'});
-    // Retain the whole chat for this game. The AI prompt separately reads only recent messages.
-    if(result?.voteForId) {
-     room.aiVotePlans??={};room.aiVotePlans[bot.id]=result.voteForId;
-    }
-    if(status)room.aiProviderStatus=status;
-    else delete room.aiProviderStatus;
-    room.updated=Date.now();save();
-   }
-   activeAiChats.delete(room.code);
-  }
- })();
+ rememberSurvivalPosition(room,bot,result);
+ room.aiChat??=[];
+ room.aiChat.push({name:bot.name,text:result.reply,bot:true,botId:bot.id,
+  round:room.round,turn:room.turn,auto:true,source:'rules'});
+ room.updated=Date.now();save();
 }
 
 const localRooms=store.load();
@@ -249,6 +225,8 @@ export const server=http.createServer(async(req,res)=>{
     return send(400,{error:'Для обращения к боту напишите сообщение.'});
    if(!message && room.aiChat?.some(x=>x.botId===bot.id&&x.round===room.round&&x.turn===room.turn&&x.auto))
     return send(400,{error:'Этот бот уже выступал в текущем ходе.'});
+   if(activeAiChats.has(room.code))return send(429,{error:'ИИ-бот уже отвечает. Подождите предыдущий ответ.'});
+   if((room.aiRequestCount||0)>=PUBLIC_AI_LIMIT)return send(429,{error:'Достигнут лимит 30 обращений к ИИ за партию. Обычные боты продолжают играть.'});
    activeAiChats.add(room.code);
    const oldGame=room.gameNumber,oldRound=room.round;
    room.aiRequestCount=(room.aiRequestCount||0)+1;
@@ -256,9 +234,12 @@ export const server=http.createServer(async(req,res)=>{
    save();
    try{
     let result=null;
-    const confirmedVoteAnswer=message?(explainFixedGameRule(room,message)||explainPrivateBallotBoundary(room,bot,message,me)||explainOwnBotVote(room,bot,message)||answerBunkerFacts(room,message)):null;
+    const confirmedVoteAnswer=message?(explainFixedGameRule(room,message)||explainPrivateBallotBoundary(room,bot,message,me)||(!/(?:кого|кто).{0,30}(?:исключ|выгна)/i.test(message)||/(?:голосовал|в прошлом|раньше|тогда)/i.test(message)?explainOwnBotVote(room,bot,message):null)||answerBunkerFacts(room,message)):null;
+    const strategic=!confirmedVoteAnswer&&strategicDiscussion(room,bot,message,me);
     if(confirmedVoteAnswer){
      result={reply:confirmedVoteAnswer,voteForId:null,source:'rules'};
+    }else if(strategic&&(!message||/мест|двое|две в бункер|выбрать|исключ|выгна|состав|полез|нужен|нужна|чем ты|зачем|бот\s*\d|горло|зареж|м[её]рт|труп|убью|поменял|гидропоник/i.test(message))){
+     result={...strategic,source:'rules'};
     }else if(gigaChat.enabled){
      try{
       const raw=await gigaChat.generate(buildBotPrompt(room,bot,message));
@@ -272,19 +253,22 @@ export const server=http.createServer(async(req,res)=>{
     }
     if(room.gameNumber!==oldGame || room.round!==oldRound || !room.aiMode || room.phase==='finished')
      return send(409,{error:'Игровая ситуация изменилась. Попробуйте ещё раз.'});
+    if(result?.source!=='rules'&&result&&bot.alive){
+     const current=strategicDiscussion(room,bot,message,me);
+     if(current?.position?.fingerprint!==strategic?.position?.fingerprint)result=null;
+    }
+    if(!bot.alive)return send(409,{error:'Бот выбыл из игры. Выберите другого участника.'});
     if(result&&result.source!=='rules'&&gigaChat.enabled)delete room.aiProviderStatus;
     else if(!gigaChat.enabled&&!confirmedVoteAnswer)room.aiProviderStatus='GIGACHAT_AUTH_KEY не найден в окружении Render.';
-    if(result){rememberBotEndorsements(room,bot,result);rememberBotVoteReason(room,bot,result);}
+    if(!result&&strategic)result={...strategic,source:'rules'};
+    rememberSurvivalPosition(room,bot,result);
     const answer=result?.reply||aiFallback(bot,room);
     room.aiChat??=[];
     if(message)room.aiChat.push({name:me.name,text:message.slice(0,240),round:room.round,source:'player'});
     room.aiChat.push({name:bot.name,text:answer,bot:true,botId:bot.id,
      round:room.round,turn:room.turn,auto:!message,source:result?(result.source==='rules'?'rules':'ai'):'fallback'});
     // Retain the whole chat for this game. The AI prompt separately reads only recent messages.
-    if(result?.voteForId){
-     room.aiVotePlans??={};
-     room.aiVotePlans[bot.id]=result.voteForId;
-    }
+
     room.lastActivityAt=Date.now();room.updated=Date.now();save();
     return send(200,view(room,me));
    }finally{activeAiChats.delete(room.code);}
