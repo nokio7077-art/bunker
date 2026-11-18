@@ -43,16 +43,17 @@ test('867872 scores every active candidate in pairs and conditions hydroponics o
 });
 
 test('867872 changes its preferred partner when relevant evidence is opened',()=>{
- const {room,bio,music,olga}=replay();
- assert.equal(buildSurvivalStrategy(room,bio).self.bestTeam.members[1].id,music.id);
+ const {room,bio,music,olga,loader}=replay();
+ room.turn=music.id;
+ music.revealed=['profession','hobby'];
+ loader.revealed=['profession','health'];
+ assert.equal(buildSurvivalStrategy(room,bio).self.bestTeam.members[1].id,olga.id);
  rememberSurvivalPosition(room,bio,strategicDiscussion(room,bio));
- olga.cards.hobby='Первая помощь';
- olga.cards.profession='Электрик';
- olga.revealed.push('interesting');
+ act(room,music,'reveal','luggage');
  const result=strategicDiscussion(room,bio,'Надо выбрать 2');
- assert.match(result.reply,/Пересматриваю состав: Ольга.*Электрик/);
- olga.alive=false;
- assert.ok(!buildSurvivalStrategy(room,bio).ranked.some(p=>p.id===olga.id));
+ assert.match(result.reply,/Пересматриваю состав: Бот 3.*бобовых/);
+ music.alive=false;
+ assert.ok(!buildSurvivalStrategy(room,bio).ranked.some(p=>p.id===music.id));
 });
 
 test('867872 builds a prospective ballot from open evidence and preserves private state',()=>{
