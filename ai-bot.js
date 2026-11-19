@@ -201,8 +201,12 @@ export function explainOwnBotVote(room,bot,message){
  const history=(room.aiBotVoteHistory?.[bot.id]||[])
   .filter(entry=>entry.round<room.round||room.phase==='finished');
  const names=room.players.filter(p=>p.id!==bot.id);
- const named=names.find(p=>text.includes(p.name.toLowerCase())||
-  (p.bot&&new RegExp('(?:^|[^а-яё])'+p.name.toLowerCase().replace('бот ','бот\\s*')+'(?:$|[^а-яё0-9])','i').test(text)));
+ const named=names.find(p=>{
+  const number=p.bot&&p.name.match(/^бот\s+(\d+)$/i)?.[1];
+  if(!number)return text.includes(p.name.toLowerCase());
+  return new RegExp('(?:^|[^а-яё0-9])(?:бот(?:а|у|ом)?\\s*'+number+'|'+number+
+   '\\s*(?:-?го\\s+)?бот(?:а|у|ом)?)(?=$|[^а-яё0-9])','i').test(text);
+ });
  const asksBallot=/(?:голосовал|голосовала|голосовали|проголосовал|проголосовала|голос|выбрал|выбрала|выбирал|выбирала)/.test(text);
  const asksWhy=/(?:почему|зачем|объясни|причин)/.test(text);
  const followup=asksWhy&&/(?:этого|именно|так|такой|этот|это|поступил|выбор)/.test(text);

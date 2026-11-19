@@ -5,7 +5,7 @@ import { createRoomStore } from './room-storage.js';
 import { createCloudRoomBackup } from './cloud-room-backup.js';
 import { createGigaChat } from './gigachat-client.js';
 import { buildBotPrompt, parseBotReply, aiFallback, validateBotClaim, isRepetitiveBotReply, explainOwnBotVote, explainPrivateBallotBoundary, explainFixedGameRule, answerBunkerFacts } from './ai-bot.js';
-import { strategicDiscussion, rememberSurvivalPosition } from './bot-strategy.js';
+import { isStrategicMessage, strategicDiscussion, rememberSurvivalPosition } from './bot-strategy.js';
 import { fileURLToPath } from 'node:url';
 import { join as pathJoin } from 'node:path';
 import { randomInt, randomBytes } from 'node:crypto';
@@ -238,7 +238,7 @@ export const server=http.createServer(async(req,res)=>{
     const strategic=!confirmedVoteAnswer&&strategicDiscussion(room,bot,message,me);
     if(confirmedVoteAnswer){
      result={reply:confirmedVoteAnswer,voteForId:null,source:'rules'};
-    }else if(strategic&&(!message||/мест|двое|две в бункер|выбрать|исключ|выгна|состав|полез|нужен|нужна|чем ты|зачем|бот\s*\d|горло|зареж|м[её]рт|труп|убью|поменял|гидропоник/i.test(message))){
+    }else if(strategic&&isStrategicMessage(message)){
      result={...strategic,source:'rules'};
     }else if(gigaChat.enabled){
      try{

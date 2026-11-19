@@ -10,6 +10,10 @@ const priorities = {
 };
 
 const cards = [
+ ['profession', /пульмонолог/i, 'medicine', 2, 'помощь при дыхательных осложнениях по специальности'],
+ ['profession', /эндокринолог/i, 'medicine', 1, 'медицинская помощь по своему профилю'],
+ ['profession', /механизатор|механик/i, 'maintenance', 2, 'обслуживание техники по специальности'],
+ ['profession', /радиотелефонист/i, 'communication', 1, 'работа со связью при наличии оборудования и канала'],
  ['profession', /электрик|электромонт|энергетик|электротехник/i, 'power', 2, 'обслуживание питания'],
  ['profession', /врач|фельдшер|медсестр|хирург|реаниматолог/i, 'medicine', 2, 'медицинская помощь'],
  ['profession', /сантехник|водоочист|водопровод/i, 'water', 2, 'обслуживание воды'],
@@ -20,7 +24,7 @@ const cards = [
  ['profession', /грузчик/i, 'mobility', 1, 'перенос запасов'],
  ['luggage', /консерв|суш[её]ных бобовых|питьевая вода/i, 'stores', 1, 'добавка к резервам'],
  ['luggage', /охотничий нож|инструмент/i, 'tools', 1, 'инструмент по назначению'],
- ['luggage', /аптечк|жгут|бинт/i, 'medicalSupply', 1, 'медицинское оснащение'],
+ ['luggage', /аптечк|жгут|бинт|промывания ран/i, 'medicalSupply', 1, 'медицинское оснащение'],
  ['hobby', /гидропоник|микрозелен/i, 'grow', 1, 'гидропоника зависит от пригодной установки и питания'],
  ['hobby', /капкан|силк/i, 'outside', 1, 'добыча после разрешённого выхода'],
  ['hobby', /сохранение мяса/i, 'preservation', 1, 'сохранение мяса без холодильника при наличии мяса'],
@@ -40,7 +44,7 @@ function scenario(room, bot) {
  const hazard = disaster.hazard || '';
  const weight = { power: 2, water: 2, food: 2, stores: 3, medicine: 2, shelter: 2,
   analysis: 1.5, mobility: 0.5, tools: 1, medicalSupply: 1, grow: 1,
-  outside: 1, preservation: 1.5, access: 1, treatment: 2, air: 1,
+  outside: 1, preservation: 1.5, access: 1, treatment: 2, air: 1, maintenance: 2, communication: 1,
   ...priorities[hazard] };
  const supplies = [['еда', bunker.food_days], ['вода', bunker.water_days], ['энергия', bunker.energy_days]];
  const daysKnown = n => typeof n === 'number' && Number.isFinite(n) && n >= 0;
@@ -49,7 +53,17 @@ function scenario(room, bot) {
  if (deficit(bunker.food_days, 30)) weight.stores += 2;
  if (deficit(bunker.water_days, 30)) weight.water += 2;
  if (deficit(bunker.energy_days, 30)) weight.power += 2;
- const growingEquipment = (bunker.equipment || []).some(item => /теплиц|гидропон/i.test(item));
+ const airDays = bunker.air_days;
+ const equipment = Array.isArray(bunker.equipment) ? bunker.equipment : [];
+ const sealedAir = equipment.some(item => /фильтровентиляц|герметич/i.test(item)) ||
+  disaster.requires?.includes('sealed_air');
+ const airReserve = daysKnown(airDays) && sealedAir ?
+  'По карточке резерв фильтрации в изоляции — '+airDays+' сут.' : '';
+ if (sealedAir && (hazard === 'airborne' || (horizon > 0 && daysKnown(airDays) && airDays <= horizon))) {
+  weight.maintenance += 3;
+  weight.air += 1;
+ }
+ const growingEquipment = equipment.some(item => /теплиц|гидропон/i.test(item));
  if (!growingEquipment || hazard === 'blackout' || deficit(bunker.energy_days, 30)) weight.grow = 0;
  if (horizon > 0) weight.outside *= 0.5;
  const persona = botPersona(bot).id;
@@ -61,7 +75,7 @@ function scenario(room, bot) {
  const constraint = hazard === 'blackout' ? 'Гидропонику нельзя считать источником еды без подтверждённого питания' :
   horizon ? 'Изоляция — '+horizon+' сут.; вылазки учитываю только после неё' :
    'Сначала проверяю, чем пополнить реальные запасы';
- return { weight, reserve, constraint, disaster: disaster.name || (Array.isArray(disaster) ? disaster[0] : '') };
+ return { weight, reserve, constraint, airReserve, disaster: disaster.name || (Array.isArray(disaster) ? disaster[0] : '') };
 }
 
 function assess(player, weight) {
@@ -114,7 +128,7 @@ export function buildSurvivalStrategy(room, bot) {
   return { ...person, individual:teamScore([person]), bestTeam:teams[0] };
  }).sort((a,b) => b.bestTeam.score - a.bestTeam.score || b.individual - a.individual);
  return { capacity, activeCount:active.length, self:ranked.find(p => p.id === self?.id), ranked,
-  reserve:situation.reserve, constraint:situation.constraint, disaster:situation.disaster };
+  reserve:situation.reserve, constraint:situation.constraint, airReserve:situation.airReserve, disaster:situation.disaster };
 }
 
 const short = value => String(value).slice(0, 75);
@@ -145,9 +159,16 @@ export function strategicBallot(room, bot, candidates) {
  return { id:target.id, reason:(evidence+(risk ? '. '+risk : '')).slice(0,180) };
 }
 
+const maintenanceTopic = /вентиляц|фильтр|кислород|запас воздуха|строительн.{0,12}фен|почин|ч[еи]нить|два\s+(?:медика|врача)|двух\s+(?:медиков|врачей)|один врач|1 врач/i;
+
+export function isStrategicMessage(message) {
+ return !message || maintenanceTopic.test(message) ||
+  /мест|двое|две в бункер|выбрать|исключ|выгна|состав|полез|нужен|нужна|чем ты|зачем|бот\s*\d|горло|зареж|м[её]рт|труп|убью|поменял|гидропоник/i.test(message);
+}
+
 export function strategicDiscussion(room, bot, message = '', speaker) {
  const strategy = buildSurvivalStrategy(room, bot);
- const {self, ranked, capacity, activeCount, reserve, constraint, disaster} = strategy;
+ const {self, ranked, capacity, activeCount, reserve, constraint, airReserve, disaster} = strategy;
  if (!self || !capacity) return null;
  const text = message.toLowerCase();
  const teammates = self.bestTeam.members.filter(p => p.id !== self.id);
@@ -157,7 +178,7 @@ export function strategicDiscussion(room, bot, message = '', speaker) {
  const subject = named || asker || rival;
  const previous = room.aiStrategyPositions?.[bot.id];
  const ids = teammates.map(p => p.id).sort().join(',');
- const fingerprint = JSON.stringify([capacity, reserve, constraint, disaster,
+ const fingerprint = JSON.stringify([capacity, reserve, constraint, airReserve, disaster,
   ranked.map(p => [p.id, p.profession, p.evidence])]);
  const changed = previous && previous.fingerprint !== fingerprint && previous.ids !== ids;
  const position = { fingerprint, ids };
@@ -172,15 +193,30 @@ export function strategicDiscussion(room, bot, message = '', speaker) {
  const same = previous?.fingerprint === fingerprint && previous?.message === text;
  const hasHydroponics = [self, ...teammates].some(p => p.evidence.some(item => item.role === 'grow'));
  let reply;
- if (same) {
+ const afterExpulsion = speaker && !speaker.alive && /выгна|исключ|был специалист/i.test(text);
+ if (afterExpulsion) {
+  reply = speaker.name+' уже выбыл(а) по итогам голосования. '+prefix+pair+
+   (airReserve ? airReserve+' ' : '')+
+   (ranked.some(p => p.evidence.some(e => e.role === 'maintenance')) ?
+    'По оставшимся картам отдельно проверю, кто может обслуживать технику.' :
+    'У оставшихся нет открытой карты с опытом обслуживания техники.');
+ } else if (maintenanceTopic.test(text)) {
+  const specialists = ranked.filter(p => p.evidence.some(e => e.role === 'maintenance'));
+  const tech = specialists[0];
+  const repair = tech ? tech.name+' — '+strength(tech)+'. ' :
+   'Среди оставшихся не подтверждён опыт обслуживания техники. ';
+  const limit = /фен/i.test(text) ? 'Строительный фен сам по себе не подтверждает возможность ремонта вентиляции. ' :
+   'Обслуживание техники не гарантирует ремонт фильтров. ';
+  const overlap = /медик|врач/i.test(text) ? 'У двух врачей есть перекрытие по медпомощи. ' : '';
+  reply = prefix+(airReserve ? airReserve+' ' : '')+(same ? limit+repair : overlap+repair+limit)+pair;
+ } else if (same) {
   const drawback = subject && concern(subject);
   reply = prefix+(reserve ? 'Резервы: '+reserve+'. ' : '')+constraint+'. '+
    (drawback ? subject.name+': '+drawback+'.' : rival ? 'Что '+rival.name+' может подтвердить открытой картой?' : selfCase);
  } else if (/зареж|горло|м[её]рт|убью|ты труп|поменял.{0,18}(?:хобби|карт)|(?:хобби|карт).{0,18}поменял/.test(text)) {
   const event = /поменял/.test(text) ? 'Обмен карт проверяется в журнале условий.' : 'Статус игроков определяет официальное голосование.';
   return {reply:event, position:previous};
- }
- if (/(?:кого|кто).{0,30}(?:исключ|выгна)|(?:исключ|выгна).{0,30}(?:кого|кого-то)/.test(text) && candidate) {
+ } else if (/(?:кого|кто).{0,30}(?:исключ|выгна)|(?:исключ|выгна).{0,30}(?:кого|кого-то)/.test(text) && candidate) {
   reply = prefix+revising+'Предлагаю обсудить исключение '+candidate.name+'. '+strength(candidate)+'. '+pair;
  } else if (/полез|нужен|нужна|зачем.{0,24}(?:нам|ты|тебе)|чем ты|тво[яё] место/.test(text)) {
   reply = prefix+revising+selfCase+(selfRisk ? selfRisk+'. ' : '')+compare+
@@ -190,7 +226,7 @@ export function strategicDiscussion(room, bot, message = '', speaker) {
  } else {
   reply = prefix+revising+pair+(partner && !changed ? partner.name+' — '+strength(partner)+'. ' : '')+
    selfCase+(hasHydroponics ? constraint+'. ' :
-    (reserve ? 'Резервы: '+reserve+'. ' : constraint+'. '));
+    (airReserve ? airReserve+' ' : reserve ? 'Резервы: '+reserve+'. ' : constraint+'. '));
   if (disaster && reply.length < 300) reply += 'Сценарий: '+disaster+'.';
  }
  reply = reply.trim();
