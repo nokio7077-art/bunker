@@ -1,4 +1,5 @@
 import {botPersona} from './bot-personas.js';
+import { buildSurvivalStrategy } from './bot-strategy.js';
 // Only public game information is sent to external providers. No player
 // tokens, recovery codes, closed cards, private votes, or cloud snapshots.
 // Game state, not chat history, is the source of truth about who is still
@@ -98,7 +99,14 @@ export function buildBotPrompt(room,bot,message=''){
  const persona=botPersona(bot);
  const personalHistory=(room.aiChat||[]).filter(x=>x.botId===bot.id).slice(-6)
   .map(x=>String(x.text||'').slice(0,220));
+ const strategy=buildSurvivalStrategy(room,bot);
  const payload={
+  survivalStrategy:{
+   seats:strategy.capacity,reserve:strategy.reserve,constraint:strategy.constraint,
+   preferredTeam:strategy.self?.bestTeam.members.map(p=>p.id),
+   candidates:strategy.ranked.map(p=>({id:p.id,individual:p.individual,
+    bestTeamScore:p.bestTeam.score,evidence:p.evidence}))
+  },
   persona:{name:persona.title,motivation:persona.goal},
   ownPreviousStatements:personalHistory,
   ownConfirmedVotes,
@@ -114,6 +122,7 @@ export function buildBotPrompt(room,bot,message=''){
 Твой характер — ${persona.title}. Темперамент: ${persona.tone}.
 Твой мотив: ${persona.goal}.
 Твой собственный стиль: ${persona.style}
+survivalStrategy — расчёт игрового движка по открытым картам. При сравнении игроков используй названные причины, ограничения и состав с учётом числа мест. Не приписывай новые навыки. Твоя реплика не определяет результат голосования.
 Сохраняй индивидуальный голос на протяжении партии, не превращайся в другого персонажа после сообщения игрока.
 Сохраняй ранее высказанную позицию, если не появились новые публичные факты. Если изменил мнение — назови новую причину.
 Другие боты имеют свои характеры: не подражай их стилю.
@@ -192,8 +201,12 @@ export function explainOwnBotVote(room,bot,message){
  const history=(room.aiBotVoteHistory?.[bot.id]||[])
   .filter(entry=>entry.round<room.round||room.phase==='finished');
  const names=room.players.filter(p=>p.id!==bot.id);
- const named=names.find(p=>text.includes(p.name.toLowerCase())||
-  (p.bot&&new RegExp('(?:^|[^а-яё])'+p.name.toLowerCase().replace('бот ','бот\\s*')+'(?:$|[^а-яё0-9])','i').test(text)));
+ const named=names.find(p=>{
+  const number=p.bot&&p.name.match(/^бот\s+(\d+)$/i)?.[1];
+  if(!number)return text.includes(p.name.toLowerCase());
+  return new RegExp('(?:^|[^а-яё0-9])(?:бот(?:а|у|ом)?\\s*'+number+'|'+number+
+   '\\s*(?:-?го\\s+)?бот(?:а|у|ом)?)(?=$|[^а-яё0-9])','i').test(text);
+ });
  const asksBallot=/(?:голосовал|голосовала|голосовали|проголосовал|проголосовала|голос|выбрал|выбрала|выбирал|выбирала)/.test(text);
  const asksWhy=/(?:почему|зачем|объясни|причин)/.test(text);
  const followup=asksWhy&&/(?:этого|именно|так|такой|этот|это|поступил|выбор)/.test(text);

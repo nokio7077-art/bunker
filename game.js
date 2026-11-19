@@ -7,7 +7,7 @@ import { applySpecial } from './special-actions.js';
 import { specialCard } from './special-cards.js';
 import { chooseBotVote, chooseBotReveal, chooseBotSpecialTarget } from './bot-ai.js';
 import {assignBotPersonas} from './bot-personas.js';
-import {chooseConsistentBotTarget} from './ai-commitments.js';
+import { strategicBallot } from './bot-strategy.js';
 export { categories };
 const pick = a => a[randomInt(a.length)];
 // Independently randomize who draws first for each category.
@@ -121,14 +121,22 @@ function botSpecialMove(room,bot){
 }
 // Record only each bot's own actual ballot for later self-explanation.
 // It is kept server-side and never exposed to other players or bots.
+function botBallotTarget(room,bot,candidates){
+ if(room.testMode&&room.aiMode){
+  const decision=strategicBallot(room,bot,candidates);
+  if(!decision)return null;
+  room.aiBotVoteReasons??={};
+  room.aiBotVoteReasons[bot.id]={targetId:decision.id,round:room.round,reason:decision.reason};
+  return decision.id;
+ }
+ return chooseBotVote(room,bot,candidates);
+}
 function recordBotBallot(room,bot,targetId){
  if(!room.aiMode||!bot.bot)return;
  room.aiBotVoteHistory??={};
  const history=room.aiBotVoteHistory[bot.id]??=[];
  const stored=room.aiBotVoteReasons?.[bot.id];
- const target=room.players.find(p=>p.id===targetId);
-const fallbackReason='Выбор сделан автоматическим алгоритмом; отдельная аргументация в тот момент не была сформирована.';
- const reason=stored?.targetId===targetId&&stored.round===room.round?stored.reason:fallbackReason;
+ const reason=stored?.targetId===targetId&&stored.round===room.round?stored.reason:null;
  history.push({round:room.round,targetId,revote:Boolean(room.revoteCandidates),reason});
  room.aiBotVoteHistory[bot.id]=history.slice(-12);
 }
@@ -191,12 +199,9 @@ export function act(room, p, action, value) {
   check(bots.length > 0, 'Все боты уже проголосовали.');
   const candidates = voteCandidates(room);
   for (const bot of bots) {
-   const aiChoice=room.aiVotePlans?.[bot.id];
-   const preferred=aiChoice&&candidates.includes(aiChoice)&&aiChoice!==bot.id
-    ?aiChoice:chooseBotVote(room,bot,candidates);
-   const consistent=room.aiMode?chooseConsistentBotTarget(room,bot,candidates,preferred,
-    pool=>chooseBotVote(room,bot,pool)):preferred;
-   act(room,bot,'vote',consistent);
+   const target=botBallotTarget(room,bot,candidates);
+   if(target)act(room,bot,'vote',target);
+   if(room.phase!=='vote')break;
   }
  } else if (action === 'start') {
   check(room.host === p.id && room.phase === 'lobby', 'Только ведущий может начать игру.');
@@ -228,12 +233,10 @@ export function act(room, p, action, value) {
   if (room.testMode && room.players.filter(x => !x.bot).every(x => Object.hasOwn(room.votes,x.id))) {
    const candidates = voteCandidates(room);
    for (const bot of room.players.filter(x => x.bot && !Object.hasOwn(room.votes,x.id))) {
-    const aiChoice=room.aiVotePlans?.[bot.id];
-    const preferred=aiChoice&&candidates.includes(aiChoice)&&aiChoice!==bot.id
-     ?aiChoice:chooseBotVote(room,bot,candidates);
-    room.votes[bot.id]=room.aiMode?chooseConsistentBotTarget(room,bot,candidates,preferred,
-     pool=>chooseBotVote(room,bot,pool)):preferred;
-    recordBotBallot(room,bot,room.votes[bot.id]);
+    const target=botBallotTarget(room,bot,candidates);
+    if(!target)continue;
+    room.votes[bot.id]=target;
+    recordBotBallot(room,bot,target);
    }
   }
   if (Object.keys(room.votes).length === room.players.length) finishVote(room);
@@ -416,7 +419,7 @@ export function advanceRoom(room,now=Date.now()){
  return changed;
 }
 export function view(room, me) {
- const { players, votes, rps, aiVotePlans, aiBotVoteHistory, aiBotEndorsements, aiBotVoteReasons, aiChatLocks, lastActivityAt, privateSpecialHistory, dealHistory, ...rest } = room;
+ const { players, votes, rps, aiVotePlans, aiBotVoteHistory, aiBotEndorsements, aiBotVoteReasons, aiStrategyPositions, aiChatLocks, lastActivityAt, privateSpecialHistory, dealHistory, ...rest } = room;
  const ownSpecialChanges=(privateSpecialHistory||[]).flatMap(event=>event.results.filter(r=>r.playerId===me.id).map(r=>({eventId:event.id,before:r.before,after:r.after})));
  return { ...rest, rps:rps?{candidates:rps.candidates,round:rps.round,deadline:rps.deadline,submitted:rps.candidates.filter(id=>Object.hasOwn(rps.choices,id)),myChoice:rps.choices[me.id]||null,lastResult:rps.lastResult||null}:null, specialPrivateResults:ownSpecialChanges, categories, me: me.id, recoveryCode: me.recoveryCode, specialAvailable: Boolean(specialCard(me.cards.special)) && !me.specialUsed, hasVoted: Object.hasOwn(votes,me.id), votedFor: votes[me.id] || null, voteCount: Object.keys(votes).length,
   pendingBotVotes: players.filter(p => p.bot && !Object.hasOwn(votes,p.id)).length,
